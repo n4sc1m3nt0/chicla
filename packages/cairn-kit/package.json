@@ -1,0 +1,8 @@
+{
+  "name": "cairn-kit",
+  "version": "0.0.0",
+  "description": "Workflow completo para coding agents: estado, fingerprints, política, manifesto, entrega verificada, dump e recovery.",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED"
+}
