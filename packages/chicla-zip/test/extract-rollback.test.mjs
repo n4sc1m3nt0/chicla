@@ -9,10 +9,11 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSyn
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { extractZip, ZipError } from '../src/zipkit.mjs';
+import { realTmp } from './fsprobe.mjs';
 import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
-before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-rollback-')); });
+before(() => { dir = mkdtempSync(join(realTmp(), 'chicla-zip-rollback-')); });
 after(() => { rmSync(dir, { recursive: true, force: true }); });
 // Three ops in a fixed order (readdir order): a.txt (replaces an existing file), b.txt (new file), sub (new folder, moved whole).
 const ZIP = () => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buildZip([{ name: 'a.txt', data: 'NEW-A' }, { name: 'b.txt', data: 'NEW-B' }, { name: 'sub/c.txt', data: 'NEW-C', method: 8 }])); return p; };

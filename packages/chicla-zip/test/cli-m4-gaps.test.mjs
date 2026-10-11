@@ -7,6 +7,7 @@ import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildZip } from './zipfab.mjs';
+import { normalizing } from './fsprobe.mjs';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-m4-')); });
@@ -59,7 +60,7 @@ test('mark --json: patched counts only the entries it changed', async () => {
   assert.deepEqual([j.patched, j.total], [1, 2]);
 });
 
-test('extract text: names that differ only in NFC/NFD are reported', async () => {
+test('extract text: names that differ only in NFC/NFD are reported', { skip: normalizing && 'this file system treats NFC and NFD as one name: extract refuses them (ECOLLISION), which is the right answer there' }, async () => {
   const nfc = 'caf\u00e9.txt', nfd = 'cafe\u0301.txt';
   const r = await cli('extract', zipOf([{ name: nfc, data: 'a', flags: 0x800 }, { name: nfd, data: 'b', flags: 0x800 }]), join(fresh(), 'o'));
   assert.equal(r.code, 0); assert.match(r.out, /equivalent names/);

@@ -35,21 +35,25 @@ Owner: Rodrigo, who moves between Claude accounts. Nothing is remembered between
 
 **Current version:** v0.0.62 (round 59: C4.5, `ls --json` with a zero DOS date).
 
-**Fingerprint:** seq=67 · app=version.mjs ·
+**Fingerprint:** seq=71 · app=version.mjs ·
 app_sha256_12=065d37032ef1 (of everything below the app file's own
 fingerprint comment; unchanged at this seq — rewritten by `scripts/bump-round.mjs`) ·
 changelog=CHANGELOG.md ·
-changelog_sha256_12=a48c8af84127 (hash of `CHANGELOG.md` below its own
-fingerprint line; recomputed by `scripts/bump-round.mjs` at seq 67) · matches the
+changelog_sha256_12=cd160308e147 (hash of `CHANGELOG.md` below its own
+fingerprint line; recomputed by `scripts/bump-round.mjs` at seq 71) · matches the
 `STATUS_FILE_FINGERPRINT` comment on line 2–3 of the app file and the
 `CHANGELOG_FINGERPRINT` comment on line 1 of `CHANGELOG.md`. If any of
 these three don't match what you're looking at, stop and see
 instructions item 11 above before doing anything else.
 
-**Last updated (round 63):** 2026-10-11. C5.4: CI job `bench` with the 3x budget, and the bench refuses an unreadable budget instead of skipping the check. Not run: the job on GitHub, Node 18 and 20, macOS, non-root.
+**Last updated (round 67):** 2026-10-11. Docs only: the G-C1 checks are all in (Rodrigo's `npm view chicla`). Round 66 (macOS test fixes) still waits for a CI run.
 
 ## Snapshot
 
+- Done: round 67 (2026-10-11). Docs only: G-C1 evidence recorded (repo public; `which chicla` finds nothing; `npm view chicla` shows only our `0.0.0` placeholder by `n4sc1m3nt0`). Rodrigo closes G-C1.
+- Done: round 66 (2026-10-11). The 41 macOS CI failures were all in the tests (Apple `zipinfo` prints «?», APFS is case/NFC-insensitive, `/var` link, U+FFFF refused). `test/fsprobe.mjs` (measured probes), 5 tests skipped where the tree cannot be built, realpath temp base, lossy-aware zipinfo reader, `fsprobe.test.mjs` (3). Reproduced red on Linux with shims first. **Not confirmed on a Mac until the next CI run (G-C3).** G-C9: bench ratio 1.3x on GitHub, green.
+- Done: round 65 (2026-10-11). D46: Apache-2.0 (`LICENSE`, SPDX id in 3 `package.json`, `CLAUDE.md` rule 5), `test/license.test.mjs` (4, red first). Gates: G-C9 bench green on GitHub (ratio not reported); G-C1 repo public (Rodrigo), `which chicla` not found. **Found: CI red on the macOS jobs (`npm test` exit 1); cause unknown, needs the log.**
+- Done: round 64 (2026-10-11). D45 confirmed by Rodrigo (the `bench` job fails the CI above 3x). No code, no card closed, no gate changed.
 - Done: C5.4 (round 63, 2026-10-11). CI job `bench` (Linux, Node 22, tmpfs): the 20 000-file benchmark with `--budget 3` (D15). The bench now exits 2 on an unreadable `--budget`/`--runs`/`--files` (a bad budget used to switch the gate off). `bench-small.test.mjs` (3) and `test/ci.test.mjs` (4), red first; 3 hand mutants red. Not yet run on GitHub: gate G-C9 (see Gates). D45 below.
 - Done: C5.3b slice 7 (round 62, 2026-10-10). 9 mutants `C5.1-*` (reader, round 41) added (6 red, 3 explained survivors); the list has 229 entries, run as one run, all as listed. **C5.3b is closed.** No source or test change, no gate changed.
 - Done: C9.7 (round 61, 2026-10-10). `verify-delivery-zip` requires `FILES.baseline.json` and checks it against the zip (list, size, sha256; `EBASELINE_*`). `smoke-test-delivery-guards` section 0c (5 checks, red first), 1 hand mutant red. No gate changed.
@@ -118,15 +122,15 @@ instructions item 11 above before doing anything else.
 
 ## Next up
 
-**Open decisions (ask first, `CLAUDE.md`):** after round 63, one (D45): the `bench` job FAILS the CI when the ratio is above 3 (Claude suggests: yes, but if the first runs on GitHub sit near 3, re-measure before touching the budget; D15 reopens only then). The `/dump` sentence change still waits for G-C7. Next task: Claude suggests C7.1 (manifest v2 with crc and sizes; M) or C11.1 (the `chicla` command of the kit; M); alternative: the Gates. Rodrigo to confirm or name another.
+**Open decisions (ask first, `CLAUDE.md`):** D47 (macOS tests skip by measured probe; Claude suggests yes) is waiting for Rodrigo; the `/dump` sentence change waits for G-C7. Rodrigo: push round 66 and send the result of the macOS jobs. Then: tests that assert what macOS does with equivalent names (`ECOLLISION`) instead of skipping, once a Mac log exists; after it C7.1 or C11.1.
 
 ## Gates
 
 | Gate | What | State |
 | --- | --- | --- |
-| G-C1 | Name; create the public GitHub repo; check the `chicla` command; publish the npm placeholders (D23) | open (name decided, D22; npm placeholders published; repo created, public status unverified; remaining: the `chicla` command check on a clean system, and Rodrigo closes it) |
-| G-C2 | Licence | open |
+| G-C1 | Name; create the public GitHub repo; check the `chicla` command; publish the npm placeholders (D23) | open (name decided, D22; npm placeholders published; repo created, public status unverified; repo PUBLIC (Rodrigo, 2026-10-11); `which chicla` finds nothing on his machine (done); `npm view chicla` shows only our `0.0.0` placeholder by `n4sc1m3nt0` (all checks in; Rodrigo closes it) |
+| G-C2 | Licence | decided: Apache-2.0 (D46, 2026-10-11), `LICENSE` added in round 65; Rodrigo closes it (and may give a copyright holder) |
 | G-C3 | Run on a real Mac | done (Rodrigo, 2026-10-08: macOS on Node 26, Linux on Node 18, 20 and 22, no problems; run on round-7 code, so round 8 has not been on a Mac yet) ; ROADMAP §9 now also asks for the C2.7 copy fallback on an exFAT/FAT drive, not run) |
 | G-C4 | Windows: warning only or its own milestone | open (Rodrigo's answer: own milestone M14, D19; he closes the gate) |
 | G-C5, G-C6, G-C7, G-C8 | See ROADMAP §9 | open |
-| G-C9 | Push round 63 and watch the first `bench` run on GitHub (ratio, and whether runners are stable enough for the 3x budget) | open |
+| G-C9 | Push round 63 and watch the first `bench` run on GitHub (ratio, and whether runners are stable enough for the 3x budget) | open (first run green, ratio 1.3x, 2026-10-11; watch a few more runs) |

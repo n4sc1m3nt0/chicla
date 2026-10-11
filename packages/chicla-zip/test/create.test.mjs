@@ -20,6 +20,7 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { checkZip } from './interop.mjs';
+import { refusesNoncharacters } from './fsprobe.mjs';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-create-')); });
@@ -156,7 +157,7 @@ test('a name on disk that is not valid UTF-8 is refused with EUNSAFE (it cannot 
 });
 
 test('the order is by the bytes of the names, not by the machine nor by JavaScript string order (300 shuffled names, astral and high BMP characters)', async () => {
-  const root = fresh(); let x = 99; const nm = new Set(['\uffff.txt', '\u{1f600}.txt', '\ue000.txt', 'z']);
+  const root = fresh(); let x = 99; const nm = new Set([...(refusesNoncharacters ? [] : ['\uffff.txt']), '\u{1f600}.txt', '\ue000.txt', 'z']); // macOS refuses U+FFFF (EILSEQ)
   while (nm.size < 300) { x = (Math.imul(x, 1103515245) + 12345) >>> 0; nm.add(`f${x.toString(36)}`); }
   for (const f of [...nm].sort(() => 0.5 - ((x = (Math.imul(x, 1103515245) + 12345) >>> 0) / 2 ** 32))) writeFileSync(join(root, f), f);
   const out = join(base, 'order.zip'); await createZip(out, root);

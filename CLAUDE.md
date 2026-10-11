@@ -21,7 +21,7 @@ Read this file, then the **highest-numbered** `CHICLA_PROJECT_STATUS-<N>.md`: th
 2. A zip is hostile input: never extract outside the destination, never trust names, sizes or counts from the archive. Return errors, never throw through the CLI.
 3. Whatever Chicla writes must be accepted by `unzip -t` and Python's `zipfile` (independent readers).
 4. Distribution is GitHub first and also npm from 0.1 (D41). Only Rodrigo publishes (login and 2FA): the AI never runs `npm publish`, and nothing is published before the licence (G-C2) is decided.
-5. Licence is open (G-C2): leave `UNLICENSED` and add no licence file until Rodrigo decides.
+5. Licence is Apache-2.0 (D46, Rodrigo, 2026-10-11): `LICENSE` in the root and `"license": "Apache-2.0"` in every `package.json`. Add no copyright line or NOTICE with a holder's name until Rodrigo gives it.
 6. User-facing messages are English only, plain strings (D18, replaces D8). Tests assert error `code`s, never message text.
 
 ## Working rules (ROADMAP §3)

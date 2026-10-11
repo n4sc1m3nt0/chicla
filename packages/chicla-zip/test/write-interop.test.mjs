@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { checkZip } from './interop.mjs';
+import { normalizing } from './fsprobe.mjs';
 
 const writeZip = zk.writeZip, T = writeZip ? test : test.todo;
 let dir, n = 0;
@@ -54,7 +55,7 @@ T('compressible data is deflated and incompressible data is not inflated (the zi
   assert.ok(statSync(p).size < 1_200_000);
 });
 
-T('round trip: what the Chicla writer wrote, the Chicla extractor gives back byte for byte', async () => {
+T('round trip: what the Chicla writer wrote, the Chicla extractor gives back byte for byte', { skip: normalizing && 'this file system treats NFC and NFD as one name: the extractor refuses the NFC/NFD pair (ECOLLISION)' }, async () => {
   const tree = CASES['non-ASCII names, NFC and NFD kept as given'], p = out(), dest = join(dir, `x${n++}`);
   await writeZip(p, asSources(tree)); await zk.extractZip(p, dest);
   for (const [name, v] of Object.entries(tree)) assert.deepEqual(readFileSync(join(dest, name)), Buffer.from(v), name);

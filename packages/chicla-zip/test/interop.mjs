@@ -4,6 +4,7 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { listZip, readZipFile, testZip } from '../src/zipkit.mjs';
+import { lossy, lossyNames } from './fsprobe.mjs';
 
 const sha = (b) => createHash('sha256').update(b).digest('hex');
 const want = (expected) => Object.fromEntries(Object.entries(expected).map(([k, v]) => [k, k.endsWith('/') ? null : sha(Buffer.from(v))]));
@@ -30,7 +31,8 @@ export const readers = {
   zipinfo: (p, exp) => {
     const r = run('zipinfo', ['-1', p]); if (!r) return null;
     if (r.status !== 0) return { ok: false, problems: [`zipinfo exited ${r.status}`] };
-    const names = r.stdout.split('\n').filter(Boolean), problems = diff(Object.fromEntries(names.map((n) => [n, null])), Object.fromEntries(Object.keys(exp).map((n) => [n, null])));
+    const m = lossyNames ? lossy : (n) => n; // Apple's zipinfo cannot print non-ASCII names: there it only confirms the names up to those characters
+    const names = r.stdout.split('\n').filter(Boolean), problems = diff(Object.fromEntries(names.map((n) => [m(n), null])), Object.fromEntries(Object.keys(exp).map((n) => [m(n), null])));
     return { ok: !problems.length, problems };
   },
   python: (p, exp) => {

@@ -1,5 +1,31 @@
-<!-- CHANGELOG_FINGERPRINT: seq=67 file=CHICLA_PROJECT_STATUS-67.md app_sha256_12=065d37032ef1 changelog_sha256_12=a48c8af84127 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=71 file=CHICLA_PROJECT_STATUS-71.md app_sha256_12=065d37032ef1 changelog_sha256_12=cd160308e147 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 67 — G-C1 evidence recorded (v0.0.70)
+
+- Docs only. Rodrigo's `npm view chicla` (2026-10-11): `chicla@0.0.0`, 2 versions, our placeholder, maintainer `n4sc1m3nt0`, published 2 days earlier. With `which chicla` finding nothing and the repo public, the checks of G-C1 are all in; Rodrigo closes the gate. D47 is still PROPOSED (no answer yet).
+- Files: status file, this entry. No code. Run: `npm test`, `npm run smoke`. Not run: macOS, Node 18 and 20 locally, CI, non-root.
+
+## Round 66 — the macOS CI jobs: 41 test failures, all in the tests (v0.0.69)
+
+- Task: the red macOS jobs of the first CI run (Rodrigo sent the logs, 2026-10-11). Same 41 failures on Node 18, 20 and 22; Ubuntu all green; `bench` green (ratio 1.3x on the runner). No product bug: the product behaves correctly on APFS (it refuses equivalent names with `ECOLLISION`); the TESTS assumed Linux. Causes: (1) Apple's `zipinfo` prints every non-ASCII byte as «?» (30 random-tree tests of `differential-python`, plus `interop` x2 and `write-interop`); (2) APFS is case- and NFC/NFD-insensitive, so a tree holding `a.txt` + `A.txt` or `café` in two forms cannot be built (`cli-create` x2, `cli-m4-gaps`, `write-interop` round trip); (3) `/var/folders` is a link to `/private/var/folders` while the extractor reports real paths (`extract-exdev`, `extract-rollback` x2); (4) APFS refuses a name with U+FFFF (`EILSEQ`, `create` ordering test).
+- Reproduced on Linux before the fix (red): a symlinked `TMPDIR` (the 3 realpath tests) and a `zipinfo` shim that turns non-ASCII bytes into «?» (the 3 reader tests and the random trees).
+- Fix, tests only: new `test/fsprobe.mjs` (probes that MEASURE the machine: case-insensitive, normalising, refuses noncharacters, lossy `zipinfo`, link-free temp base); the zipinfo reader compares names with runs of non-ASCII collapsed to «?» only where that probe says it is lossy; the 5 tests that need an impossible tree are skipped there with a reason, the others use `realTmp()` and drop `U+FFFF` where refused; `fsprobe.test.mjs` (3). Linux: 76 tests of the touched files green, also with the shims.
+- Files: 8 test files (`fsprobe.mjs` new), no source. Run: `check-build`, `npm test`, `npm run smoke`.
+- Not run: macOS itself: these fixes are NOT confirmed on a Mac until the next CI run; if more fails, a failure hidden behind these 41 may show. The skipped tests do not check what macOS does with those names (it should refuse with `ECOLLISION`): a follow-up once a Mac log exists. Node 18/20 locally, Windows, non-root.
+
+## Round 65 — D46: Apache-2.0 (v0.0.68)
+
+- Task: G-C2 decided by Rodrigo (2026-10-11): Apache-2.0. `LICENSE` (the Apache License 2.0 text, terms only, no copyright line: Claude does not invent a holder) in the root; `"license": "Apache-2.0"` in the root and both `package.json`; `CLAUDE.md` rule 5 rewritten (it said to leave `UNLICENSED`). Rodrigo closes G-C2; nothing is published (rule 4).
+- Tests first (4 red before): `test/license.test.mjs` (the text and its main clauses, SPDX id in 3 files, `CLAUDE.md`, `LICENSE` in the manifest).
+- Reported, not fixed: CI is RED on the macOS jobs (`npm test`, exit 1) since round 63's push, bench green; the session cannot read the GitHub logs, so the failing tests are not known yet (needs the `not ok` lines from the log). The macOS suites had last run on round-7 code (G-C3), so this is probably a new macOS-only difference.
+- Files: `LICENSE` (new), three `package.json`, `CLAUDE.md`; test, docs. No source code touched.
+- Run: `check-build`, `npm test`, `npm run smoke`. Not run: Node 18 and 20, macOS, Windows, CI, non-root.
+
+## Round 64 — D45 confirmed (v0.0.67)
+
+- Docs only. D45 (the CI `bench` job fails the CI above 3x) confirmed by Rodrigo, 2026-10-11, who then moved to the gates; no card closed, no gate changed.
+- Files: `ROADMAP.md`, status file, this entry; no code touched. Run: `check-build`, `npm test`, `npm run smoke`. Not run: Node 18 and 20, macOS, Windows, CI, non-root.
 
 ## Round 63 — C5.4: the small-files benchmark runs in CI with its budget (v0.0.66)
 

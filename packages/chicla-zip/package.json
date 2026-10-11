@@ -4,5 +4,5 @@
   "description": "Ler, verificar, extrair em segurança, escrever e reparar zips (UTF-8 correto em qualquer sistema).",
   "type": "module",
   "engines": { "node": ">=18" },
-  "license": "UNLICENSED"
+  "license": "Apache-2.0"
 }

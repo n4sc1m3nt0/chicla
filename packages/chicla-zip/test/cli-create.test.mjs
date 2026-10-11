@@ -7,6 +7,7 @@
 // Assertions use exit codes and error `code`s, never message text.
 import { listZip } from '../src/zipkit.mjs';
 import { checkZip } from './interop.mjs';
+import { caseInsensitive } from './fsprobe.mjs';
 import { buildZip } from './zipfab.mjs';
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -117,7 +118,7 @@ test('create: a symlink is skipped and reported (text and json); exit stays 0', 
   const t = run('create', outZip(), root); assert.equal(t.code, 0); assert.match(t.text, /^! skipped: link \(symlink\)$/m);
 });
 
-test('create: names that differ only in case or normalisation are reported as collisions (text and json), the zip is still written', () => {
+test('create: names that differ only in case or normalisation are reported as collisions (text and json), the zip is still written', { skip: caseInsensitive && 'this file system cannot hold a.txt and A.txt in one folder (the tree cannot be built)' }, () => {
   const root = tree(); writeFileSync(join(root, 'A.txt'), 'upper');
   const out = outZip(), j = oneJson(run('create', out, root, '--json'));
   assert.equal(j.collisions.length, 1); assert.deepEqual([...j.collisions[0]].sort(), ['A.txt', 'a.txt']); assert.ok(existsSync(out));
@@ -147,7 +148,7 @@ test('extract --json: files, dirs, bytes, skipped and collisions on one line; th
   assert.equal(readFileSync(join(d, 'dir', 'b.txt'), 'utf8'), 'bee');
 });
 
-test('extract --json: collisions and skipped entries are listed, not only counted', () => {
+test('extract --json: collisions and skipped entries are listed, not only counted', { skip: caseInsensitive && 'this file system is case-insensitive: extract refuses a.txt + A.txt (ECOLLISION), which is the right answer there' }, () => {
   const p = join(fresh(), 'c.zip'); writeFileSync(p, buildZip([{ name: 'a.txt', data: '1' }, { name: 'A.txt', data: '2' }]));
   const j = oneJson(run('extract', p, join(fresh(), 'o'), '--json', '--overwrite')); assert.equal(j.ok, true); assert.equal(j.collisions.length, 1); assert.deepEqual([...j.collisions[0]].sort(), ['A.txt', 'a.txt']);
 });

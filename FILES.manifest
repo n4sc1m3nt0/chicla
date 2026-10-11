@@ -1,9 +1,10 @@
 .github/workflows/ci.yml
 .gitignore
 CHANGELOG.md
-CHICLA_PROJECT_STATUS-67.md
+CHICLA_PROJECT_STATUS-71.md
 CLAUDE.md
 FILES.baseline.json
+LICENSE
 ROADMAP.md
 docs/README.md
 docs/audits/AUDIT-1.md
@@ -49,6 +50,8 @@ packages/chicla-zip/test/extract-legacy.test.mjs
 packages/chicla-zip/test/extract-m2-gaps.test.mjs
 packages/chicla-zip/test/extract-rollback.test.mjs
 packages/chicla-zip/test/extract.test.mjs
+packages/chicla-zip/test/fsprobe.mjs
+packages/chicla-zip/test/fsprobe.test.mjs
 packages/chicla-zip/test/fuzz-read.test.mjs
 packages/chicla-zip/test/interop.mjs
 packages/chicla-zip/test/interop.test.mjs
@@ -84,4 +87,5 @@ scripts/verify-delivery-zip.mjs
 test/baseline.test.mjs
 test/ci.test.mjs
 test/layout.test.mjs
+test/license.test.mjs
 version.mjs

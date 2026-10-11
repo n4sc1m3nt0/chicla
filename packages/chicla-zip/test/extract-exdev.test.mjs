@@ -9,11 +9,12 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSyn
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
+import { realTmp } from './fsprobe.mjs';
 import { extractZip, ZipError } from '../src/zipkit.mjs';
 import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
-before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-exdev-')); });
+before(() => { dir = mkdtempSync(join(realTmp(), 'chicla-zip-exdev-')); });
 after(() => { rmSync(dir, { recursive: true, force: true }); });
 const put = (entries) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buildZip(entries)); return p; };
 const world = () => { const parent = join(dir, `w${n++}`), dest = join(parent, 'out'); mkdirSync(dest, { recursive: true }); writeFileSync(join(dest, 'keep.txt'), 'mine'); return { parent, dest }; };
