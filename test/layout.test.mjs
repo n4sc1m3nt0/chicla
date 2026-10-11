@@ -14,10 +14,10 @@ const isDir = (p) => has(p) && statSync(join(root, p)).isDirectory();
 const node = (...args) => spawnSync(process.execPath, args, { cwd: root, encoding: 'utf8' });
 
 const SCRIPTS = [
-  'archive-changelog', 'bump-round', 'check-build', 'check-manifest', 'emergency-dump',
-  'make-delivery-zip', 'recovery-report', 'verify-delivery-zip',
+  'archive-changelog', 'baseline', 'bump-round', 'check-build', 'check-manifest', 'emergency-dump',
+  'make-delivery-zip', 'mutants', 'recovery-report', 'verify-delivery-zip',
   'smoke-test-archive-changelog', 'smoke-test-bump-round', 'smoke-test-check-build',
-  'smoke-test-delivery-guards', 'smoke-test-emergency',
+  'smoke-test-delivery-guards', 'smoke-test-emergency', 'smoke-test-mutants',
 ];
 
 test('raiz: monorepo privado, ESM, Node 18+, versão da app (D13)', () => {
@@ -31,7 +31,7 @@ test('raiz: monorepo privado, ESM, Node 18+, versão da app (D13)', () => {
   assert.match(pkg.version, /^\d+\.\d+\.\d+$/);
 });
 
-for (const name of ['cairn-zip', 'cairn-kit']) {
+for (const name of ['chicla-zip', 'chicla-kit']) {
   test(`${name}: package válido, versionado à parte, sem dependências (D3, D4)`, () => {
     const dir = `packages/${name}`;
     const pkg = json(`${dir}/package.json`);
@@ -46,15 +46,15 @@ for (const name of ['cairn-zip', 'cairn-kit']) {
   });
 }
 
-test('cairn-kit tem a pasta templates/', () => {
-  assert.ok(isDir('packages/cairn-kit/templates'));
+test('chicla-kit tem a pasta templates/', () => {
+  assert.ok(isDir('packages/chicla-kit/templates'));
 });
 
 test('C0.3: ficheiros de arranque na raiz, com exatamente 1 ficheiro de estado', () => {
   for (const f of ['CLAUDE.md', 'CHANGELOG.md', 'ROADMAP.md', 'FILES.manifest', 'version.mjs']) {
     assert.ok(has(f), `falta ${f} na raiz`);
   }
-  const status = readdirSync(root).filter((f) => /^CAIRN_PROJECT_STATUS-\d+\.md$/.test(f));
+  const status = readdirSync(root).filter((f) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f));
   assert.equal(status.length, 1, `há ${status.length} ficheiros de estado`);
   assert.equal(has('docs/CLAUDE.md'), false, 'docs/CLAUDE.md devia ter passado para a raiz');
 });

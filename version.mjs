@@ -1,5 +1,5 @@
-// Cairn app version. Single source: "version" in the root package.json (D13).
+// Chicla app version. Single source: "version" in the root package.json (D13).
 // Line 3 below is the app leg of the status/changelog fingerprint; scripts/bump-round.mjs rewrites it.
-// STATUS_FILE_FINGERPRINT: seq=12 file=CAIRN_PROJECT_STATUS-12.md app_sha256_12=065d37032ef1 changelog_sha256_12=c71dacc368b4 (bump-round.mjs: app hash unchanged, changelog hash recomputed)
+// STATUS_FILE_FINGERPRINT: seq=67 file=CHICLA_PROJECT_STATUS-67.md app_sha256_12=065d37032ef1 changelog_sha256_12=a48c8af84127 (bump-round.mjs: app hash unchanged, changelog hash recomputed)
 import { readFileSync } from "node:fs";
 export const APP_VERSION = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).version;

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Teste de fumo de check-build: projeto falso em tmpdir (não toca na árvore real).
+// Smoke test for check-build: fake project in a tmpdir (does not touch the real tree).
 //   node scripts/smoke-test-check-build.mjs
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -8,7 +8,7 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const T = mkdtempSync(join(tmpdir(), "cairn-check-build-"));
+const T = mkdtempSync(join(tmpdir(), "chicla-check-build-"));
 const proj = join(T, "proj");
 mkdirSync(join(proj, "scripts"), { recursive: true });
 copyFileSync(join(ROOT, "scripts/check-build.mjs"), join(proj, "scripts/check-build.mjs"));
@@ -21,23 +21,23 @@ const out = (r) => `exit=${r.status}\n${r.stdout}\n${r.stderr}`;
 put("packages/a/src/ok.mjs", "export const a = 1;\n");
 put("packages/b/src/também-ok.mjs", "export function b() { return 'acentuação ç'; }\n");
 let r = run();
-check(r.status === 0 && /node --check em 3 ficheiros/.test(r.stdout) && /✓ node --check passou/.test(r.stdout), "tudo válido: exit 0 e conta os ficheiros (inclui o próprio script)", out(r));
+check(r.status === 0 && /node --check on 3 \.mjs files/.test(r.stdout) && /✓ node --check passed/.test(r.stdout), "all valid: exit 0 and counts the files (including the script itself)", out(r));
 
 put("packages/a/src/partido.mjs", "export function cortado() {\n  if (true) {\n");
 r = run();
-check(r.status === 1 && /falhou em 1 ficheiro/.test(r.stderr) && /packages\/a\/src\/partido\.mjs/.test(r.stderr) && /Entrega abortada/.test(r.stderr), "ficheiro com sintaxe partida: exit 1 e nomeia-o", out(r));
-check(!/ok\.mjs/.test(r.stderr), "…e não acusa os ficheiros válidos", out(r));
+check(r.status === 1 && /failed on 1 file/.test(r.stderr) && /packages\/a\/src\/partido\.mjs/.test(r.stderr) && /Delivery aborted/.test(r.stderr), "file with broken syntax: exit 1 and names it", out(r));
+check(!/ok\.mjs/.test(r.stderr), "…and does not accuse the valid files", out(r));
 
 rmSync(join(proj, "packages/a/src/partido.mjs"));
-put("node_modules/dep/index.mjs", "isto não é javascript válido (\n");
+put("node_modules/dep/index.mjs", "this is not valid javascript (\n");
 put(".git/hooks/x.mjs", "((\n");
 r = run();
-check(r.status === 0, "node_modules e .git são ignorados mesmo com ficheiros inválidos", out(r));
+check(r.status === 0, "node_modules and .git are ignored even with invalid files", out(r));
 
 put("packages/a/src/nao-mjs.js", "((\n");
 r = run();
-check(r.status === 0, "só verifica .mjs (um .js inválido não é lido)", out(r));
+check(r.status === 0, "only checks .mjs (an invalid .js is not read)", out(r));
 
 rmSync(T, { recursive: true, force: true });
-console.log(failed ? `\n✗ ${failed} verificação(ões) falharam` : "\n✓ smoke-test-check-build: tudo passou");
+console.log(failed ? `\n✗ ${failed} check(s) failed` : "\n✓ smoke-test-check-build: all passed");
 process.exit(failed ? 1 : 0);

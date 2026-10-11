@@ -1,16 +1,16 @@
 #!/usr/bin/env node
-// Guarda contra FICHEIROS PERDIDOS (o que aconteceu na sessão da ronda 196:
-// uma atualização substituiu lib/devpanel/ por uma pasta parcial e 11
-// módulos desapareceram sem ninguém reparar).
+// Guard against LOST FILES (what happened in the round 196 session:
+// an update replaced lib/devpanel/ with a partial folder and 11
+// modules vanished without anyone noticing).
 //
-//   node scripts/check-manifest.mjs           -> verifica (falha se faltar algum ficheiro)
-//   node scripts/check-manifest.mjs --write   -> regenera FILES.manifest
+//   node scripts/check-manifest.mjs           -> checks (fails if any file is missing)
+//   node scripts/check-manifest.mjs --write   -> regenerates FILES.manifest
 //
-// FILES.manifest lista o caminho de cada ficheiro-fonte do projeto. A
-// verificação FALHA se um caminho listado já não existe (ficheiro perdido) e
-// só AVISA se existir um ficheiro novo que não está listado (esquecimento de
-// regenerar). Corre no `prebuild`. Regenerar a cada ronda, DEPOIS de todas as
-// alterações e ANTES de criar o zip.
+// FILES.manifest lists the path of every source file of the project. The
+// check FAILS if a listed path no longer exists (lost file) and
+// only WARNS if there is a new file that is not listed (forgot to
+// regenerate). Runs on `prebuild`. Regenerate every round, AFTER all
+// changes and BEFORE creating the zip.
 import { fileURLToPath } from "node:url";
 import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { join, resolve, relative } from "node:path";
@@ -47,32 +47,32 @@ const current = walk(ROOT).sort();
 
 if (process.argv.includes("--write")) {
   writeFileSync(MANIFEST, current.join("\n") + "\n");
-  console.log(`✓ FILES.manifest escrito (${current.length} ficheiros)`);
+  console.log(`✓ FILES.manifest written (${current.length} files)`);
   process.exit(0);
 }
 
 if (!existsSync(MANIFEST)) {
-  console.warn("⚠ FILES.manifest não existe — corre `node scripts/check-manifest.mjs --write` para o criar.");
+  console.warn("⚠ FILES.manifest does not exist — run `node scripts/check-manifest.mjs --write` to create it.");
   process.exit(0);
 }
 
 const listed = readFileSync(MANIFEST, "utf8").split("\n").filter(Boolean);
-// Round 1r: os nomes comparam-se em NFC (o manifesto escrito no macOS tem NFD; o checkout do git no Linux traz NFC).
-// Só a COMPARAÇÃO é normalizada: os nomes impressos e os que `--write` grava são os verdadeiros do disco.
+// Round 1r: names are compared in NFC (a manifest written on macOS has NFD; the git checkout on Linux brings NFC).
+// Only the COMPARISON is normalised: the names printed and those `--write` writes are the true ones from the disk.
 const nfc = (f) => f.normalize("NFC");
 const have = new Set(current.map(nfc));
-// The status file is renamed every round (CAIRN_PROJECT_STATUS-N.md -> -N+1, instruction 8):
+// The status file is renamed every round (CHICLA_PROJECT_STATUS-N.md -> -N+1, instruction 8):
 // that is a deliberate rename, not a loss, as long as exactly one status file exists now.
-const STATUS_RE = /^CAIRN_PROJECT_STATUS-\d+\.md$/;
+const STATUS_RE = /^CHICLA_PROJECT_STATUS-\d+\.md$/;
 const statusNow = current.filter((f) => STATUS_RE.test(f));
 const lost = listed.filter((f) => !have.has(nfc(f)) && !(STATUS_RE.test(f) && statusNow.length === 1));
 const listedSet = new Set(listed.map(nfc));
 const added = current.filter((f) => !listedSet.has(nfc(f)));
 
-if (added.length) console.warn(`⚠ ${added.length} ficheiro(s) novo(s) fora de FILES.manifest (regenera com node scripts/check-manifest.mjs --write):\n  ${added.slice(0, 15).join("\n  ")}`);
+if (added.length) console.warn(`⚠ ${added.length} new file(s) outside FILES.manifest (regenerate with node scripts/check-manifest.mjs --write):\n  ${added.slice(0, 15).join("\n  ")}`);
 if (lost.length) {
-  console.error(`\n✗ ${lost.length} ficheiro(s) PERDIDO(S) face a FILES.manifest:\n  ${lost.join("\n  ")}`);
-  console.error("\nProvável causa: uma pasta foi substituída por uma versão parcial. Repõe estes ficheiros ANTES de continuar.\n");
+  console.error(`\n✗ ${lost.length} LOST file(s) vs FILES.manifest:\n  ${lost.join("\n  ")}`);
+  console.error("\nProbable cause: a folder was replaced by a partial version. Restore these files BEFORE continuing.\n");
   process.exit(1);
 }
-console.log(`✓ nenhum ficheiro perdido (${listed.length} no manifesto, ${current.length} no disco)`);
+console.log(`✓ no file lost (${listed.length} in the manifest, ${current.length} on disk)`);

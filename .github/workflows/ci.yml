@@ -22,3 +22,16 @@ jobs:
       - run: node scripts/check-manifest.mjs
       - run: node scripts/bump-round.mjs --verify
       - run: npm run smoke
+
+  # C5.4: performance budget (D15): extractZip of 20 000 small files must stay within 3x `unzip`. Separate job, Linux and
+  # tmpfs only (where the budget was measured; the ratio is relative, so a slower runner does not move it much).
+  bench:
+    runs-on: ubuntu-latest
+    env:
+      TMPDIR: /dev/shm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node packages/chicla-zip/bench/small-files.mjs --runs 5 --budget 3

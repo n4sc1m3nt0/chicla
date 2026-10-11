@@ -1,13 +1,14 @@
 {
-  "name": "cairn",
+  "name": "chicla",
   "private": true,
-  "version": "0.0.11",
+  "version": "0.0.66",
   "type": "module",
   "workspaces": ["packages/*"],
   "engines": { "node": ">=18" },
   "scripts": {
     "test": "node --test",
-    "smoke": "node scripts/smoke-test-archive-changelog.mjs && node scripts/smoke-test-bump-round.mjs && node scripts/smoke-test-check-build.mjs && node scripts/smoke-test-delivery-guards.mjs && node scripts/smoke-test-emergency.mjs"
+    "mutants": "node scripts/mutants.mjs",
+    "smoke": "node scripts/smoke-test-archive-changelog.mjs && node scripts/smoke-test-bump-round.mjs && node scripts/smoke-test-check-build.mjs && node scripts/smoke-test-delivery-guards.mjs && node scripts/smoke-test-emergency.mjs && node scripts/smoke-test-mutants.mjs"
   },
   "license": "UNLICENSED"
 }

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// Guarda de compilação: uma entrega não sai se algum ficheiro .mjs deixou de passar `node --check`.
+// Build guard: a delivery does not go out if any .mjs file stopped passing `node --check`.
 //
 //   node scripts/check-build.mjs
 //
-// - Percorre a árvore (sem node_modules, .git, __MACOSX) e corre `node --check` em cada .mjs.
-// - Sai com 1 e nomeia os ficheiros que falharam; sai com 0 se todos passam.
-// - Não corre os testes: `npm test` e `npm run smoke` continuam a ser um passo da ronda (e da CI).
-// Substitui o `cargo check` do workflow original: Node está sempre presente (os próprios scripts correm nele), por isso
-// não há caminho de «compilação NÃO verificada».
+// - Walks the tree (skipping node_modules, .git, __MACOSX) and runs `node --check` on every .mjs.
+// - Exits 1 and names the files that failed; exits 0 if all pass.
+// - Does not run the tests: `npm test` and `npm run smoke` remain a step of the round (and of CI).
+// Replaces the `cargo check` of the original workflow: Node is always present (the scripts themselves run on it), so
+// there is no path of "build NOT verified".
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
@@ -26,11 +26,11 @@ const walk = (dir) => {
 };
 walk(ROOT);
 
-console.log(`node --check em ${files.length} ficheiros .mjs`);
+console.log(`node --check on ${files.length} .mjs files`);
 const bad = [];
 for (const f of files) {
   const r = spawnSync(process.execPath, ["--check", f], { encoding: "utf8" });
   if (r.status !== 0) bad.push(`${relative(ROOT, f).split("\\").join("/")}: ${(r.stderr.split("\n").find((l) => /Error/.test(l)) ?? "").slice(0, 100)}`);
 }
-if (bad.length) { console.error(`\n✗ node --check falhou em ${bad.length} ficheiro(s). Entrega abortada.\n  ${bad.join("\n  ")}`); process.exit(1); }
-console.log("✓ node --check passou");
+if (bad.length) { console.error(`\n✗ node --check failed on ${bad.length} file(s). Delivery aborted.\n  ${bad.join("\n  ")}`); process.exit(1); }
+console.log("✓ node --check passed");
