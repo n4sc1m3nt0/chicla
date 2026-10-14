@@ -14,6 +14,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { checkZip } from './interop.mjs';
+const WIN = process.platform === 'win32';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-slimits-')); });
@@ -60,7 +61,7 @@ test('createZip: an output that IS the folder being read is ERECURSE, and the fo
   assert.deepEqual(readdirSync(root), ['a.txt']); assert.equal(readFileSync(join(root, 'a.txt'), 'utf8'), 'a');
 });
 
-test('createZip { stream: true }: a FIFO is skipped as "special" at listing time (never opened, never ECHANGED)', { timeout: 20000 }, async () => {
+test('createZip { stream: true }: a FIFO is skipped as "special" at listing time (never opened, never ECHANGED)', { timeout: 20000, skip: WIN && 'no real FIFO on Windows (the mkfifo of the runner makes a .lnk file)' }, async () => {
   const root = fresh(); spawnSync('mkdir', ['-p', root]); writeFileSync(join(root, 'a'), 'a');
   const m = spawnSync('mkfifo', [join(root, 'pipe')]); if (m.status !== 0) return; // no mkfifo: nothing to test here
   const r = await createZip(join(fresh() + '.zip'), root, { stream: true });

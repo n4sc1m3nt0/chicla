@@ -65,7 +65,7 @@ test('the zip written in streaming mode is accepted by every independent reader 
 test('files are read in slices: the read hook runs once per slice, and a file of an exact multiple of the slice has no extra one', async () => {
   const root = fresh(); writeFileSync(join(root, 'ten'), sample(10)); writeFileSync(join(root, 'eight'), sample(8)); writeFileSync(join(root, 'none'), '');
   const seen = {}; const out = join(fresh(), 'a.zip');
-  await createZip(out, root, { stream: true, _slice: 4, _afterRead: (p) => { const k = p.split('/').pop(); seen[k] = (seen[k] ?? 0) + 1; } });
+  await createZip(out, root, { stream: true, _slice: 4, _afterRead: (p) => { const k = p.split(/[\\/]/).pop(); seen[k] = (seen[k] ?? 0) + 1; } });
   assert.deepEqual(seen, { eight: 2, ten: 3 });
   assert.deepEqual((await checkZip(out, { ten: sample(10), eight: sample(8), none: '' })).problems, []);
 });
@@ -121,8 +121,10 @@ test('refusals before writing leave nothing and destroy a sink: ERECURSE (sink i
   await refuses(root, join(root, 'out.zip'), 'ERECURSE'); assert.deepEqual(readdirSync(root).sort(), ['a.txt', 'ln']);
   await refuses(root, join(fresh(), 'a.zip'), 'ESYMLINK', { symlinks: 'error' });
   await refuses(root, join(fresh(), 'a.zip'), 'EZIP64', { zip64: false });
-  const bad = fresh(); writeFileSync(join(bad, 'a.txt'), 'x'); writeFileSync(join(bad, '..hidden\\x'), 'y'); // a backslash in a name is unsafe
-  await refuses(bad, join(fresh(), 'a.zip'), 'EUNSAFE');
+  if (process.platform !== 'win32') { // on Windows a backslash is a separator: such a name cannot be made there
+    const bad = fresh(); writeFileSync(join(bad, 'a.txt'), 'x'); writeFileSync(join(bad, '..hidden\\x'), 'y'); // a backslash in a name is unsafe
+    await refuses(bad, join(fresh(), 'a.zip'), 'EUNSAFE');
+  }
   const inside = join(root, 'sink.zip'), sink = createWriteStream(inside);
   await assert.rejects(createZip(sink, root), (e) => e instanceof ZipError && e.code === 'ERECURSE'); assert.ok(sink.destroyed);
   rmSync(inside, { force: true });

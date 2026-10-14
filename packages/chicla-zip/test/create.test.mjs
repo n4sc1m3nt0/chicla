@@ -21,6 +21,7 @@ import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { checkZip } from './interop.mjs';
 import { refusesNoncharacters } from './fsprobe.mjs';
+const WIN = process.platform === 'win32';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-create-')); });
@@ -61,7 +62,7 @@ test('mtime and mode come from the disk by default, and deterministic normalises
   const { utimesSync, chmodSync } = await import('node:fs'); utimesSync(join(root, 'a.txt'), t, t); chmodSync(join(root, 'a.txt'), 0o600);
   const o1 = join(base, 'm1.zip'), o2 = join(base, 'm2.zip'); await createZip(o1, root); await createZip(o2, root, { deterministic: true, epoch: 1700000000 });
   const [e1] = listZip(o1).entries, [e2] = listZip(o2).entries;
-  assert.equal(e1.mode & 0o777, 0o600); assert.ok(Math.abs(e1.mtime - t) <= 2000 + 24 * 3600e3, 'mtime not from the disk');
+  if (!WIN) assert.equal(e1.mode & 0o777, 0o600); /* a disk mode: Windows has no mode bits */ assert.ok(Math.abs(e1.mtime - t) <= 2000 + 24 * 3600e3, 'mtime not from the disk');
   assert.equal(e2.mode & 0o777, 0o644);
 });
 
@@ -105,13 +106,13 @@ test('an excluded symlink is neither reported nor an error', async () => {
   assert.deepEqual(names(out), ['a']); assert.deepEqual(r.skipped, []);
 });
 
-test('a FIFO is skipped as "special" and never read (reading it would block)', { timeout: 20000 }, async () => {
+test('a FIFO is skipped as "special" and never read (reading it would block)', { timeout: 20000, skip: WIN && 'no real FIFO on Windows (the mkfifo of the runner makes a .lnk file)' }, async () => {
   const root = tree(fresh(), { 'a': 'a' }); const m = spawnSync('mkfifo', [join(root, 'pipe')]); if (m.status !== 0) return; // no mkfifo: nothing to test here
   const out = join(base, 'fifo.zip'), r = await createZip(out, root);
   assert.deepEqual(names(out), ['a']); assert.deepEqual(r.skipped, [{ name: 'pipe', reason: 'special' }]);
 });
 
-test('a file swapped for a symlink after it was listed is not followed (O_NOFOLLOW)', async () => {
+test('a file swapped for a symlink after it was listed is not followed (O_NOFOLLOW)', { skip: WIN && 'a symlink needs a privilege on Windows (C14.3)' }, async () => {
   const secret = tree(fresh(), { 's.txt': 'TOP SECRET' }), root = tree(fresh(), { 'a.txt': 'a', 'b.txt': 'b' }), out = join(base, 'swap.zip');
   const r = await createZip(out, root, { exclude: (rel) => { if (rel === 'b.txt') { unlinkSync(join(root, 'b.txt')); symlinkSync(join(secret, 's.txt'), join(root, 'b.txt')); } return false; } });
   assert.ok(!readFileSync(out).includes('SECRET'), 'followed a symlink that appeared after the listing');
@@ -137,7 +138,7 @@ test('a root that is a symlink to a folder is accepted', async () => {
   const out = join(base, 'rl.zip'); await createZip(out, link); assert.deepEqual(names(out), ['a']);
 });
 
-test('an unsafe name found on disk is refused with EUNSAFE and nothing is written', async () => {
+test('an unsafe name found on disk is refused with EUNSAFE and nothing is written', { skip: WIN && 'a backslash is a path separator on Windows: the name cannot be made there' }, async () => {
   const root = tree(fresh(), { 'ok': 'ok' }); writeFileSync(join(root, 'back\\slash'), 'x');
   await refuses(root, join(base, 'unsafe.zip'), 'EUNSAFE');
 });
@@ -164,7 +165,7 @@ test('the order is by the bytes of the names, not by the machine nor by JavaScri
   assert.deepEqual(names(out), [...nm].sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b))));
 });
 
-test('a file swapped for a FIFO after it was listed is skipped as "special" and does not block', { timeout: 20000 }, async () => {
+test('a file swapped for a FIFO after it was listed is skipped as "special" and does not block', { timeout: 20000, skip: WIN && 'no real FIFO on Windows (the mkfifo of the runner makes a .lnk file)' }, async () => {
   const root = tree(fresh(), { 'a.txt': 'a', 'b.txt': 'b' }), out = join(base, 'swapfifo.zip'); let made = true;
   const r = await createZip(out, root, { exclude: (rel) => { if (rel === 'b.txt' && made) { unlinkSync(join(root, 'b.txt')); made = spawnSync('mkfifo', [join(root, 'b.txt')]).status === 0; } return false; } });
   if (!made) return; // no mkfifo

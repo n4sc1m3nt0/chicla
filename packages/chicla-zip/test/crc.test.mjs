@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import zlib from 'node:zlib';
 import { crc32, crc32Js, crc32Source, makeCrc32 } from '../src/zipkit.mjs';
 import { crc32 as reference } from './zipfab.mjs';
@@ -76,7 +76,7 @@ test('makeCrc32: a real function is used as-is, anything else falls back to JS',
 test('the JS fallback path passes the whole read suite (child process with CHICLA_ZIP_JS_CRC=1)', { skip: forced }, () => {
   const env = { ...process.env, CHICLA_ZIP_JS_CRC: '1' };
   const probe = spawnSync(process.execPath, ['--input-type=module', '-e',
-    `import { crc32Source } from ${JSON.stringify(here('../src/zipkit.mjs'))}; console.log(crc32Source);`], { env, encoding: 'utf8' });
+    `import { crc32Source } from ${JSON.stringify(pathToFileURL(here('../src/zipkit.mjs')).href)}; console.log(crc32Source);`], { env, encoding: 'utf8' });
   assert.equal(probe.stdout.trim(), 'js', probe.stderr);
   const r = spawnSync(process.execPath, ['--test', here('./read.test.mjs'), here('./open.test.mjs'), here('./legacy-encoding.test.mjs')], { env, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stdout.slice(-2000) + r.stderr.slice(-1000));

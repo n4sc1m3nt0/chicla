@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { extractZip, ZipError } from '../src/zipkit.mjs';
 import { buildZip } from './zipfab.mjs';
+const WIN = process.platform === 'win32';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-audit1-')); mkdirSync(join(dir, 'zips')); });
@@ -33,7 +34,7 @@ test('setuid, setgid and sticky bits are never applied: small file, large file a
     ]), dest);
     for (const f of ['small.bin', 'small-deflate.txt', 'large.bin', 'large-stored.bin', 'dir', 'dir/inner.txt'])
       assert.equal(statSync(join(dest, f)).mode & SPECIAL, 0, `${f} kept special bits (${special.toString(8)})`);
-    assert.equal(statSync(join(dest, 'small.bin')).mode & 0o777, 0o755); // the ordinary bits are still honoured
+    if (!WIN) assert.equal(statSync(join(dest, 'small.bin')).mode & 0o777, 0o755); // the ordinary bits are still honoured (Windows has no mode bits)
   }
 });
 

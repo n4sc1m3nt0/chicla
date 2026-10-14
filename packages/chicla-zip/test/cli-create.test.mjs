@@ -16,6 +16,7 @@ import { mkdtempSync, rmSync, writeFileSync, mkdirSync, existsSync, readFileSync
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+const WIN = process.platform === 'win32';
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'zipkit.mjs');
 let base, n = 0;
@@ -99,7 +100,7 @@ test('create --deterministic: the flag reaches the writer (modes become 0644) an
   const plain = outZip(), det = outZip(), det2 = outZip();
   assert.equal(run('create', plain, root).code, 0); assert.equal(run('create', det, root, '--deterministic').code, 0); assert.equal(run('create', det2, root, '--deterministic').code, 0);
   const mode = (p) => listZip(p).entries.find((e) => e.name === 'a.txt').mode & 0o777;
-  assert.equal(mode(plain), 0o600); assert.equal(mode(det), 0o644);
+  if (!WIN) assert.equal(mode(plain), 0o600); /* a disk mode: Windows has no mode bits */ assert.equal(mode(det), 0o644);
   assert.ok(readFileSync(det).equals(readFileSync(det2)));
 });
 

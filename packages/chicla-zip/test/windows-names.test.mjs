@@ -18,7 +18,7 @@ const D = (name) => ({ name, data: Buffer.from('data data data data') });
 const sinkOf = () => new Writable({ write(_c, _e, cb) { cb(); } });
 const BAD = ['nul.txt', 'dir/CON', 'a<b', 'name.', 'dir /x', 'ab:stream', 'COM1.log', 'x/y?z', 'trail ', 'CONIN$'];
 const GOOD = ['a.txt', 'dir/sub/b.txt', 'résumé.txt', 'CONSOLE.txt', 'COM10'];
-const mk = async (names) => { const zip = join(fresh(), 'a.zip'); await writeZip(zip, names.map(D)); return zip; };
+const mk = async (names) => { const zip = join(fresh(), 'a.zip'); await writeZip(zip, names.map(D), { windowsNames: false }); return zip; };
 const refused = (p) => p.then(() => assert.fail('should have been refused'), (e) => { assert.equal(e.code, 'EUNSAFE'); return e; });
 
 test('the sanity of the fixtures: every BAD name has a problem and every GOOD name has none', () => {
@@ -40,7 +40,7 @@ test('extractZip with windowsNames: true extracts good names normally', async ()
 });
 
 test('extractZip with windowsNames: true also checks folder entries (a trailing slash is not part of the name)', async () => {
-  const zip = join(fresh(), 'f.zip'); await writeZip(zip, [{ name: 'nul/' }, D('ok.txt')]);
+  const zip = join(fresh(), 'f.zip'); await writeZip(zip, [{ name: 'nul/' }, D('ok.txt')], { windowsNames: false });
   await refused(extractZip(zip, fresh(), { windowsNames: true }));
 });
 

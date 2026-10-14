@@ -7,13 +7,14 @@ import { mkdtempSync, readFileSync, rmSync, existsSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+const NPM = process.platform === "win32" ? { shell: true } : {}; // npm is npm.cmd on Windows (round 145)
 
 const pkgDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 const rootDir = join(pkgDir, "..", "..");
 const pkg = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8"));
 
 const pack = () => {
-  const out = execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: pkgDir, encoding: "utf8" });
+  const out = execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: pkgDir, encoding: "utf8", ...NPM });
   return JSON.parse(out)[0].files.map((f) => f.path).sort();
 };
 
@@ -43,13 +44,13 @@ test("README exists and names the install, the API entry points and the CLI", ()
 test("a packed tarball installs in a clean folder: import works and the bin runs", () => {
   const tmp = mkdtempSync(join(tmpdir(), "chicla-pack-"));
   try {
-    const name = execFileSync("npm", ["pack", "--ignore-scripts", "--pack-destination", tmp, "--json"], { cwd: pkgDir, encoding: "utf8" });
+    const name = execFileSync("npm", ["pack", "--ignore-scripts", "--pack-destination", tmp, "--json"], { cwd: pkgDir, encoding: "utf8", ...NPM });
     const tgz = join(tmp, JSON.parse(name)[0].filename);
     assert.ok(existsSync(tgz));
     const proj = join(tmp, "proj");
     execFileSync("mkdir", [proj]);
     writeFileSync(join(proj, "package.json"), '{"name":"t","version":"1.0.0","type":"module"}');
-    execFileSync("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", tgz], { cwd: proj, stdio: "pipe" });
+    execFileSync("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", tgz], { cwd: proj, stdio: "pipe", ...NPM });
     const exportsSeen = execFileSync(process.execPath, ["-e",
       'import("chicla-zip").then(m=>console.log(["openZip","extractZip","writeZip","writeZipStream","createZip","testZip","markUtf8Names","runCli"].filter(k=>typeof m[k]==="function").join(",")))'],
       { cwd: proj, encoding: "utf8" }).trim();

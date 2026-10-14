@@ -8,7 +8,7 @@ import { lossy, lossyNames } from './fsprobe.mjs';
 
 const sha = (b) => createHash('sha256').update(b).digest('hex');
 const want = (expected) => Object.fromEntries(Object.entries(expected).map(([k, v]) => [k, k.endsWith('/') ? null : sha(Buffer.from(v))]));
-const run = (cmd, args) => { const r = spawnSync(cmd, args, { encoding: 'utf8', maxBuffer: 1 << 28 }); return r.error ? null : r; };
+const run = (cmd, args) => { const r = spawnSync(cmd, args, { encoding: 'utf8', maxBuffer: 1 << 28, env: { ...process.env, PYTHONUTF8: '1' } }); return r.error ? null : r; };
 const diff = (got, exp) => { // got, exp: name -> sha256 | null
   const out = [];
   for (const k of Object.keys(exp)) if (!(k in got)) out.push(`missing «${k}»`); else if (got[k] !== exp[k]) out.push(`content of «${k}» differs`);

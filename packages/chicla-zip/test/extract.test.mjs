@@ -9,6 +9,7 @@ import { join, relative } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { extractZip, ZipError } from '../src/zipkit.mjs';
 import { buildZip } from './zipfab.mjs';
+const WIN = process.platform === 'win32';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-extract-')); mkdirSync(join(dir, 'zips')); });
@@ -58,18 +59,18 @@ test('a destination that is an existing empty folder is filled, and keeps its ow
   const ino = statSync(dest).ino;
   await extractZip(put(OK), dest);
   assert.equal(statSync(dest).ino, ino);
-  assert.equal(statSync(dest).mode & 0o777, 0o750);
+  if (!WIN) assert.equal(statSync(dest).mode & 0o777, 0o750); // Windows has no mode bits
   assert.equal(readFileSync(join(dest, 'a.txt'), 'utf8'), 'alpha');
   assert.deepEqual(readdirSync(p), ['out']);
 });
 
-test('a new destination gets the default folder mode (0777 & ~umask), not the temp folder mode', async () => {
+test('a new destination gets the default folder mode (0777 & ~umask), not the temp folder mode', { skip: WIN && 'modes and umask do not exist on Windows' }, async () => {
   const p = parent(), dest = join(p, 'out'), um = process.umask();
   await extractZip(put(OK), dest);
   assert.equal(statSync(dest).mode & 0o777, 0o777 & ~um);
 });
 
-test('file modes from the zip are kept (exec bit) with the owner always able to read and write', async () => {
+test('file modes from the zip are kept (exec bit) with the owner always able to read and write', { skip: WIN && 'Windows has no mode bits' }, async () => {
   const p = parent(), dest = join(p, 'out');
   await extractZip(put([{ name: 'run.sh', data: '#!/bin/sh', mode: 0o100755 }, { name: 'ro.txt', data: 'x', mode: 0o100444 }]), dest);
   assert.equal(statSync(join(dest, 'run.sh')).mode & 0o777, 0o755);
@@ -185,7 +186,7 @@ test('an entry named "." is reported in skipped, never silently dropped, and the
   assert.equal(r.files, 1);
   assert.deepEqual(r.skipped.map((s) => s.name).sort(), ['.', './']);
   assert.deepEqual(readdirSync(dest), ['ok.txt']);
-  assert.equal(statSync(dest).mode & 0o777, 0o777 & ~process.umask(), 'the zip does not set the destination root mode');
+  if (!WIN) assert.equal(statSync(dest).mode & 0o777, 0o777 & ~process.umask(), 'the zip does not set the destination root mode'); // Windows has no mode bits
 });
 
 test('limits are checked before writing: entry count and total declared bytes', async () => {

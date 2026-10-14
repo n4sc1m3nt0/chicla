@@ -103,7 +103,7 @@ test('openZip: a directory is a ZipError with code EISDIR, and listZip and readZ
   for (const f of [() => listZip(miss), () => readZipFile(miss, 'a.txt')]) assert.throws(f, (e) => e instanceof ZipError && e.code === 'ENOENT');
 });
 
-test('openZip: an unreadable file is a ZipError with the system code (round 37)', { skip: process.getuid?.() === 0 && 'root can read anything' }, () => {
+test('openZip: an unreadable file is a ZipError with the system code (round 37)', { skip: (process.getuid?.() === 0 && 'root can read anything') || (process.platform === 'win32' && 'chmod 000 does not make a file unreadable on Windows') }, () => {
   const p = put(sample()); chmodSync(p, 0o000);
   assert.throws(() => openZip(p), (e) => e instanceof ZipError && e.code === 'EACCES');
 });

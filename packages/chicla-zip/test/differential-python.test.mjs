@@ -28,7 +28,7 @@ const sha = (b) => createHash('sha256').update(b).digest('hex');
 const prng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
 // ---------- the random tree: { dirs: ['a/', 'a/b/'], files: Map(path -> Buffer) } ----------
-const PARTS = ['a', 'docs', 'src', 'data.v2', 'with space', 'caf\u00e9', 'cafe\u0301', '\u00df\u00fc\u00f1', '\u65e5\u672c\u8a9e', '[x]', '#1', '100%', '.hidden', '-dash', 'UPPER', 'n'.repeat(120), 'a.b.c.d'];
+const PARTS = ['a', 'docs', 'src', 'data.v2', 'with space', 'caf\u00e9', 'cafe\u0301', '\u00df\u00fc\u00f1', '\u65e5\u672c\u8a9e', '[x]', '#1', '100%', '.hidden', '-dash', 'UPPER', 'n'.repeat(process.platform === 'win32' ? 20 : 120), 'a.b.c.d'];
 function genTree(r) {
   const pick = (a) => a[Math.floor(r() * a.length)], used = new Set(), dirs = [], files = new Map();
   const key = (p) => p.normalize('NFC').toLowerCase().replace(/\/$/, ''); // portable: no two names equal in NFC or in case
@@ -86,7 +86,7 @@ with zipfile.ZipFile(Unseekable(raw) if spec["mode"]=="stream" else raw,"w") as 
             with z.open(zi,"w",force_zip64=True) as w: w.write(data)
         else: z.writestr(zi,data,compress_type=e["method"],compresslevel=e["level"] if e["method"] else None)
 raw.close()`;
-const py = (code, args, input) => { const r = spawnSync('python3', ['-c', code, ...args], { encoding: 'utf8', input, maxBuffer: 1 << 28 }); assert.equal(r.status, 0, `python3 failed: ${r.error?.message ?? r.stderr.trim().split('\n').pop()}`); return r.stdout; };
+const py = (code, args, input) => { const r = spawnSync('python3', ['-c', code, ...args], { encoding: 'utf8', input, maxBuffer: 1 << 28, env: { ...process.env, PYTHONUTF8: '1' } }); assert.equal(r.status, 0, `python3 failed: ${r.error?.message ?? r.stderr.trim().split('\n').pop()}`); return r.stdout; };
 
 // the Chicla listing, entry by entry, against Python's infolist of the same zip (name, size, CRC, method, bit 11)
 function metaProblems(zipPath) {

@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, lstatSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openZip, testZip, extractZip, ZipError } from '../src/zipkit.mjs';
 import { buildZip } from './zipfab.mjs';
@@ -49,7 +49,7 @@ const mutate = (seedBuf, r) => { let b = seedBuf; const log = [], k = 1 + Math.f
 const snap = (root, skip) => {
   const out = {};
   const walk = (p) => {
-    const st = lstatSync(p), rel = relative(root, p) || '.';
+    const st = lstatSync(p), rel = relative(root, p).split(sep).join('/') || '.';
     if (st.isSymbolicLink()) { out[rel] = 'symlink'; return; }
     if (st.isDirectory()) { out[rel] = 'dir'; if (rel === skip) return; for (const c of readdirSync(p).sort()) walk(join(p, c)); return; }
     out[rel] = `file:${(st.mode & 0o777).toString(8)}:${readFileSync(p).toString('hex')}`;

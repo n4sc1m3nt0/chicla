@@ -10,6 +10,7 @@ import { join, relative } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { extractZip, ZipError } from '../src/zipkit.mjs';
 import { buildZip } from './zipfab.mjs';
+const WIN = process.platform === 'win32';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-fast-')); mkdirSync(join(dir, 'zips')); });
@@ -58,9 +59,11 @@ test('modes and mtimes of small files are applied exactly as for large ones', as
     { name: 'small-x.sh', data: '#!/bin/sh', mode: 0o100755 }, { name: 'small-ro.txt', data: 'x', method: 8, mode: 0o100444 },
     { name: 'big-x.sh', data: noise(300000, 3), mode: 0o100755 }, { name: 'empty.txt', data: '', mode: 0o100640 },
   ]), dest);
-  for (const f of ['small-x.sh', 'big-x.sh']) assert.equal(statSync(join(dest, f)).mode & 0o777, 0o755, f);
-  assert.equal(statSync(join(dest, 'small-ro.txt')).mode & 0o600, 0o600);
-  assert.equal(statSync(join(dest, 'empty.txt')).mode & 0o777, 0o640);
+  if (!WIN) { // Windows has no mode bits: the mtime check below still runs
+    for (const f of ['small-x.sh', 'big-x.sh']) assert.equal(statSync(join(dest, f)).mode & 0o777, 0o755, f);
+    assert.equal(statSync(join(dest, 'small-ro.txt')).mode & 0o600, 0o600);
+    assert.equal(statSync(join(dest, 'empty.txt')).mode & 0o777, 0o640);
+  }
   const want = statSync(join(dest, 'big-x.sh')).mtimeMs;
   for (const f of ['small-x.sh', 'small-ro.txt', 'empty.txt']) assert.equal(statSync(join(dest, f)).mtimeMs, want, `${f} has the zip's date like the large file`);
 });
@@ -133,7 +136,7 @@ test('small entries whose local extra field differs from the central one are rea
   for (const e of entries) assert.deepEqual(readFileSync(join(dest, e.name)), e.data, e.name);
 });
 
-test('the final mode of a small file does not depend on the umask', async () => {
+test('the final mode of a small file does not depend on the umask', { skip: WIN && 'modes and umask do not exist on Windows' }, async () => {
   const old = process.umask(), umasks = [0o000, 0o022, 0o077, 0o277, 0o027];
   const parents = umasks.map(() => parent()); // made BEFORE the umask changes: under 0o277 a parent made here would be unwritable and, for a non-root user, extraction next to it would fail (audit 1: this test only passed as root)
   try {

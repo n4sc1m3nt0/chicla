@@ -1,5 +1,13 @@
-<!-- CHANGELOG_FINGERPRINT: seq=148 file=CHICLA_PROJECT_STATUS-148.md app_sha256_12=065d37032ef1 changelog_sha256_12=c0663c928c35 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=149 file=CHICLA_PROJECT_STATUS-149.md app_sha256_12=065d37032ef1 changelog_sha256_12=6bebd70e5ce2 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 145 — Windows test portability, second Windows run (v0.0.148)
+
+- Task: Rodrigo's «sim 145». Phase 1 (read only): the second Windows log (`logs_104473389310`): Ubuntu and macOS green (1047 ok each), `bench` and `pack` green, Windows 79/75/66 red on Node 18/20/22 (was ~90); no `fsync` EPERM left. Phase 2: tests only, 18 files in `packages/chicla-zip/test/`, NO source file, the pin did not move.
+- Fixed in the tests: Python is spawned with `PYTHONUTF8=1` (names and stdin went through the Windows code page: ~30 `differential-python` failures; the 120-`n` name is 20 on win32, paths over 260 characters are C14.3); `interop` sends its spec by stdin (93 000 characters in argv, limit 32 767 on Windows); `crc` imports a file URL; `create-stream` and `fuzz-read` compare paths with both separators; `windows-names` and `audit2` build fixtures with `windowsNames: false`; `write-collisions` skips case-only names on Windows; `package` runs `npm` through a shell; `bench-small` skips when there is no `zip`.
+- Skipped on win32, each with its reason in the test: POSIX mode bits read from disk (create, cli-create, extract ×6, extract-fast, audit1; the deterministic modes still run), FIFOs (3 tests: the runner's `mkfifo` makes a `.lnk`), the symlink swap, backslash names (2), `chmod 000`.
+- Left RED on purpose (real findings, C14.3, see ROADMAP): on Node 18/20 only, cleanup fails with EPERM/ENOTEMPTY while a handle is open (7 «bad entry» extract tests, `.partial` left behind in 3 tests, temp dirs of `open` and `windows-names`); `openZip` of a directory gives ENOTZIP, not EISDIR, on Windows (test 440); on Node 18/20 also the pipe-closed-early test, on 18 the non-UTF-8 name.
+- NOT run: any of this on Windows (written from the log; the next run decides), `npm test` on Node 18 and 20, `npm run mutants`, macOS. Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
 
 ## Round 144 — `.idea/` in `.gitignore` (v0.0.147)
 

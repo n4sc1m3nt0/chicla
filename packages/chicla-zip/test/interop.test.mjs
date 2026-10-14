@@ -19,7 +19,7 @@ const REQUIRED = ['unzip', 'zipinfo', 'python', 'chicla'];
 
 const pyZip = (tree, method) => {
   const p = P(); const spec = JSON.stringify(Object.entries(tree).map(([k, v]) => [k, Buffer.from(v).toString('base64')]));
-  const r = spawnSync('python3', ['-c', `import sys,json,base64,zipfile\nz=zipfile.ZipFile(sys.argv[1],'w',${method})\nfor k,v in json.loads(sys.argv[2]):\n    z.writestr(k,base64.b64decode(v))\nz.close()`, p, spec]);
+  const r = spawnSync('python3', ['-c', `import sys,json,base64,zipfile\nz=zipfile.ZipFile(sys.argv[1],'w',${method})\nfor k,v in json.loads(sys.stdin.read()):\n    z.writestr(k,base64.b64decode(v))\nz.close()`, p], { input: spec, env: { ...process.env, PYTHONUTF8: '1' } });
   assert.equal(r.status, 0, String(r.stderr)); return p;
 };
 

@@ -34,20 +34,22 @@ Owner: Rodrigo, who moves between Claude accounts. Nothing is remembered between
 19. **Gates** (`G-C<n> · …`, listed in `ROADMAP.md` §9) are human-only. The AI never marks one done; Rodrigo does, in the next status file.
 20. **Long commands: never get stuck** (Rodrigo, 2026-10-13). Same rules as the section of that name in `CLAUDE.md` (the full text is there; this item is the pointer and the summary). `npm test` takes ~4 min and `npm run mutants` 30+ min, more than a foreground call allows. (a) Never run `npm test`, `npm run mutants`, `npm run smoke` or `check-build` in the foreground: background with a log file, poll with short calls, `sleep` ≤ 60 s. (b) While coding run only the file at hand, with `timeout 120`; the whole `npm test` once per round, after `bump-round`. (c) Mutants: only the round's own, `--only <id> --timeout 60`, one at a time; the full list only when Rodrigo asks, else report it as NOT run (item 18). (d) A command silent for 3 minutes: kill it, read the last 25 log lines, run the one active file once; a second hang means STOP, report it and deliver what builds (item 15). (e) A hang is a finding: name it, never raise a timeout, skip a test or drop a mutant without Rodrigo's word. (f) If the plan needs a whole `npm test` or a mutant run, say so and give the expected time in the first reply.
 
-**Current version:** v0.0.147 (round 144: `.idea/` in `.gitignore`; round 143: G-C13 findings, `fsync` on a writable handle; round 142: M14 C14.4, the `windows` CI job; round 141: M14 C14.2, the extractor and the writers apply the Windows name checks; round 140: M14 C14.1, the pure Windows name functions; round 139: C11.5 slice c, the read-only panel; round 138: C11.5 slice b, the CLI paints the ✓ ✗ ⚠ marks on a terminal; round 137: docs only, the status file cleaned of a duplicated block; round 136: C11.5 slice a, the pure drawing module `packages/chicla-kit/src/ui.mjs`, not wired yet; round 135 made the CLI import its cores from `src/`).
+**Current version:** v0.0.148 (round 145: Windows test portability; round 144: `.idea/` in `.gitignore`; round 143: G-C13 findings, `fsync` on a writable handle; round 142: M14 C14.4, the `windows` CI job; round 141: M14 C14.2, the extractor and the writers apply the Windows name checks; round 140: M14 C14.1, the pure Windows name functions; round 139: C11.5 slice c, the read-only panel; round 138: C11.5 slice b, the CLI paints the ✓ ✗ ⚠ marks on a terminal; round 137: docs only, the status file cleaned of a duplicated block; round 136: C11.5 slice a, the pure drawing module `packages/chicla-kit/src/ui.mjs`, not wired yet; round 135 made the CLI import its cores from `src/`).
 
-**Fingerprint:** seq=148 · app=version.mjs ·
+**Fingerprint:** seq=149 · app=version.mjs ·
 app_sha256_12=065d37032ef1 (of everything below the app file's own
 fingerprint comment; unchanged at this seq — rewritten by `scripts/bump-round.mjs`) ·
 changelog=CHANGELOG.md ·
-changelog_sha256_12=c0663c928c35 (hash of `CHANGELOG.md` below its own
-fingerprint line; recomputed by `scripts/bump-round.mjs` at seq 148) · matches the
+changelog_sha256_12=6bebd70e5ce2 (hash of `CHANGELOG.md` below its own
+fingerprint line; recomputed by `scripts/bump-round.mjs` at seq 149) · matches the
 `STATUS_FILE_FINGERPRINT` comment on line 2–3 of the app file and the
 `CHANGELOG_FINGERPRINT` comment on line 1 of `CHANGELOG.md`. If any of
 these three don't match what you're looking at, stop and see
 instructions item 11 above before doing anything else.
 
-**Last updated (round 144):** 2026-10-14. `.idea/` added to `.gitignore` (Rodrigo's request); nothing else changed, the pin did not move.
+**Last updated (round 145):** 2026-10-14. Second Windows log read (Ubuntu and macOS green, Windows 79/75/66 red) and the test-side causes fixed or skipped with a reason in 18 test files, no source change. What stays red is real: cleanup with open handles on Node 18/20 and `openZip` of a directory (C14.3).
+
+**Previous (round 144):** 2026-10-14. `.idea/` added to `.gitignore` (Rodrigo's request); nothing else changed, the pin did not move.
 
 **Previous (round 143):** 2026-10-14. First Windows CI logs read (G-C13 input): `createZip` `stream: true` called `fsync` on a read-only handle (EPERM on Windows), fixed with `"r+"`, plus two CI-only test fixes; D99 and the task confirmed by Rodrigo; the pin moved (G-C11 due again). `main` still holds the 3 shims and `.idea/` (Rodrigo's `git rm`), the POSIX-only Windows tests go to C14.3.
 
@@ -93,6 +95,7 @@ instructions item 11 above before doing anything else.
 
 ## Snapshot
 
+- Done: Windows test portability (round 145, 2026-10-14; Rodrigo's «sim 145»): tests only, written from the log, NOT seen on Windows.
 - Done: `.idea/` in `.gitignore` (round 144, 2026-10-14; Rodrigo's request).
 - Done: G-C13 findings (round 143, 2026-10-14; Rodrigo confirmed D99 and the task with «confirmo tudo»). `fsync` on `"r+"` in `createZip` stream:true (Windows EPERM), `fsync-writable.test.mjs` (+1, red first), toolchain-pin and dump-allow-held test fixes for CI. NOT seen on Windows or on a Mac after the fix.
 - Done: M14 C14.4 (round 142, 2026-10-14; named by Rodrigo, D98 confirmed with it). Job `windows` in `.github/workflows/ci.yml` (`continue-on-error`, D99), guards in `test/ci.test.mjs` (+6), 7 YAML mutants red. NOT seen running on GitHub (G-C13). Left in M14: C14.3, C14.5.
@@ -240,7 +243,7 @@ instructions item 11 above before doing anything else.
 
 ## Next up
 
-**Open decisions:** D99 is CONFIRMED (Rodrigo, 2026-10-14): the `windows` job is informative until green on Node 18, 20 and 22, then blocking. **Task: M14 C14.3** (long paths over 260 characters and `\\?\`, `rename` over an existing folder, `EPERM`/`EBUSY` retry with a bound, symlink privileges), aimed at what the first Windows run showed (see CHANGELOG round 143: modes, reserved names, `npm`, `import()` of `D:\\` paths, `python3`, FIFOs, symlinks; push the fix and read the next run first). **G-C11 is Rodrigo's and DUE** (the pin moved in rounds 141 and 143). **Rodrigo's to do:** `git rm scripts/baseline.mjs scripts/manifest.mjs scripts/policy.mjs`, `git rm -r --cached .idea` (`.idea/` is in `.gitignore` since round 144; the copy-over push left the files on `main`).
+**Open decisions:** D99 is CONFIRMED (Rodrigo, 2026-10-14): the `windows` job is informative until green on Node 18, 20 and 22, then blocking. **Task: M14 C14.3** (long paths over 260 characters and `\\?\`, `rename` over an existing folder, `EPERM`/`EBUSY` retry with a bound, symlink privileges), aimed at what the first Windows run showed (see CHANGELOG round 143: modes, reserved names, `npm`, `import()` of `D:\\` paths, `python3`, FIFOs, symlinks; round 145 fixed the test side; what stays red is real: cleanup with open handles on Node 18/20, `openZip` of a directory, long paths; push round 145 and read the next run first). **G-C11 is Rodrigo's and DUE** (the pin moved in rounds 141 and 143). **Rodrigo's to do:** `git rm scripts/baseline.mjs scripts/manifest.mjs scripts/policy.mjs`, `git rm -r --cached .idea` (`.idea/` is in `.gitignore` since round 144; the copy-over push left the files on `main`).
 
 ## Gates
 
@@ -256,4 +259,4 @@ instructions item 11 above before doing anything else.
 | G-C9 | Push round 63 and watch the first `bench` run on GitHub (ratio, and whether runners are stable enough for the 3x budget) | open (first run green, ratio 1.3x, 2026-10-11; watch a few more runs) |
 | G-C11 | After slice 6b of C11.1 (D91): repeat `/dump` and «recovery mode» in a clean session on the new `src/pinned/` layout (proposed; Rodrigo marks it) | open; DUE since round 133 (6b is delivered; the pin moved once) and again since round 141 (pin moved by C14.2) |
 | G-C12 | The panel on a real terminal: `chicla` with no arguments (macOS and Linux), the four pages, →/←/Tab/q, terminal restored after `q` and Ctrl-C; coloured marks on a terminal, none through a pipe (proposed in round 139; Rodrigo marks it) | open |
-| G-C13 | The `windows` CI job on GitHub: push round 142, see whether it starts and what the chicla-zip suite says on Node 18, 20 and 22; send the failing test names (input of C14.3) (proposed in round 142; Rodrigo marks it) | open (first run seen, round 143: ~90 red per Node version on Windows, ~32 from one `fsync` bug, now fixed; ubuntu and macOS red only from the stale shims and two test issues; `bench` and `pack` green; Rodrigo marks it) |
+| G-C13 | The `windows` CI job on GitHub: push round 142, see whether it starts and what the chicla-zip suite says on Node 18, 20 and 22; send the failing test names (input of C14.3) (proposed in round 142; Rodrigo marks it) | open (second run seen, round 145: Ubuntu, macOS, `bench`, `pack` green; Windows 79/75/66 red, test side fixed blind in round 145; first run seen, round 143: ~90 red per Node version on Windows, ~32 from one `fsync` bug, now fixed; ubuntu and macOS red only from the stale shims and two test issues; `bench` and `pack` green; Rodrigo marks it) |

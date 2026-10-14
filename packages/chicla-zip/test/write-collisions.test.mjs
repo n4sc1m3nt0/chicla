@@ -98,14 +98,14 @@ test('writeZip: nothing is refused and both entries are written; the extractor r
 });
 
 test('createZip (buffered): collisions reach the result, next to entries and skipped', async () => {
-  if (process.platform === 'darwin') return; // the tree itself cannot hold both names there
+  if (process.platform === 'darwin' || process.platform === 'win32') return; // a case-insensitive disk: the tree itself cannot hold both names
   const r = await viaCreate([D('Readme.md'), D('README.md')]);
   assert.deepEqual(norm(r.collisions), norm([['Readme.md', 'README.md']]));
   assert.ok(Array.isArray(r.skipped) && Array.isArray(r.entries));
 });
 
 test('createZip (stream: true, path): collisions reach the result', async () => {
-  if (process.platform === 'darwin') return;
+  if (process.platform === 'darwin' || process.platform === 'win32') return;
   const root = join(fresh(), 'root'); mkdirSync(root);
   writeFileSync(join(root, 'Readme.md'), 'a'); writeFileSync(join(root, 'README.md'), 'b');
   const r = await createZip(join(fresh(), 'a.zip'), root, { stream: true });
@@ -113,7 +113,7 @@ test('createZip (stream: true, path): collisions reach the result', async () => 
 });
 
 test('createZip (Writable): collisions reach the result', async () => {
-  if (process.platform === 'darwin') return;
+  if (process.platform === 'darwin' || process.platform === 'win32') return;
   const root = join(fresh(), 'root'); mkdirSync(root);
   writeFileSync(join(root, 'Readme.md'), 'a'); writeFileSync(join(root, 'README.md'), 'b');
   const r = await createZip(sinkOf(), root);

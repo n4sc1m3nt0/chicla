@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { extractZip, ZipError } from '../src/zipkit.mjs';
 import { buildZip } from './zipfab.mjs';
+const WIN = process.platform === 'win32';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-m2gaps-')); mkdirSync(join(dir, 'zips')); });
@@ -39,7 +40,7 @@ test('filter leaves entries out: they are not written and not counted', async ()
   assert.ok(!existsSync(join(dest, 'sub')));
 });
 
-test('a large file with no permission bits gets 0644 (slow path), like a small one', async () => {
+test('a large file with no permission bits gets 0644 (slow path), like a small one', { skip: WIN && 'Windows has no mode bits' }, async () => {
   const dest = join(parent(), 'out');
   await extractZip(put([{ name: 'big.bin', data: text(300000), method: 8, mode: 0o100000 }, { name: 'small.bin', data: 'x', mode: 0o100000 }]), dest);
   assert.equal(statSync(join(dest, 'big.bin')).mode & 0o777, 0o644); assert.equal(statSync(join(dest, 'small.bin')).mode & 0o777, 0o644);
