@@ -55,9 +55,9 @@ test("a packed tarball installs in a clean folder: import works and the bin runs
       'import("chicla-zip").then(m=>console.log(["openZip","extractZip","writeZip","writeZipStream","createZip","testZip","markUtf8Names","runCli"].filter(k=>typeof m[k]==="function").join(",")))'],
       { cwd: proj, encoding: "utf8" }).trim();
     assert.equal(exportsSeen, "openZip,extractZip,writeZip,writeZipStream,createZip,testZip,markUtf8Names,runCli");
-    const bin = join(proj, "node_modules", ".bin", "chicla-zip");
+    const bin = join(proj, "node_modules", ".bin", process.platform === "win32" ? "chicla-zip.cmd" : "chicla-zip");
     assert.ok(existsSync(bin));
-    execFileSync(bin, ["--help"], { cwd: proj, stdio: "pipe" }); // exit 0 (C4.4)
+    execFileSync(bin, ["--help"], { cwd: proj, stdio: "pipe", ...NPM }); // exit 0 (C4.4)
     // and the installed CLI really works on a zip made by the installed library
     writeFileSync(join(proj, "t.mjs"), 'import {writeZip} from "chicla-zip"; await writeZip("a.zip",[{name:"café.txt",data:Buffer.from("hi")}]);');
     execFileSync(process.execPath, ["t.mjs"], { cwd: proj });

@@ -8,7 +8,13 @@ import { lossy, lossyNames } from './fsprobe.mjs';
 
 const sha = (b) => createHash('sha256').update(b).digest('hex');
 const want = (expected) => Object.fromEntries(Object.entries(expected).map(([k, v]) => [k, k.endsWith('/') ? null : sha(Buffer.from(v))]));
-const run = (cmd, args) => { const r = spawnSync(cmd, args, { encoding: 'utf8', maxBuffer: 1 << 28, env: { ...process.env, PYTHONUTF8: '1' } }); return r.error ? null : r; };
+const RUN_TIMEOUT = 120000; // round 146: a reader that stands still is a failure that names the tool, not a CI job that hangs
+const run = (cmd, args) => {
+  const r = spawnSync(cmd, args, { encoding: 'utf8', maxBuffer: 1 << 28, timeout: RUN_TIMEOUT, env: { ...process.env, PYTHONUTF8: '1' } });
+  if (r.error?.code === 'ETIMEDOUT') return { status: null, stdout: '', stderr: `timed out after ${RUN_TIMEOUT} ms: ${cmd} ${args.map((a) => String(a).slice(0, 40)).join(' ')}` };
+  return r.error ? null : r;
+};
+const tail = (r) => String(r.stdout + r.stderr).trim().split('\n').pop().slice(0, 160);
 const diff = (got, exp) => { // got, exp: name -> sha256 | null
   const out = [];
   for (const k of Object.keys(exp)) if (!(k in got)) out.push(`missing «${k}»`); else if (got[k] !== exp[k]) out.push(`content of «${k}» differs`);
@@ -27,7 +33,11 @@ print(json.dumps(out))
 `;
 
 export const readers = {
-  unzip: (p) => { const r = run('unzip', ['-t', p]); return r && { ok: r.status === 0 && /No errors detected/.test(r.stdout), problems: r.status === 0 ? [] : [`unzip -t exited ${r.status}`] }; },
+  unzip: (p) => { // Info-ZIP exits 1 for warnings (on Windows it cannot represent non-ASCII names) and still says «No errors detected»: that is a pass only where names are lossy
+    const r = run('unzip', ['-t', p]); if (!r) return null;
+    const tested = /No errors detected/.test(r.stdout), ok = tested && (r.status === 0 || (r.status === 1 && lossyNames));
+    return { ok, problems: ok ? [] : [`unzip -t exited ${r.status}: ${tail(r)}`] };
+  },
   zipinfo: (p, exp) => {
     const r = run('zipinfo', ['-1', p]); if (!r) return null;
     if (r.status !== 0) return { ok: false, problems: [`zipinfo exited ${r.status}`] };

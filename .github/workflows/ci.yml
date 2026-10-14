@@ -7,6 +7,8 @@ on:
 
 jobs:
   test:
+    # round 146: a stuck job (macOS Node 18, 45 minutes) must not run for GitHub's default 6 hours
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -28,6 +30,7 @@ jobs:
   # `shell: bash` (Git for Windows) expands the glob the same way on every Node version. The readers are CHECKED first: a skipped reader proves nothing.
   windows:
     continue-on-error: true
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -57,6 +60,7 @@ jobs:
   # C5.4: performance budget (D15): extractZip of 20 000 small files must stay within 3x `unzip`. Separate job, Linux and
   # tmpfs only (where the budget was measured; the ratio is relative, so a slower runner does not move it much).
   bench:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     env:
       TMPDIR: /dev/shm
@@ -70,6 +74,7 @@ jobs:
   # C5.5b: pack chicla-zip as the release will (npm pack), with its sha256; kept as a build artifact. Nothing is published:
   # only Rodrigo publishes (login and 2FA).
   pack:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

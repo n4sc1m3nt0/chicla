@@ -1,5 +1,12 @@
-<!-- CHANGELOG_FINGERPRINT: seq=149 file=CHICLA_PROJECT_STATUS-149.md app_sha256_12=065d37032ef1 changelog_sha256_12=6bebd70e5ce2 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=150 file=CHICLA_PROJECT_STATUS-150.md app_sha256_12=065d37032ef1 changelog_sha256_12=bd8a6595db84 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 146 — a stuck CI job costs minutes: job timeouts, readers with a timeout (v0.0.149)
+
+- Task: Rodrigo's «autorizo» after the third CI log (`logs_104699766122`). The macOS Node 18 job stood still for 45 minutes until he cancelled it (the workflow had no `timeout-minutes`: GitHub's default is 360). It stopped before the first test of `interop.test.mjs` finished (test 561; macOS 20 and 22 and Ubuntu 18, 20 and 22 passed it). THE CAUSE IS NOT FOUND and was not reproduced (Node 18.20.8 on Linux, 30 runs of a 93 kB stdin to `python3`, and the file itself: no hang). Suspect, unproven: `pyZip` sent its spec (93 000 characters, round 145) through stdin.
+- Test first: `test/ci.test.mjs` requires `timeout-minutes` (5 to 30) on every job; red, then `ci.yml` got 20 (test), 15 (windows), 10 (bench), 10 (pack). `interop.mjs`: every reader has a 120 s `timeout` and a timeout is a PROBLEM that names the tool, not a skip. `pyZip` writes its spec to a file (also under the 32 767 characters of a Windows command line).
+- Windows, from the same log (written blind): `lossy()` also folds `+` on win32 (the OEM code page turns «é» into `+` and U+FFFD), the `unzip` reader accepts exit 1 when it says «No errors detected» and names are lossy (this also loosens it on macOS, where `lossyNames` is true), its failure message now carries the last output line, and the `package` test calls `chicla-zip.cmd` through a shell. No source file changed, the pin did not move.
+- NOT run: the timeout of a reader that really stands still (only the `ETIMEDOUT` shape was checked), anything on macOS or Windows, `npm test` on Node 18 and 20, `npm run mutants`. If the macOS Node 18 job stops again, the job timeout and the reader timeout will say where. Left red on purpose (C14.3): `openZip` of a directory, cleanup with an open handle on Node 18/20.
 
 ## Round 145 — Windows test portability, second Windows run (v0.0.148)
 

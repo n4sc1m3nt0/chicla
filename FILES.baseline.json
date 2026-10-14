@@ -1,12 +1,12 @@
 {
  "format": "chicla-baseline-v1",
- "created": "2026-10-14T20:34:48.131Z",
- "seal": "4d42b0b53ac7661f178c7ddd732b62e2dcaffe2bb277d172494ac93de46cae67",
+ "created": "2026-10-14T22:35:10.926Z",
+ "seal": "629fd4cb9feaa79df317b4dbbaf29ef371965a02c356be46fd143fece9099b3a",
  "files": [
   {
    "path": ".github/workflows/ci.yml",
-   "size": 2988,
-   "sha256": "2bcb38eb5c757c01f1a0d08e637279d5a1f308dfb2b9b16713877a8b0623a278"
+   "size": 3183,
+   "sha256": "20dd83dca68dcedfa850a95ed2ce4af5e3c2fc9ab488b7596068764038f097cf"
   },
   {
    "path": ".gitignore",
@@ -15,13 +15,13 @@
   },
   {
    "path": "CHANGELOG.md",
-   "size": 199676,
-   "sha256": "3a678003af824bd4d64d7bb5b1c1c6d368855de3b78e931ecc936a51b3c8875b"
+   "size": 201523,
+   "sha256": "e6d41ea28661b5eaa7399fb7edb0fc72cc9f4bbbedb776d84a4e2644f942bc8e"
   },
   {
-   "path": "CHICLA_PROJECT_STATUS-149.md",
-   "size": 79346,
-   "sha256": "d6ff65b1e8b3ad86f3198099762d108d0330ec35446d9dfe6bc6afecedaf5e45"
+   "path": "CHICLA_PROJECT_STATUS-150.md",
+   "size": 79991,
+   "sha256": "519ac3fea9e024f74d2343c10bc1a6cef86c79ba7be69d15a006e11f0f904c99"
   },
   {
    "path": "CLAUDE.md",
@@ -31,7 +31,7 @@
   {
    "path": "FILES.manifest",
    "size": 8226,
-   "sha256": "8a2b57cfec7c5e529b1f696738cba14783914b0e894b9ffa82eb8f33fc88834d"
+   "sha256": "543fef957d6b9c722531e105b14bfd0c4be018bbab36e9138d16e81233ad1cc4"
   },
   {
    "path": "LICENSE",
@@ -96,7 +96,7 @@
   {
    "path": "package.json",
    "size": 541,
-   "sha256": "3b78b752a0b1c799d57efb5ab849e49bbac0de5da933d4fd5fd3d64f2c3509d7"
+   "sha256": "5b89132d4eb6e79cbb4f2afb3d5a6b36422f6b7a45521151f410f8cd9e98f7d1"
   },
   {
    "path": "packages/chicla-kit/package.json",
@@ -425,8 +425,8 @@
   },
   {
    "path": "packages/chicla-zip/test/fsprobe.mjs",
-   "size": 2446,
-   "sha256": "2f0fcde8efc7879b3f39e06ab28f1d5bba31c2e0a72ddedfba4f010e642d7ce4"
+   "size": 2653,
+   "sha256": "d9d3d26274e43b75027c9ff44d4d2c41c14aa411b8965b21fddccffb24f529bf"
   },
   {
    "path": "packages/chicla-zip/test/fsprobe.test.mjs",
@@ -445,13 +445,13 @@
   },
   {
    "path": "packages/chicla-zip/test/interop.mjs",
-   "size": 3911,
-   "sha256": "0cfc178995a2f2e45082c0334da0b2ecf70acb77166d9179ca99bf4c7837ede7"
+   "size": 4589,
+   "sha256": "1fed5bab29d7c5ae9e0ea7d81d5c053dbc88bafbe1d40c0b940b133e1261500e"
   },
   {
    "path": "packages/chicla-zip/test/interop.test.mjs",
-   "size": 4511,
-   "sha256": "383dfa1bab689ee926232c4d32b3a272ea16b42d1ab44dd4f606901677acdf43"
+   "size": 4753,
+   "sha256": "5cf8d6e751c6bb386ed8a27aa94c3868354f69afb1c6e4ce5fd5e754eb8d4abe"
   },
   {
    "path": "packages/chicla-zip/test/legacy-encoding.test.mjs",
@@ -470,8 +470,8 @@
   },
   {
    "path": "packages/chicla-zip/test/package.test.mjs",
-   "size": 4115,
-   "sha256": "f29c09d6f66d7a248cf104fe4c3e72bf078f2fe511e54aecfb2e2d1fbd4a150b"
+   "size": 4173,
+   "sha256": "02f657d330f0744ee37d3146fa09093ba34a47711b5695c0bd869c37a9354ea6"
   },
   {
    "path": "packages/chicla-zip/test/read.test.mjs",
@@ -625,8 +625,8 @@
   },
   {
    "path": "test/ci.test.mjs",
-   "size": 4295,
-   "sha256": "1330de606b921123efd57ccf4439e77bab2e8cbaa48e9bad3a9aef2a05a6202f"
+   "size": 5081,
+   "sha256": "46f304c77b700f0db2cd7fb8dfdaa1a3bd3e70481c71ebe54628a105e0d85a72"
   },
   {
    "path": "test/collisions-nfc.test.mjs",
@@ -826,7 +826,7 @@
   {
    "path": "version.mjs",
    "size": 531,
-   "sha256": "a00aeca3e8f1040afb62665ea9c5fba6871b7027e2b4640ec04f45e0f2bf5039"
+   "sha256": "eec7d84e0c7de827563e7da9a5185952a0d60cd5caa05815e2d6ef17e526d1ee"
   }
  ]
 }

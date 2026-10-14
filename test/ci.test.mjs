@@ -86,3 +86,15 @@ test('C14.4 (D99): the job is informative, continue-on-error, until Windows is g
   assert.match(windows, /continue-on-error:\s*true/);
   assert.doesNotMatch(windows, /secrets\.|npm publish/);
 });
+
+// Round 146: the macOS Node 18 job stood still for 45 minutes (Rodrigo cancelled it); GitHub's default limit is 360 minutes.
+test('round 146: every CI job has `timeout-minutes`, so a stuck test costs minutes, not hours', () => {
+  const own = ci.slice(ci.indexOf('\njobs:')).split(/^  (?=[a-z][\w-]*:\s*$)/m).slice(1); // only the keys under `jobs:` (not `push:` under `on:`)
+  assert.ok(own.length >= 4, `expected at least test, windows, bench and pack, found ${own.length}`);
+  for (const j of own) {
+    const name = j.match(/^([\w-]+):/)[1];
+    const m = j.match(/^    timeout-minutes:\s*(\d+)\s*$/m);
+    assert.ok(m, `job «${name}» has no timeout-minutes`);
+    assert.ok(Number(m[1]) >= 5 && Number(m[1]) <= 30, `job «${name}»: ${m[1]} minutes is outside 5..30`);
+  }
+});

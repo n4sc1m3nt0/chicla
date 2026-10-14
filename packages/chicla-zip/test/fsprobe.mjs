@@ -32,4 +32,5 @@ export const lossyNames = (() => {
     return !r.error && r.status === 0 && r.stdout.trim() !== 'é-日.txt';
   } catch { return false; } finally { rmSync(d, { recursive: true, force: true }); }
 })();
-export const lossy = (n) => n.replace(/[^\x20-\x7e]/g, '?').replace(/\?+/g, '?');
+// On Windows the OEM code page turns the UTF-8 bytes of «é» into «+» and a replacement character (round 146): both count as the non-ASCII run there.
+export const lossy = (n) => n.replace(process.platform === 'win32' ? /[^\x20-\x7e]|\+/g : /[^\x20-\x7e]/g, '?').replace(/\?+/g, '?');
