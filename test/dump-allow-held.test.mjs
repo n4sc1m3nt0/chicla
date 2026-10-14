@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -109,9 +109,13 @@ test('emergency-dump: `allow` compares in NFC and behaves as policyAllows() does
     for (const c of cases) files[`chicla/${c}`] = SECRET;
     // `a` is a file AND the first segment of `a/b.txt`: keep the table honest by dropping the one that cannot exist beside the others
     delete files['chicla/a'];
+    // On a case-insensitive disk (macOS APFS, Windows) `A/b.txt` is `a/b.txt` and `case/file.txt` is `Case/File.txt`: one file, the first spelling wins. Drop the second spelling of each pair there;
+    // the "a different case is not released" rows stay on case-sensitive disks (Linux CI), where they are real (round 143).
+    const probe = join(T, 'CaseProbe'); writeFileSync(probe, '');
+    if (existsSync(join(T, 'caseprobe'))) { delete files['chicla/A/b.txt']; delete files['chicla/case/file.txt']; }
     const { names } = dump(T, 'stream', files);
     const pol = policy.parsePolicy(POL({ allow }));
-    for (const c of cases.filter((x) => x !== 'a')) assert.equal(names.has(nfc(`work/chicla/${c}`)), policy.policyAllows(c, pol), `${JSON.stringify(c)}: the dump and policyAllows() agree`);
+    for (const c of cases.filter((x) => x !== 'a' && files[`chicla/${x}`] !== undefined)) assert.equal(names.has(nfc(`work/chicla/${c}`)), policy.policyAllows(c, pol), `${JSON.stringify(c)}: the dump and policyAllows() agree`);
     assert.ok(names.has(nfc('work/chicla/relatório/k.txt')), 'the NFD-named file is released');
     assert.ok(!names.has('work/chicla/a/c.txt'));
   } finally { rmSync(T, { recursive: true, force: true }); }

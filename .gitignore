@@ -2,3 +2,4 @@ node_modules/
 *.partial
 *.tgz
 .DS_Store
+.idea/

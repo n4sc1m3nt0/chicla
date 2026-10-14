@@ -97,7 +97,7 @@ test('C9.4a: the start line of item 17 checks the digest in the shell before run
     const dump = miniDump(T);
     mkdirSync(join(T, 'new')); copyFileSync(join(ROOT, 'CLAUDE.md'), join(T, 'new/CLAUDE.md'));
     const go = (extra = '') => sh(`LC_ALL=C; ${line.replace('<dump.zip>', JSON.stringify(dump)).replace('<last delivery zip>', '')} ${extra}`.replace(/--baseline ""/, ''), join(T, 'new'));
-    const r = go();
+    const r = go(`--out ${JSON.stringify(join(T, 'recovered'))}`); // the start line has no --out and the default is /home/claude/recovered: a CI runner cannot create it (round 143)
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /RECOVERY DIFF/);
     // a toolchain swapped inside the zip must stop in the shell, and nothing of it may run

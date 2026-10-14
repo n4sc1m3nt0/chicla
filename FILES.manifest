@@ -1,13 +1,13 @@
 # chicla-manifest v2
 .github/workflows/ci.yml	7b728cec	2988
-.gitignore	6ead6c11	40
-CHANGELOG.md	10f5642b	195629
-CHICLA_PROJECT_STATUS-146.md	02fe1899	77081
-CLAUDE.md	fcff0821	8485
-FILES.baseline.json	bf7baa8d	25688
+.gitignore	1b52e6b9	47
+CHANGELOG.md	29d0be20	197796
+CHICLA_PROJECT_STATUS-148.md	4235ba70	78609
+CLAUDE.md	ecc0cb4b	8485
+FILES.baseline.json	f2fd1ba0	25857
 LICENSE	1ea3b7b0	10174
 README.md	ab68b187	9903
-ROADMAP.md	28857191	102591
+ROADMAP.md	e6d06d02	102949
 docs/README.md	d90304dc	1689
 docs/audits/AUDIT-1.md	a56e8d6e	7439
 docs/audits/AUDIT-2.md	e0c1bf46	7749
@@ -17,7 +17,7 @@ docs/pinned-files-design.md	6256c946	6552
 docs/zip-handling.md	83c151f1	13614
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	be378184	541
+package.json	e0ff0f0b	541
 packages/chicla-kit/package.json	26130e41	318
 packages/chicla-kit/src/.gitkeep	00000000	0
 packages/chicla-kit/src/bump-round.mjs	b4ee761d	13448
@@ -59,7 +59,7 @@ packages/chicla-zip/bench/zip64-real.mjs	c5737f18	2654
 packages/chicla-zip/mutants/list.mjs	444d7a6d	67916
 packages/chicla-zip/package.json	32447dc7	676
 packages/chicla-zip/src/.gitkeep	00000000	0
-packages/chicla-zip/src/zipkit.mjs	ea8da058	82626
+packages/chicla-zip/src/zipkit.mjs	5af37af9	82693
 packages/chicla-zip/test/.gitkeep	00000000	0
 packages/chicla-zip/test/audit2.test.mjs	61d9d0e7	6832
 packages/chicla-zip/test/audit3.test.mjs	2ec59f2e	8595
@@ -85,6 +85,7 @@ packages/chicla-zip/test/extract-rollback.test.mjs	540a2ebf	7293
 packages/chicla-zip/test/extract.test.mjs	2571e2a8	13254
 packages/chicla-zip/test/fsprobe.mjs	4ad3a817	2446
 packages/chicla-zip/test/fsprobe.test.mjs	515b1f5c	1092
+packages/chicla-zip/test/fsync-writable.test.mjs	30889f60	2612
 packages/chicla-zip/test/fuzz-read.test.mjs	1459bb0d	12185
 packages/chicla-zip/test/interop.mjs	d761dc3e	3869
 packages/chicla-zip/test/interop.test.mjs	602e1848	4453
@@ -124,7 +125,7 @@ test/baseline.test.mjs	267b4a20	9983
 test/changelog-heading.test.mjs	8af49f49	794
 test/ci.test.mjs	dd51ebc3	4295
 test/collisions-nfc.test.mjs	00aed6f6	5905
-test/dump-allow-held.test.mjs	cf850794	17516
+test/dump-allow-held.test.mjs	a49cba54	18072
 test/dump-policy-file.test.mjs	579adf3c	8815
 test/dump-policy.test.mjs	4ceb8a1e	5629
 test/dump-project-only.test.mjs	d2256511	8012
@@ -159,7 +160,7 @@ test/secret-marker-chain.test.mjs	aaffa6b7	10234
 test/secret-names.test.mjs	18ef4002	10320
 test/toolchain-files.mjs	7fcb143d	4167
 test/toolchain-files.test.mjs	ca93fcbe	4034
-test/toolchain-pin.test.mjs	17fb5b53	7669
+test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	add70671	553
+version.mjs	c1a50c9b	531

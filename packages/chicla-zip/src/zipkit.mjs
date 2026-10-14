@@ -806,7 +806,7 @@ const buildZip = async (outPath, root, { exclude, symlinks = "skip", stream, _af
   const final = resolve(outPath), tmp = `${final}.partial`; // a path: <out>.partial, fsync, atomic rename; the old output stays until the end
   try {
     const r = await writeZipStream(createWriteStream(tmp, { fd: openPartial(tmp) }), sources, writeOpts); // the stream owns its descriptor (a FileHandle stream with autoClose: false hangs fh.close() on Node 22); opened here so a bad folder is ENOENT as in writeZip
-    const fh = await fsOpen(tmp, "r"); try { await fh.sync(); } finally { await fh.close(); } // fsync works on the file, so a second descriptor does
+    const fh = await fsOpen(tmp, "r+"); try { await fh.sync(); } finally { await fh.close(); } // fsync works on the file, so a second descriptor does; it must be able to write ("r" gives EPERM on Windows, round 143)
     renameSync(tmp, final); syncDir(final);
     return { ...r, skipped };
   } catch (err) {

@@ -1,5 +1,17 @@
-<!-- CHANGELOG_FINGERPRINT: seq=146 file=CHICLA_PROJECT_STATUS-146.md app_sha256_12=065d37032ef1 changelog_sha256_12=c183517532ba (bump-round.mjs: app hash unchanged, changelog hash recomputed; C14.4 windows CI job) -->
+<!-- CHANGELOG_FINGERPRINT: seq=148 file=CHICLA_PROJECT_STATUS-148.md app_sha256_12=065d37032ef1 changelog_sha256_12=c0663c928c35 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 144 — `.idea/` in `.gitignore` (v0.0.147)
+
+- Task: Rodrigo's one-line request. `.gitignore` gets `.idea/` (5 IDE files were committed by mistake to `main`; the ignore rule alone does not remove them: `git rm -r --cached .idea` is still Rodrigo's). No source file, no test and no pin changed.
+- NOT run: CI, macOS, `npm test` on Node 18 and 20, `npm run mutants`. Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
+
+## Round 143 — G-C13 findings: `fsync` on a handle that can write (v0.0.146)
+
+- Task: the first Windows CI run (logs sent by Rodrigo, round 142 on `main`; he confirmed D99 and the task). `createZip(path, root, { stream: true })` opened `<out>.partial` with `"r"` and called `fh.sync()`: on Windows that is `EPERM: operation not permitted, fsync` (~32 tests of the `windows` job, plus their cascades). Fix: `"r+"` (1 line in `packages/chicla-zip/src/zipkit.mjs`). THE PIN MOVED (`zipkit.mjs` is in `RECOVER/`): `bump-round` wrote the new digest, G-C11 is due again.
+- Tests: `packages/chicla-zip/test/fsync-writable.test.mjs` (red first, with the exact Windows message: a child process makes `sync()` throw EPERM on a handle opened with `"r"`). Two CI-only test fixes found in the same logs: `toolchain-pin` item-17 test now passes `--out` (the start line defaults to `/home/claude/recovered`, EACCES on a runner); `dump-allow-held` NFC/policy test drops the second spelling of `A/b.txt` and `case/file.txt` on a case-insensitive disk (macOS; the case rows stay on Linux).
+- Found, NOT fixed (outside the task): (1) `main` on GitHub still holds `scripts/baseline.mjs`, `manifest.mjs`, `policy.mjs` (deleted in 6c) and 5 `.idea/` files: tests 932, 937, 942, 951 go red on Ubuntu and macOS until Rodrigo runs `git rm` (the copy-over push does not delete); (2) Windows tests that assume POSIX (modes 438, `nul.txt` and `x..` names, `spawnSync npm`, `import()` of a `D:\` path, `python3`/surrogates, FIFOs, symlinks): input of C14.3.
+- NOT run: THE FIX ON WINDOWS (emulated only), the macOS branch of the 812 fix (written, never run on a case-insensitive disk), `npm test` on Node 18 and 20, `npm run mutants`, CI, macOS. Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
 
 ## Round 142 — M14, C14.4: CI job on windows-latest (v0.0.145)
 
