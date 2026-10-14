@@ -1,5 +1,556 @@
-<!-- CHANGELOG_FINGERPRINT: seq=71 file=CHICLA_PROJECT_STATUS-71.md app_sha256_12=065d37032ef1 changelog_sha256_12=cd160308e147 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=146 file=CHICLA_PROJECT_STATUS-146.md app_sha256_12=065d37032ef1 changelog_sha256_12=c183517532ba (bump-round.mjs: app hash unchanged, changelog hash recomputed; C14.4 windows CI job) -->
 # Changelog
+
+## Round 142 — M14, C14.4: CI job on windows-latest (v0.0.145)
+
+- Task: M14, card C14.4 only (named by Rodrigo; D98 confirmed in the same message). New job `windows` in `.github/workflows/ci.yml`: `windows-latest`, Node 18, 20 and 22 (`fail-fast: false`), `shell: bash`, runs `node --test packages/chicla-zip/test/*.test.mjs` (the whole chicla-zip suite). Before it: 7-Zip is put on PATH, a `python3` copy of `python.exe` is made (the tests call `python3`), and the readers are CHECKED (`7z --help`, `python3 -c "import zipfile"`; `unzip` is reported, never required).
+- D99 (proposed): the job is `continue-on-error: true` because Windows is not supported yet; it becomes blocking when it is green on all three Node versions. No source file changed; the pin did not move.
+- Tests: 6 new guards in `test/ci.test.mjs` (red first: no `windows` job); 7 hand mutants of the YAML (runner, fail-fast, matrix, reader check, continue-on-error, shell, glob), all red. The `test` job is unchanged.
+- NOT run, and it cannot be from here: THE JOB ITSELF. Nobody has seen the suite on Windows: it will probably show real failures (paths, `rename`, permissions: C14.3). The `python3.exe` copy and the 7-Zip path are assumptions about the runner. Also NOT run: `npm test` on Node 18 and 20, `npm run smoke`, `npm run mutants`, macOS; gates G-C11, G-C12, G-C4 are Rodrigo's.
+
+## Round 141 — M14, C14.2: the extractor and the writers apply the Windows name checks (v0.0.144)
+
+- Task: M14, card C14.2 only (Rodrigo confirmed D96 (3)-(6), D97 «inline» and the task through the questions at the start). `windowsNameProblems` and `WIN_CODES` moved INTO `packages/chicla-zip/src/zipkit.mjs` (exported) and `winnames.mjs` is DELETED (D97; `--allow-removed`). New option `windowsNames` (true, false, or undefined = true only on win32; anything else is `EARG`) on `extractZip`, `writeZip`, `writeZipStream` and `createZip` (through the writer): a hit is `EUNSAFE` and nothing is written; nothing is renamed.
+- Files (source, 1): `zipkit.mjs` (+~40 lines net of the moved block). Tests: `windows-names.test.mjs` (13, red first: the export was missing) and `winnames.test.mjs` repointed to `zipkit.mjs` (its «no imports» test became «winnames.mjs is gone, `files` unchanged»). 7 mutants of the wiring added to `mutants/list.mjs` (`win14`), run one at a time, all red.
+- THE PIN MOVED: D97 said it would not, «to be proved then»; it is disproved: the pin hashes the CONTENT of the five files of `RECOVER/` and `zipkit.mjs` is one of them, so any edit of it moves it (two files would have moved it too). `bump-round` wrote the new digest into `CLAUDE.md`; G-C11 (repeat `/dump` and «recovery mode») is due again on this code.
+- Not done on purpose: no CLI flag for `windowsNames` and no Windows warning in `chicla-zip test` (proposed as D98); `skipped` is unchanged (a Windows-bad name is a refusal like the other unsafe names, not a skip).
+- Run: see the end of the round reply. NOT run: `npm test` on Node 18 and 20, `npm run smoke` (no script changed), `npm run mutants` (full list), CI, macOS, Windows (C14.4); gates G-C11, G-C12 and G-C4 are Rodrigo's.
+
+## Round 140 — M14, C14.1: Windows name safety as pure functions (v0.0.143)
+
+- Task: M14, card C14.1 only (Rodrigo confirmed the task and the design with «Sim, só C14.1» and «Sim»; D95 and G-C12 were confirmed with «avança» just before). New `packages/chicla-zip/src/winnames.mjs`: `windowsNameProblems(path)` returns the codes `EWIN_BACKSLASH`, `EWIN_DRIVE`, `EWIN_UNC`, `EWIN_RESERVED`, `EWIN_CHAR`, `EWIN_TRAILING`, `EWIN_STREAM` (new array, no duplicates, the order of `WIN_CODES`); it only detects and reports, never renames; pure, no imports, no platform check. NOTHING calls it yet: the extractor and the writer are C14.2, long paths C14.3.
+- Files (source, 1): `winnames.mjs`. Tests: `packages/chicla-zip/test/winnames.test.mjs` (13, red first: module missing; one expectation of mine was wrong, «a:b:c» starts with a drive letter, and the test was fixed, not the code). 18 hand mutants of the module, 16 red at first, the 2 survivors (order, type check) got tests and are red now.
+- Docs: D96 (calls on delegation) and D97 (where C14.2 puts the code) proposed; D95 recorded as confirmed; D62 done: a Windows line in ROADMAP §12 and in G-C4. `package.json` of `chicla-zip` NOT changed (`files` still lists only `zipkit.mjs`: the module is not shipped until C14.2 decides D97). The pin did not move.
+- Run: see the end of the round reply. NOT run: `npm test` on Node 18 and 20, `npm run smoke` (no script changed), `npm run mutants`, CI, macOS, Windows (nothing runs there yet, C14.4); gates G-C11 and G-C12 are Rodrigo's.
+
+## Round 139 — C11.5 slice c: the read-only panel, `chicla` with no arguments (v0.0.142)
+
+- Task: C11.5, slice c (named by Rodrigo with «avança»; D94 (1) to (4) confirmed by the same word). New `packages/chicla-kit/src/panel.mjs`: `readPanelData(root)` (the highest-numbered status file, the newest «Last updated» entry, «Next up», the gates table, the newest `chicla-round*.zip` BESIDE the project), `renderPanel` (four pages: Status, Gates, Decisions, Delivery) and `runPanel` (→ / Tab / l next, ← / h previous, `r` re-read, `q` or Ctrl-C or end of input leave; raw mode and the cursor are always restored). `cli.mjs` opens it only when there are NO arguments and stdout AND stdin are TTYs under the `shouldStyle` rules; everything else keeps the usage error (exit 2).
+- Files (source, 2): `panel.mjs` (new, ~70 lines), `cli.mjs` (+5). Tests: `packages/chicla-kit/test/panel.test.mjs` (10, red first: module missing; injected streams, a fake stdin; a test that fails instead of hanging when the panel never closes). It writes nothing (a snapshot of the project and its parent is compared after a session). The pin did not move.
+- 10 hand mutants of the new lines: 7 red at first, 3 survived because a hung panel was not a failure; the tests were tightened (`settled`) and all 10 are red now.
+- D95 proposed and gate G-C12 proposed (a real terminal). Run: see the end of the round reply. NOT run: `npm test` on Node 18 and 20, `npm run smoke` (no script changed), `npm run mutants`, CI, macOS, any REAL terminal (G-C12); gate G-C11 is Rodrigo's.
+
+## Round 138 — C11.5 slice b: the human output of the CLI is styled on a terminal (v0.0.141)
+
+- Task: C11.5, slice b (named by Rodrigo with «avança para a c11.5 slice b»; D93 (1) to (4), (a), (b) confirmed at the start of round 137). New `styleSummary(text, on)` in `ui.mjs` paints ONLY the mark (✓ green, ✗ red, ⚠ yellow) that opens a summary line; `cli.mjs` applies it to the human text of the six commands when `shouldStyle` says so, judging stdout and stderr on their own, with the environment from `io.env` (tests) or `process.env`.
+- Files (source, 2): `ui.mjs`, `cli.mjs`. Tests: `packages/chicla-kit/test/cli-style.test.mjs` (7, injected streams, five red first), `ui.test.mjs` +4 (red first: the import failed), `cli-recovery.test.mjs` (its copy of the kit also gets `ui.mjs`).
+- Plain text is byte for byte today's on a pipe, `--json`, CI, NO_COLOR, TERM=dumb; usage errors and `--help` are never styled; exit codes and `--json` unchanged. The pin did not move. 8 hand mutants of the new lines: 7 red, 1 equivalent (`\s*` for ` *` in the mark regex differs only for a tab).
+- D94 proposed (calls made on delegation). Left in C11.5: slice c, the panel.
+- Run: see the end of the round reply. NOT run: `npm test` on Node 18 and 20, `npm run smoke` (no script changed), `npm run mutants`, CI, macOS, any REAL terminal (all tests use injected streams); gate G-C11 is Rodrigo's.
+
+## Round 137 — docs only: the status file is cleaned (v0.0.140)
+
+- Task: Rodrigo asked for the corrupted status file to be cleaned (2026-10-14). `CHICLA_PROJECT_STATUS-140.md` carried a second, truncated copy of the Instructions block (it began in the middle of a sentence) and an old «Current version: v0.0.130» line between the real «Current version» and the Fingerprint paragraph; those 32 lines (39 to 70 of the upload) are removed, nothing else in the Instructions block changed (the removed items 2 to 20 were checked identical to the kept ones with `diff`).
+- D93 (1) to (4), (a) and (b) recorded as CONFIRMED by Rodrigo (2026-10-14) in `ROADMAP.md` and «Next up».
+- No source, test, script or pin changed. Files: the status file, `ROADMAP.md`, `CHANGELOG.md`, `package.json`.
+- Run: see the end of the round reply. NOT run: `npm test` on Node 18 and 20, `npm run smoke` (no script changed), `npm run mutants`, CI, macOS; gate G-C11 is Rodrigo's.
+
+## Round 136 — C11.5 slice a: `ui.mjs`, the drawing functions of the kit CLI (v0.0.139)
+
+- Task: C11.5, slice a (Rodrigo chose it with «1»; D93 proposed, calls made on delegation). New `packages/chicla-kit/src/ui.mjs`: pure functions, no imports, no I/O (`shouldStyle`, `paint`, `stripAnsi`, `width`, `pad`, `truncate`, `box`, `table`, `bar`, `SPINNER`, `spinnerFrame`). NOTHING calls it yet: no command output changed; slice b wires it, slice c adds the panel.
+- Files (source, 1): `ui.mjs`. Tests: `packages/chicla-kit/test/ui.test.mjs` (9, red first: module missing), including one that `ui.mjs` imports nothing and never names `process`.
+- The pin did not move. No exit code, `--json` output or plain text changed.
+- Run: see the end of the round reply. NOT run: `npm test` on Node 18 and 20, `npm run smoke` (no script changed), `npm run mutants`, CI, macOS, any real terminal (nothing is wired to one yet); gate G-C11 is Rodrigo's.
+
+## Round 135 — C11.1 slice 7: the kit CLI imports every core from `src/` (v0.0.138)
+
+- Task: C11.1, slice 7 (D92 (a), confirmed with «d92 confirmo tudo. avança»). `packages/chicla-kit/src/cli.mjs` loads each core from the kit itself (`./check-manifest.mjs`, `./bump-round.mjs`, `./verify-delivery.mjs`, `./make-delivery.mjs`, `./emergency-dump.mjs`, `./pinned/recovery-report.mjs`) instead of the wrappers in `scripts/`; the `SCRIPTS` base url is gone and the ECOMMAND_LOAD message names the file without `scripts/`. The wrappers in `scripts/` stay as entry points of the workflow.
+- Files (source, 1): `cli.mjs`. Tests: `packages/chicla-kit/test/cli-loads-src.test.mjs` (3, red first: a copy of kit + chicla-zip with NO `scripts/` runs `check-manifest`), `cli-recovery.test.mjs` (its stand-in core now sits at the pinned path, as the CLI loads it).
+- The pin did not move (nothing pinned was touched). D92 (b), the old comment on line 39 of `src/pinned/recovery-report.mjs`, is left for the next slice that moves the pin.
+- Run: see the end of the round reply. NOT run: `npm test` on Node 18 and 20, `npm run mutants` (no logic changed), CI, macOS, gate G-C11 (Rodrigo's).
+
+## Round 134 — C11.1 slice 6c: the three re-export shims of `scripts/` are deleted (v0.0.137)
+
+- Task: C11.1, slice 6c (named with «avança»; no decision waiting). Deleted on purpose: `scripts/baseline.mjs`, `scripts/manifest.mjs`, `scripts/policy.mjs` (one-line re-exports since 6a; no source file imported them any more, every core already used `./pinned/…`). `scripts/recovery-report.mjs` is NOT a shim (wrapper with its own entry point, the kit CLI loads it) and stays.
+- Files (source, 1 edited + 3 deleted): the comment of `packages/chicla-kit/src/cli.mjs` now says what is true (the kit still loads its cores through `scripts/` wrappers and needs `chicla-zip`, so it cannot be published alone yet). Docs: `README.md`, `docs/manifest.md`, one comment in `scripts/verify-delivery-zip.mjs`, comments of 14 tests. Tests: `test/pinned-shims-gone.test.mjs` (5, red first), the three `pinned-*-move` tests (shim tests replaced by «is gone»), `test/toolchain-files.mjs` (`SHIMS` out, `REMOVED_SHIMS` in), `test/layout.test.mjs` (two names out of its list).
+- The pin in `CLAUDE.md` did NOT move (`bump-round --verify` green before and after). Left as is on purpose: the comment on line 39 of `src/pinned/recovery-report.mjs` still says `scripts/policy.mjs`; editing it would move the pin.
+- Run (Node 22, Linux): after `bump-round`, the whole `npm test` in the background: 981 tests, 978 pass, 1 skipped, 2 red, both in `test/layout.test.mjs` (its `SCRIPTS` list still named `baseline` and `manifest`; my search had looked for import paths, not for a list). Fixed; that file re-run green (11 pass); the whole suite was NOT run a second time. `check-build` ok. NOT run: `npm test` on Node 18 and 20, `npm run mutants` (no logic changed), CI, macOS, gate G-C11 (Rodrigo's).
+
+## Round 133 — C11.1 slice 6b: `recovery-report` moves into the kit's pinned folder; the pin moves once (v0.0.136)
+
+- Task: C11.1, slice 6b (named with «avança»; no decision waiting). `recovery-report.mjs` moves to `packages/chicla-kit/src/pinned/recovery-report.mjs`. The only change in it is the zipkit fallback path (`../../../chicla-zip/src/zipkit.mjs`); it keeps its `./` imports and its own entry point, so the copy in `RECOVER/` runs alone as before. `scripts/recovery-report.mjs` is a wrapper (re-export + entry point), like the other cores.
+- Files (source, 4): the moved file, the wrapper, the `TOOLCHAIN` maps in `bump-round.mjs` and `emergency-dump.mjs`. Tests: `test/toolchain-files.mjs` (`PINNED['recovery-report']`, new `WRAPPERS` in `DUMP_COPY`), `test/pinned-recovery-report-move.test.mjs` (5, red first: it rebuilds the old sha256 by swapping the one line back).
+- The pin in `CLAUDE.md` MOVED once (`bump-round` rewrote it; before it, `--verify` was red on the digest, as designed). The start line of item 17 and the five RECOVER names are unchanged.
+- Run (Node 22, Linux): after `bump-round`, the whole `npm test` in the background: 976 tests, 973 pass, 1 skipped, 2 red, both in tests: `cli-recovery.test.mjs` put its stand-in core at the pinned path while the CLI loads the wrapper, and the helper guard caught the path of the wrapper in my new test. Fixed; both files re-run green (the whole suite was NOT run a second time). Before that, by hand: a rehearsal in a sandbox of the start line of item 17 on a dump of the new layout (digest ok, `RECOVER/recovery-report.mjs` extracted and compared). `npm run smoke` all green (12, 52 checks); `check-build` ok. NOT run: `npm test` on Node 18 and 20, `npm run mutants` (no logic changed), CI, macOS, and the real rehearsal of `/dump` plus «recovery mode» on the new layout (gate G-C11, Rodrigo's).
+
+## Round 132 — C11.1 slice 6a-3: `policy` moves into the kit's pinned folder; slice 6a done (v0.0.135)
+
+- Task: C11.1, slice 6a-3 (named with «avança»; no decision waiting). `policy.mjs` moves byte-identical (sha256 ecd47337…) to `packages/chicla-kit/src/pinned/policy.mjs`; `scripts/policy.mjs` is a one-line re-export shim (`scripts/recovery-report.mjs` still imports `./policy.mjs`; the shim goes in 6c).
+- Files (source, 6; the same one-time exception to rule 16, every edit a rename or one line): the moved file, the shim, the `TOOLCHAIN` maps in `bump-round.mjs` and `emergency-dump.mjs`, the policy import of `verify-delivery` and `check-manifest`, and the guarded dynamic import in `emergency-dump`. Tests: `test/toolchain-files.mjs` (`PINNED.policy`, `SHIMS`), `test/pinned-policy-move.test.mjs` (5, red first).
+- The pin in `CLAUDE.md` did not move: same bytes, `bump-round --verify` ok before and after.
+- Run (Node 22, Linux): a subset of 287 tests before `bump-round` had 3 red, all tests: my new test counted the TOOLCHAIN-map strings of `emergency-dump`, `policy.test.mjs` looked for the old import path, and `toolchain-pin` was red because the fingerprint was not refreshed yet (by design); fixed. After `bump-round`, the whole `npm test` in the background: 971 tests, 970 pass, 1 skipped, 0 fail (about 6.5 min); `npm run smoke` all green (12, 52 checks); `check-build` ok. NOT run: `npm test` on Node 18 and 20, `npm run mutants` (no logic changed), CI, macOS.
+
+## Round 131 — C11.1 slice 6a-2: `manifest` moves into the kit's pinned folder (v0.0.134)
+
+- Task: C11.1, slice 6a-2 (named with «avança»; no decision waiting). `manifest.mjs` moves byte-identical (sha256 7a39869c…) to `packages/chicla-kit/src/pinned/manifest.mjs`; `scripts/manifest.mjs` is a one-line re-export shim (`scripts/recovery-report.mjs` still imports `./manifest.mjs`; the shim goes in 6c).
+- Files (source, 8; the same one-time exception to rule 16, every edit a rename or one line): the moved file, the shim, the `TOOLCHAIN` maps in `bump-round.mjs` and `emergency-dump.mjs`, and the manifest import of `make-delivery`, `verify-delivery`, `emergency-dump` and `check-manifest` (brought forward from 6c). Tests: `test/toolchain-files.mjs` (`PINNED.manifest`, `SHIMS`), `test/pinned-manifest-move.test.mjs` (5, red first), `test/pinned-baseline-move.test.mjs` (finds its shim by name). `FILES.manifest` regenerated early: the fake projects of two core tests copy the files it lists.
+- The pin in `CLAUDE.md` did not move: same bytes, `bump-round --verify` ok before and after.
+- Run (Node 22, Linux): after `bump-round`, the whole `npm test` in the background: 966 tests, 960 pass, 1 skipped, 5 red, all in tests, none in code: the manifest-list filter of `policy-file`, `secret-content` and `secret-names` did not know `src/pinned/` (the same fix `secret-allow` got in round 130). Fixed; the three files re-run green, then the whole `npm test` once more (result in the status file); `npm run smoke` all green (12, 52 checks); `check-build` ok. NOT run: `npm test` on Node 18 and 20, `npm run mutants` (no logic changed), CI, macOS.
+
+## Round 130 — C11.1 slice 6a-1: `baseline` moves into the kit's pinned folder (v0.0.133)
+
+- Task: C11.1, slice 6a-1 (named with «avança»; no decision waiting). `baseline.mjs` moves byte-identical (sha256 7ee14e70…) to `packages/chicla-kit/src/pinned/baseline.mjs`; `scripts/baseline.mjs` is a one-line re-export shim (`scripts/recovery-report.mjs` still imports `./baseline.mjs`; the shim goes in 6c).
+- Files (source, 6; one-time exception to rule 16, every edit a rename or one line): `packages/chicla-kit/src/pinned/baseline.mjs` (moved), `scripts/baseline.mjs` (shim), the `TOOLCHAIN` maps in `bump-round.mjs` and `emergency-dump.mjs`, and the baseline import of `make-delivery.mjs` and `verify-delivery.mjs` (brought forward from 6c so the core import checks keep using `pinnedSpec`). Tests: `test/toolchain-files.mjs` (`PINNED.baseline`, new `SHIMS` in `DUMP_COPY`), `test/pinned-baseline-move.test.mjs` (5, red first).
+- The pin in `CLAUDE.md` did not move: same bytes, `bump-round --verify` ok before and after.
+- Run (Node 22, Linux): after `bump-round`, the whole `npm test` in the background: 961 tests, 957 pass, 1 skipped, 3 red, all in tests, none in code: `secret-allow.test.mjs` (2; its manifest filter did not know the folder `src/pinned/`) and the helper guard (my new test named the shim path). Fixed in the tests; the three files re-run green, then the whole `npm test` was run once more (result in the status file); `npm run smoke` all green (12, 52 checks); `check-build` ok. NOT run: `npm test` on Node 18 and 20, `npm run mutants` (no logic changed), CI, macOS.
+
+## Round 129 — C11.1 slice 6a-0b: the rest of the tests ask the helper (v0.0.132)
+
+- Task: C11.1, slice 6a-0b (named with «avança»; no decision waiting). Tests and smoke scripts only: no source file, no pinned file changed; the pin in `CLAUDE.md` did not move.
+- Files: `test/toolchain-files.mjs` (adds `ROOT`, `pinnedPath`, `pinnedFile`, `importPinned`, `specFrom`, `pinnedSpec` and the copy sets `CHECK_BUILD_COPY`, `CHECK_MANIFEST_COPY`, `VERIFY_DELIVERY_COPY`), `test/toolchain-files.test.mjs` (+2; the new guard was red first, 36 files named). 34 test files and 3 smoke scripts (`smoke-test-bump-round`, `smoke-test-delivery-guards`, `smoke-test-emergency`) no longer write the path of a pinned file: imports, spawns of `recovery-report`, fake-project copy lists and the import-specifier checks of the five cores go through the helper.
+- Guard: no test or smoke script names `scripts/<pinned>.mjs`, or two pinned names in one list, or one next to `'scripts'` (comments and RECOVER/ names are not paths). So the moves of 6a-1 to 6a-3 touch the helper, not the tests.
+- Run (Node 22, Linux): every touched test file one at a time, all green (34 files); the three smoke scripts ok (12, 52 checks, all passed). After `bump-round`, the whole `npm test` in the background: 956 tests, 955 pass, 1 skipped, 0 fail (about 4.5 min; the first launch was lost when its shell ended and was started again once, nothing hung); `check-build` ok. NOT run: `npm test` on Node 18 and 20, `npm run mutants` (no source changed), CI, macOS.
+
+## Round 128 — C11.1 slice 6a-0: shared test helper for the recovery toolchain (v0.0.131)
+
+- Task: C11.1, slice 6a-0, part 1 (D91 confirmed by Rodrigo: B, thin slices, G-C11 yes). Tests only: no source file, no script, no pinned file changed; the pin in `CLAUDE.md` did not move.
+- Files: `test/toolchain-files.mjs` (new; `PINNED`, `ZIPKIT`, `TOOLCHAIN_SOURCES`, `DUMP_COPY`, `copyFiles`), `test/toolchain-files.test.mjs` (3; the drift guard was red first), 11 tests now import the lists instead of keeping their own: `dump-allow-held`, `dump-policy-file`, `dump-policy`, `dump-project-only`, `dump-secret-content`, `emergency-fallback`, `emergency-home-noise`, `secret-marker-chain`, `secret-names` (COPY), `emergency-recover-folder`, `toolchain-pin` (RECOVER name maps).
+- Left for 6a-0b: tests that import a pinned file directly or spawn `scripts/recovery-report.mjs`, and fake projects that copy pinned files with `copyFileSync` (about 25 files, the smoke scripts); then 6a-1 `baseline`, 6a-2 `manifest`, 6a-3 `policy`.
+- Run (Node 22, Linux): `bump-round --verify` ok at the start; the 12 touched test files 81 pass, 0 fail (first as a group). After `bump-round`, the whole `npm test`: 953 pass, 1 skipped, 0 fail (271 s); `check-build` ok. NOT run: `npm test` on Node 18 and 20, `npm run smoke`, `npm run mutants` (no source changed), CI, macOS.
+
+## Round 127 — C11.1 slice 5g: design note for the four pinned files (v0.0.130)
+
+- Task: C11.1, slice 5g (D90 (1) confirmed by Rodrigo with «avança»). Docs only: no source file, no test, no script changed.
+- Files: `docs/pinned-files-design.md` (new; what the recovery toolchain is, who names it by path, 42 test and smoke files that copy it, what must not change, options A/B/C, the folder `packages/chicla-kit/src/pinned/`, slices 6a/6b/6c, risks, one thing noticed), `docs/README.md` (row), `ROADMAP.md` (D90 (1) confirmed; D91 proposed; gate G-C11; pointer on C11.1).
+- Result of the design: the three libraries can move byte-identical, so the digest in `CLAUDE.md` stays the same until `recovery-report` moves (one line, the zipkit fallback); `RECOVER/`, its names and the start line of item 17 never change.
+- Noticed, not fixed: after the move the kit still needs `packages/chicla-zip` by relative path, so `chicla-kit` alone cannot be installed from npm; separate decision, not proposed yet.
+- Run (Node 22, Linux): `bump-round --verify` ok at the start; `check-build` ok; `npm test` 949 pass, 1 skipped, 0 fail (unchanged: no test added, none needed for a note); the pin in `CLAUDE.md` did not move. `npm run smoke` not needed (no script changed). NOT run: Node 18 and 20, CI, macOS, `npm run mutants`.
+
+## Round 126 — C11.1 slice 5f: `emergency-dump` core into the kit package (v0.0.129)
+
+- Task: C11.1, slice 5f (D89 confirmed by Rodrigo: «next»). The `emergency-dump` core moves from `scripts/emergency-dump.mjs` into `packages/chicla-kit/src/emergency-dump.mjs` (`emergencyDump`, `renderEmergencyDump`); the script is a wrapper that re-exports them and, as the entry point, parses the flags, prints and exits.
+- Files (source, 3): `packages/chicla-kit/src/emergency-dump.mjs` (new), `scripts/emergency-dump.mjs` (wrapper), `packages/chicla-kit/src/cli.mjs` (a comment). The core imports `node:` and only pinned files (`scripts/manifest.mjs` statically, `scripts/policy.mjs` guarded and `packages/chicla-zip/src/zipkit.mjs` dynamically) and none of its siblings in `src/`; the project root, where the five RECOVER files are read, is three folders up. The pin in `CLAUDE.md` did not move (the dump is not one of the five).
+- Tests: `packages/chicla-kit/test/core-emergency-dump.test.mjs` (6; 4 red first). The copy lists of 9 dump tests now carry the core, and `policy.test.mjs` and `dump-secret-content.test.mjs` read the dump source from the core. 9 hand mutants (manifest import, root, policy path, zip-writer path, `--project-only`, the note join, exit code, renderer re-export, exit code in the core): the note join SURVIVED first (the test passed the note as one argument); the test now passes separate words and the mutant is red; all 9 red.
+- Run (Node 22, Linux): `npm test` 949 pass, 1 skipped, 0 fail (943 before, 6 new; the first run of the 22 dump files had 39 red until the manifest listed the core and the copy lists carried it); `npm run smoke` all green; `check-build` ok. NOT run: Node 18 and 20, CI, macOS, `npm run mutants`.
+
+## Round 125 — C11.1 slice 5e: `make-delivery` core into the kit package (v0.0.128)
+
+- Task: C11.1, slice 5e (D88 confirmed by Rodrigo: «Sim, confirmo»). The `make-delivery` core moves from `scripts/make-delivery-zip.mjs` into `packages/chicla-kit/src/make-delivery.mjs` (`makeDelivery`, `renderMakeDelivery`); the script is a wrapper that re-exports them and, as the entry point, parses `--against` and `--allow-removed`, prints and exits.
+- Files (source, 3): `packages/chicla-kit/src/make-delivery.mjs` (new), `scripts/make-delivery-zip.mjs` (wrapper, 34 lines with comments), `packages/chicla-kit/src/cli.mjs` (a comment). The core imports `node:`, the two pinned files (`baseline.mjs`, `manifest.mjs`) and its three siblings in `src/` directly; the zip writer is loaded from `packages/chicla-zip` two folders up. The pin in `CLAUDE.md` did not move.
+- Tests: `packages/chicla-kit/test/core-make-delivery.test.mjs` (7; 5 red first, 2 already green because older tests pin the behaviour). Fake projects in `test/manifest-v2.test.mjs` and `scripts/smoke-test-delivery-guards.mjs` now copy the core too. 8 hand mutants (core imports the script wrapper, wrong zip-writer path, wrapper drops `--allow-removed` or `--against`, wrong root, usage exit 1, no re-export of the renderer, core sets an exit code): all 8 red.
+- Order kept this time: tests first and seen red, then code. Long commands ran in the background with a log (item 20).
+- Run (Node 22, Linux): `npm test` 943 pass, 1 skipped, 0 fail (936 before, 7 new; the first run of the 12 files that build fake projects had 26 red until the manifest listed the core and two fake-project builders copied it); `npm run smoke` all green; `check-build` ok. NOT run: Node 18 and 20, CI, macOS, `npm run mutants`.
+
+## Round 124 — Process rules: never get stuck on `npm test` or the mutant run (v0.0.127)
+
+- Task: not a card; Rodrigo asked for rules because sessions kept hanging on the mutant round and on `npm test`. Docs only, no source file touched.
+- Cause found by measuring: `npm test` takes about 4 min (Node 22, Linux; 936 tests) and the full `npm run mutants` (229 entries) is far longer, both above the default 2-minute limit of a foreground shell call (hard limit 10 min).
+- Files: `CLAUDE.md` (new section «Long commands: never get stuck», 6 rules) and item 20 of the status file Instructions (the summary, same rules; item 18 stays the honesty rule it points to). The pin in `CLAUDE.md` did not move.
+- Rules in short: background plus log file and short polls; only the file at hand while coding, the whole `npm test` once per round after `bump-round`; only the round's own mutants with `--only <id> --timeout 60`, the full list only when Rodrigo asks; silent for 3 minutes means kill, read the log, one retry of the active file, then STOP and deliver; a hang is a finding, never a raised timeout, skipped test or dropped mutant; say the expected time in the first reply.
+- Run: `npm test` once in the foreground only to time it (exit 0). NOT run: `npm run mutants`, Node 18 and 20, CI, macOS. The rules themselves are text and have no test; whether they stop the hangs shows only in the next sessions.
+
+## Round 123 — C11.1 slice 5d: `verify-delivery` core into the kit package (v0.0.126)
+
+- Task: C11.1, slice 5d (D87 (1) and (2) confirmed by Rodrigo: «confirmo tudo. avança»). The `verify-delivery` core moves from `scripts/verify-delivery-zip.mjs` into `packages/chicla-kit/src/verify-delivery.mjs` (`verifyDelivery`, `renderVerifyDelivery`; imports only `node:` modules and the three pinned files `scripts/baseline.mjs`, `manifest.mjs` and `policy.mjs` by relative path; no entry point, no `import.meta`); the script is a thin wrapper (re-exports the core; as the entry point it parses `--against` and `--allow-removed`, prints and exits 0, 1 or 2; root = the project the file sits in). Behaviour unchanged. D87 (2): the import checks of `core-check-build` and `core-check-manifest` now also see a bare `import "x"` and `import(`.
+- Files (source, 3): `packages/chicla-kit/src/verify-delivery.mjs` (new), `scripts/verify-delivery-zip.mjs` (wrapper, 16 lines of code), `packages/chicla-kit/src/cli.mjs` (a comment). The pin in `CLAUDE.md` did not move (not one of the five RECOVER files).
+- Tests: `packages/chicla-kit/test/core-verify-delivery.test.mjs` (7). Order slip, said plainly: I moved the code BEFORE writing them (CLAUDE.md working rule 2); afterwards I put the old script back and two of the seven went red (the wrapper tests), then restored the new one. The location tests (core exports, imports, no entry point) were never red first. Fake projects now also get the core: `manifest-v2`, `manifest`, `secret-allow` tests and `smoke-test-delivery-guards`; `policy.test.mjs` and `manifest-docs.test.mjs` read the core.
+- 15 hand mutants in the first run: 14 red; M5 (wrong root in the wrapper) was GREEN because no test had a `chicla.policy.json`; a test that bans a path by policy was added and M5 is red. 4 more mutants on the two hardened tests (bare import, `import(` in each core): all red.
+- Run (Node 22, Linux): `npm test` 936 pass, 1 skipped, 0 fail (929 before, 7 new); `npm run smoke` all green; `check-build` ok; `bump-round` run through the new wrappers of rounds 122 and 123. NOT run: Node 18 and 20, CI, macOS, `npm run mutants` (chicla-zip only; untouched).
+
+## Round 122 — C11.1 slice 5c: `bump-round` core into the kit package (v0.0.125)
+
+- Task: C11.1, slice 5c (named by Rodrigo with «avança»; no decision was waiting). The `bump-round` core moves from `scripts/` into `packages/chicla-kit/src/bump-round.mjs` (`bumpRound`, `renderBumpRound`; only `node:` imports, no entry point, no `import.meta`); `scripts/bump-round.mjs` is a thin wrapper (re-exports the core; as the entry point it parses the flags, prints and exits, root = the project the file sits in). Behaviour unchanged. The default manifest step still spawns `<root>/scripts/check-manifest.mjs --write`; the kit CLI still passes `checkManifest` in-process.
+- Files (source, 3): `packages/chicla-kit/src/bump-round.mjs` (new), `scripts/bump-round.mjs` (wrapper, 16 lines of code), `packages/chicla-kit/src/cli.mjs` (a comment). The pin in `CLAUDE.md` did not move (`bump-round` is not one of the five RECOVER files). `FILES.manifest` lists the new core.
+- Tests: `packages/chicla-kit/test/core-bump-round.test.mjs` (6; 5 red first; the sixth pins the flags and already passed, so it was proved by mutants). Fake projects now also get the core: `cli-bump-round.test.mjs` and `smoke-test-bump-round.mjs`; `policy.test.mjs` reads the pin map in the core.
+- 13 hand mutants (core importing a pinned script, core exiting, wrapper dropping `--note`, `--dry-run` or `--refresh`, wrong root, exit code always 0, no stderr, no re-export, a wrapper that wraps instead of re-exporting, wrong manifest path, logic in the wrapper, `import.meta` in the core): all red, after the import check was fixed to see a bare `import "x"` (M1 was green first).
+- Noticed, not fixed (rule 6): `core-check-build.test.mjs` and `core-check-manifest.test.mjs` have the same hole as M1 had (their import regex needs `from`); proposed as D87 (2).
+- Run (Node 22, Linux): see the "Last updated" entry of the status file. NOT run: Node 18 and 20, CI, macOS, `npm run mutants` (chicla-zip only; untouched).
+
+## Round 121 — C11.1 slice 5b: `check-manifest` core into the kit package (v0.0.124)
+
+- Task: C11.1, slice 5b (D85 and D86 confirmed by Rodrigo: «d85 d86 sim. avança»). The `check-manifest` core moves from `scripts/` into `packages/chicla-kit/src/check-manifest.mjs`; `scripts/check-manifest.mjs` is a thin wrapper (re-exports the core; as the entry point it prints and exits, root = the project the file sits in). Behaviour unchanged. The core still reads the two pinned files, `scripts/manifest.mjs` and `scripts/policy.mjs`, by relative path (`../../../scripts/`).
+- Files (source, 3): `packages/chicla-kit/src/check-manifest.mjs` (new), `scripts/check-manifest.mjs` (wrapper, 8 lines of code), `packages/chicla-kit/src/cli.mjs` (a comment). The pin in `CLAUDE.md` did not move.
+- Tests: `packages/chicla-kit/test/core-check-manifest.test.mjs` (5, red first). Fake projects now also get the core: 8 tests and 2 smokes changed. Three source-reading tests now read the core too (`policy.test.mjs`, `manifest-docs.test.mjs`, `manifest-readers.test.mjs`), so the rules they pin still cover the code.
+- 10 hand mutants (root one level up, exit code always 0, `--write` ignored, no re-export, logic back in the wrapper, no entry guard, the core printing, the core importing another script, the old `./` path, a lost file no longer failing): all red.
+- Run (Node 22, Linux): `npm test` 923 pass, 1 skipped, 0 fail; `npm run smoke` ok; `check-build` ok. NOT run: Node 18 and 20, CI, macOS, `npm run mutants` (chicla-zip only; untouched).
+
+## Round 120 — C11.1 slice 5a: `check-build` core into the kit package (v0.0.123)
+
+- Task: C11.1, slice 5a (D84 (1) confirmed by Rodrigo: «d84 confirmo tudo. avança»). The `check-build` core moves from `scripts/` into `packages/chicla-kit/src/check-build.mjs`; `scripts/check-build.mjs` is now a thin wrapper (re-exports the core; as the entry point it prints and exits, with the project root as `root`). Behaviour unchanged. D86 (why `check-build` first) proposed.
+- Files (source, 3): `packages/chicla-kit/src/check-build.mjs` (new; only `node:` imports, no entry point), `scripts/check-build.mjs` (wrapper, 5 lines of code), `packages/chicla-kit/src/cli.mjs` (a comment only). The CLI, `make-delivery-zip.mjs` and `recovery-report.mjs` are untouched; the pin in `CLAUDE.md` did not move (`check-build` is not one of the five RECOVER files).
+- Tests: `packages/chicla-kit/test/core-check-build.test.mjs` (5, red first). Changed so a fake project also gets the core: `test/manifest-v2.test.mjs`, `packages/chicla-kit/test/cli-make-delivery.test.mjs`, `scripts/smoke-test-check-build.mjs` (count 3 -> 4), `scripts/smoke-test-delivery-guards.mjs`.
+- 8 hand mutants (root one level up, exit code always 0, no re-export, logic back in the wrapper, no entry guard, the core printing, the core importing from `scripts/`, `node_modules` no longer skipped): all red.
+- Run (Node 22, Linux): `npm test` 918 pass, 1 skipped, 0 fail; `npm run smoke` ok; `check-build` ok. NOT run: Node 18 and 20, CI, macOS, `npm run mutants` (chicla-zip only; untouched).
+
+## Round 119 — new root README.md (v0.0.122)
+
+- Task: docs only, asked by Rodrigo: «faz um novo readme completo primeiro». The project had no root README (only `docs/README.md` and the one in `packages/chicla-zip/`). D84 (1) recorded as confirmed («d84 confirmo tudo. avança»).
+- Files: `README.md` (new): what Chicla is, the two packages and their state, `chicla-zip` (library and CLI), the six `chicla` commands with exit codes, how the workflow works (state, fingerprints, rounds, policy, delivery, dump, honesty), how to work on it, repository map, design rules, roadmap, licence. `ROADMAP.md` (D84 confirmed, D85 proposed), status file, `package.json` version.
+- Checked against: `packages/chicla-kit/src/cli.mjs`, both `package.json`, `ci.yml`, `scripts/`, `policy.mjs`, `docs/`; the mutant count (229) from the list file. No code changed.
+- NOT run: `npm test` on Node 18 and 20, `npm run smoke`, `npm run mutants`, CI, macOS. Run before the round (Node 22, Linux): `bump-round --verify` ok, `npm test` 913 pass, 1 skipped, 0 fail. The README's claims are not tied to the code by any test (D85 (2)).
+
+## Round 118 — C11.1 slice 4b: `recovery-report` as a core, `chicla recovery` (v0.0.121)
+
+- Task: C11.1, slice 4b (D82; D83 confirmed by Rodrigo: «d83 confirmo tudo. avança»). `chicla recovery <dump.zip> [--baseline <zip>] [--out <dir>] [--toolchain-digest <hex>] [--trust-toolchain] [--json]`. Exit 0 ok, 1 nothing recovered, 2 usage, 3 EHASH_TOOLCHAIN. No `--root` (EUSAGE): a recovery has `--out`.
+- Files: `scripts/recovery-report.mjs` (core `recoveryReport({dump, baseline, out, toolchainDigest, trustToolchain})` + `renderRecoveryReport`; never prints, exits or throws; codes EUSAGE, EHASH_TOOLCHAIN, ERECOVERY_EXTRACT, ENOT_DUMP, ENO_PROJECT, EBASELINE, EBASELINE_EXTRACT, ERECOVERY_ERROR; runs only as the entry point; imports only the other pinned files), `packages/chicla-kit/src/cli.mjs` (`recovery` built; the «pending» mechanism and ECOMMAND_PENDING are gone, nothing is pending). The `toolchain-digest` pin in `CLAUDE.md` MOVED (this file is one of the five): `bump-round` rewrote it. `/dump` and recovery instructions still call the scripts, unchanged.
+- The toolchain check still only applies when the script runs from a folder named `RECOVER/`; the kit's own copy is never checked, so the real `chicla recovery` cannot return exit 3 today (the CLI mapping is tested with a stand-in core). The core's result also carries `guards` (check-manifest/check-build: passed, failed or absent in the recovered root).
+- Tests: `packages/chicla-kit/test/cli-recovery.test.mjs` (11), red first; dumps from the 4a core, zips rewritten with Python. 11 hand mutants, all red. My own bug, fixed: a test I rewrote ran `chicla dump` for real in the current folder (it wrote a dump of the tree into `outputs/`); it now uses invocations that cannot run anything.
+- Size: 2 source files, about 150 changed lines (diff ignoring whitespace; the body of the script moved into a function).
+- Run (Node 22 only): `npm test` (914 tests, 913 pass, 1 skipped), `check-build`, `npm run smoke` (all green). Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 117 — C11.1 slice 4a: `emergency-dump` as a core, `chicla dump` (v0.0.120)
+
+- Task: C11.1, slice 4a (D82, confirmed by Rodrigo with «avança»; Claude read it as accepting both suggestions, as for D80). `chicla dump [note...] [--note <text>] [--project-only] [--outdir <dir>] [--json] [--root <dir>]`: `--root` is the working directory that is dumped (default: the current folder). Exit 0 when a dump was created (warnings never change that), 1 when none was, 2 usage.
+- Files: `scripts/emergency-dump.mjs` (core `emergencyDump({work, outdir, note, projectOnly, noOutputs, hashLimit})` + `renderEmergencyDump`; never prints, exits or throws; codes EDUMP_NO_PROJECT, EDUMP_FAILED, EDUMP_ERROR; runs only as the entry point), `packages/chicla-kit/src/cli.mjs` (`dump` no longer pending; only `recovery` is). `/dump` in `CLAUDE.md` and item 17 still call the script, unchanged.
+- Behaviour changes: importing the script no longer dumps anything or creates the output folder; the stderr of the external `zip`/`tar` fallback is captured and shown at the end instead of inherited; `--hash-limit` takes a number too. The `toolchain-digest` pin did NOT move: `emergency-dump.mjs` is not one of the five pinned RECOVER files (D82 said both cores were).
+- Found and fixed while doing it: re-indenting the body also changed the lines inside the report's template literal (headings lost their start of line); `manifest-readers` and the smoke caught it.
+- Tests: `packages/chicla-kit/test/cli-dump.test.mjs` (11), red first (9 then); zips read with Python's zipfile; the old «dump is pending» assertion now covers `recovery` only. 8 hand mutants, all red (one survived at first, the EDUMP_ERROR branch, and got its test).
+- Size: 2 source files, about 137 changed lines (diff ignoring whitespace; the body of the script moved into a function).
+- Run (Node 22 only): `npm test` (903 tests, 902 pass, 1 skipped), `check-build`, `npm run smoke` (all green). Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 116 — C11.1 slice 3b: `check-build` and `make-delivery` as cores, `chicla make-delivery` (v0.0.119)
+
+- Task: C11.1, slice 3b (D81, confirmed by Rodrigo: «d81 sim»). `chicla make-delivery <out.zip> [--against <zip>]... [--allow-removed <path>]... [--json] [--root <dir>]` runs every step IN-PROCESS (manifest check, build check, manifest write, baseline, zip, verify), so a project in `--root` needs no `scripts/` folder; the zip writer is the kit's own.
+- Files: `scripts/check-build.mjs` (core `checkBuild({root})`, codes EBUILD_FAILED, EBUILD_ERROR), `scripts/make-delivery-zip.mjs` (core `makeDelivery({out, against, allowRemoved, root})`, async; codes EDELIVERY_USAGE, EDELIVERY_STEP with `step` and `cause`, EBASELINE_WRITE, EZIP_WRITE, EDELIVERY_ERROR), `packages/chicla-kit/src/cli.mjs`. Both scripts run only as the entry point; importing them runs nothing; output is the same as before (parity tests, smoke untouched).
+- Behaviour change: a relative `--against` path used to be resolved from the project root (the child process ran there) while the output path was resolved from the current folder; both now come from the current folder (no change when run from the project root, which is the normal case).
+- Tests: `packages/chicla-kit/test/cli-make-delivery.test.mjs` (16), red first (the old scripts exit at import); 5 hand mutants (rejected zip kept, build check ignored, first manifest check also writes, `--against` ignored in the CLI, verify result ignored), all red then restored. Fixed in the test helper: the tree copy lacked `FILES.manifest`, which made the first parity run see a different state.
+- Size: 3 source files, about 160 changed lines (diff ignoring whitespace).
+- Run (Node 22 only): `npm test` (892 tests, 891 pass, 1 skipped), `check-build`, `npm run smoke` (all green). Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 115 — C11.1 slice 3a: `verify-delivery` as a core and `chicla verify-delivery` (v0.0.118)
+
+- Task: C11.1, slice 3 split in two by Claude (task size, rule 16): 3a = `verify-delivery` (this round), 3b = `make-delivery` (it runs the verifier and other scripts, so it comes after).
+- Files: `scripts/verify-delivery-zip.mjs` (core `verifyDelivery({zip, against, allowRemoved, root})` + `renderVerifyDelivery`, no print/exit/throw; runs only as the entry point; the zip cache is now per call; codes EVERIFY_FAILED, EVERIFY_USAGE, EZIP_UNREADABLE, EPOLICY*), `packages/chicla-kit/src/cli.mjs` (`verify-delivery <zip> [--against]... [--allow-removed]... [--json] [--root]`; `--root` = the project whose policy applies).
+- Behaviour change: a zip that cannot be read (missing, not a zip, broken central directory) used to crash with a stack trace; it is now `✗ EZIP_UNREADABLE` (exit 1). Everything else prints byte for byte as before (parity tests; all 11 existing verify tests and the smoke scripts untouched and green).
+- Tests: `packages/chicla-kit/test/cli-verify-delivery.test.mjs` (13), red first (the old script exits at import); 4 hand mutants (problems not reported, `--allow-removed` ignored, zip not resolved against the CLI cwd, zip cache shared between calls), all red then restored; the first cache test was too weak (M4 survived) and was replaced by a corrupted-entry test.
+- Size: 2 source files; the diff ignoring whitespace is about 90 lines (the body of the script moved into a function, so a plain diff counts ~200).
+- Run (Node 22 only): `npm test`, `check-build`, `npm run smoke` (all green). Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 114 — C11.1 slice 2b: the write modes of `chicla bump-round` (v0.0.117)
+
+- Task: C11.1, slice 2b of 5 (D80). `chicla bump-round` now does the bump (no flag), `--refresh`, `--dry-run`, `--note <text>` and `--verify`; `--verify` with any of the others is `EUSAGE` (the script silently ignored them; the CLI refuses). `EOPTION_PENDING` is gone.
+- Files: `scripts/bump-round.mjs` (the manifest step is injectable: `regenerateManifest(root) -> {ok, out, err}`; default still spawns `<root>/scripts/check-manifest.mjs`, so the script behaves as before), `packages/chicla-kit/src/cli.mjs` (passes `checkManifest` in-process: a bump works on a project with no `scripts/`).
+- Tests: `packages/chicla-kit/test/cli-bump-round.test.mjs` now 21 (5 new for the CLI write modes, 1 for the injection; the old «pending» test replaced), red first (8 red); 4 hand mutants (refresh ignored, dry-run ignored, manifest step not in-process, `--verify` conflicts not refused), all red, then restored. Parity: the CLI and the script print the same on twin projects.
+- Decisions: D80 (call on delegation) and the in-process manifest step were Claude's suggestions, accepted by Rodrigo with «avança» (2026-10-12).
+- Run (Node 22 only): `npm test`, `check-build`, `npm run smoke` (all green, numbers in the reply). Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 113 — C11.1 slice 2a: `bump-round` as a core and `chicla bump-round --verify` (v0.0.116)
+
+- Task: C11.1, slice 2 split in two at Rodrigo's request (2026-10-12): 2a = the core of `bump-round` + `chicla bump-round --verify` (read only); 2b = the write modes through the CLI (bump, `--refresh`, `--dry-run`, `--note`).
+- Files: `scripts/bump-round.mjs` (core `bumpRound({root, mode, dry, note})` + `renderBumpRound`, no print/exit/throw; runs only as the entry point; importing it runs nothing; codes EBUMP_USAGE, _STATE, _UNPAIRED, _VERIFY, _MANIFEST, _FINAL, _ERROR), `packages/chicla-kit/src/cli.mjs` (`bump-round --verify`; the other modes are refused with the new `EOPTION_PENDING`, exit 2).
+- Tests: `packages/chicla-kit/test/cli-bump-round.test.mjs` (16), written first (all red; the old script ran when imported). One existing test changed on purpose: `bump-round` leaves the `ECOMMAND_PENDING` list in `cli-check-manifest.test.mjs`. Script output is byte-identical to before (parity tests, and `smoke-test-bump-round`, 12 checks, untouched).
+- Mistake this round: that first red run imported the OLD script, which bumped the working copy twice (-116 to -118); I restored the tree from the upload and kept only the test file.
+- Not done on purpose: the manifest step of a bump through the CLI (2b must run `checkManifest` in-process, because it still spawns `<root>/scripts/check-manifest.mjs`). Hand mutants: not run.
+- Run (Node 22 only): `npm test` (858 tests, 857 pass, 1 skipped), `check-build`, `npm run smoke` (all green). Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 112 — C11.1 slice 1: the `chicla` CLI dispatcher and `check-manifest` (v0.0.115)
+
+- Task: C11.1, slice 1 of 5 (D80). `chicla check-manifest [--write] [--json] [--root <dir>]` runs the same code as the script (no child process). `--json` = one object on stdout, human text on stderr; exit 0 ok, 1 failed, 2 usage; `bump-round`, `make-delivery`, `verify-delivery`, `dump`, `recovery` are refused with `ECOMMAND_PENDING`.
+- Files: `scripts/check-manifest.mjs` (core `checkManifest({root, write})`, no print/exit/throw; runs only as the entry point; same output as before, byte for byte in the parity test), `packages/chicla-kit/src/cli.mjs` (new), `packages/chicla-kit/package.json` (`bin`). New result code `EMANIFEST_LOST`, documented in `docs/manifest.md`.
+- Tests: `packages/chicla-kit/test/cli-check-manifest.test.mjs` (16), red first (the CLI did not exist); 4 hand mutants (lost passes, runs on import, `--json` pollutes stdout, pending not refused), all red, then restored.
+- Call on delegation (D80): the core stays in `scripts/` for now, because ten tests and two smoke scripts copy exactly three scripts into fake projects.
+- Run (Node 22 only): `node --test` (842 tests; 1 red found and fixed, the doc test), `check-build`, `npm run smoke` (all green).
+- Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 111 — C6.4: the secret-marker test extended to the C6.3 cases (v0.0.114)
+
+- Task: C6.4, test only (no product code). A marker string is planted in every kind of file that must never leave the machine (`.ssh/`, `.aws/`, `.npmrc`, `.netrc`, `.git-credentials`, `*.pem`, `id_rsa*` in any case and depth, `.env*`; in the project, in scratch space of work/ and in `outputs/`). The dump is made on the stream, `zip` and `tar.gz` paths and with `--project-only`; the marker must be in no member, marker JSON, report or console, nor in anything `recovery-report` extracts or writes. 14 look-alike controls must stay in the dump (an over-excluding rule fails too).
+- Files: `test/secret-marker-chain.test.mjs` (5). No source and no `RECOVER/` file changed: the toolchain pin is unchanged. Delivery side (check-manifest, verify-delivery-zip): already in `secret-names` and `secret-content`, not repeated.
+- Mutants, by hand, on the dump's rules (the tests protect behaviour that already worked, so «red first» is by mutation): 19, all red (folders, each name rule, lower case, `.env`, and each external-path pattern, `ci`).
+- Noticed, not a bug: in the `tar.gz` fallback `.env.example`/`.env.sample` are not put back (documented limit in the dump's header); the test exempts those two controls there.
+- Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 110 — D79 confirmed; the dump report no longer calls a held file «lost» (v0.0.113)
+
+- Task: Rodrigo answered «d79 sim tudo»: D79 (1) to (3) confirmed and (4) wanted now, so it is done in this round. `emergency-dump`: a held file that `FILES.manifest` lists is «held back» (own section), no longer «NOT on disk» in the report nor counted in «missing vs manifest» on the console; a file that is really gone stays listed. `recovery-report` already said «held back» (round 109).
+- Files (1 source): `scripts/emergency-dump.mjs` (not in `RECOVER/`: the toolchain pin is unchanged). Docs: `ROADMAP.md` (D79 confirmed), the status file.
+- Tests, first (1 red): `test/dump-allow-held.test.mjs` +2 (the manifest case with an NFD name; a dump with no project root). 4 hand mutants: 3 red, 1 survives (`normalize` on the held path before the prefix test: the fixture's project folder is ASCII, so it is untested for a non-ASCII project folder).
+- Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 109 — C6.3 slice c2: the dump releases `allow`, `recovery-report` says «held back» (v0.0.112)
+
+- Task: C6.3 slice c2 (D77 (5), D78), which closes C6.3. `emergency-dump`: its OWN copy of the `allow` rule (D7; exact project path, NFC): a file the project's policy releases goes into the dump like any file, silently (not in `secretsHeld`, the report or the console); a policy that cannot be used releases nothing. `recovery-report`: reads `marker.secretsHeld`, lists those files under «Held back by the dump» (name and kind only) and takes them out of «MISSING»; a file the recovered policy allows stays MISSING (an older dump held it anyway).
+- Files (2 sources): `scripts/emergency-dump.mjs`, `scripts/recovery-report.mjs`. `recovery-report.mjs` is in `RECOVER/`: the toolchain digest in `CLAUDE.md` changed.
+- Tests, first (9 red; 2 controls already green): `test/dump-allow-held.test.mjs` (12: stream, zip and tar paths; NFC both ways; tie to `policyAllows()` by behaviour; broken policy or missing `policy.mjs`; policy listing wins; `--project-only`; `outputs/` and scratch files; the four marker shapes). 12 hand mutants, all red (3 survived at first and the tests were strengthened).
+- Decisions to confirm: D79 (see ROADMAP). Noticed, not fixed: the dump's own report still lists a held manifest file under «NOT on disk».
+- Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 108 — docs only: D78 confirmed (v0.0.111)
+
+- Task: record Rodrigo's answer «Confirmo tudo» (the five calls made on delegation in C6.3 slice c, D78) in `ROADMAP.md` and in the status file. Next task: C6.3 slice c2 (the dump and `recovery-report`).
+- Files: `ROADMAP.md`, the status file. No source, no test, no script changed, so nothing in `RECOVER/` and no change of the toolchain pin.
+- Not run: `npm test` on Node 18/20, CI, macOS (the full `npm test` was run on this tree).
+
+## Round 107 — C6.3 slice c1: the `allow` key, manifest and verifier (v0.0.110)
+
+- Task: C6.3 slice c cut at the seam of rule 16 (D78): c1 = `policy.mjs`, `check-manifest`, `verify-delivery-zip`; c2 = the dump and `recovery-report` (next). `chicla.policy.json` gets `"allow": [exact files from the project root]` (NFC): a file the CONTENT detector wrongly catches is released, silently, in the manifest and in the delivery verifier. It is the only key that loosens anything, and only the content rule: a path a name rule, a credentials folder, `.env`, a Python artefact or a skipped folder (`node_modules`, `.git`…) refuses is `EPOLICY_PATH` (an error, not a silent no-op); folders, globs, names and the policy file itself are refused; a listed name or path still wins. New `policyAllows(rel, policy)`.
+- Files (3 sources): `scripts/policy.mjs`, `scripts/check-manifest.mjs`, `scripts/verify-delivery-zip.mjs`. `policy.mjs` is in `RECOVER/`: the toolchain digest in `CLAUDE.md` changed. Until c2 the dump still holds a released file back (the safe side) and `recovery-report` still calls it missing.
+- Tests, first (9 red): `test/secret-allow.test.mjs` (11: parse, bad values, name rules refused, NFC, check-manifest write and check modes, bad allow stops both, verifier in both directions). Changed on purpose: `policy-file.test.mjs` (2) and `secret-names.test.mjs` / `secret-content.test.mjs` (`allow` is no longer an unknown key; for a name rule it is `EPOLICY_PATH`). 13 hand mutants, all red.
+- Decisions to confirm: D78 (see ROADMAP).
+- Not run: Node 18/20, CI, macOS, `npm run mutants`.
+
+## Round 106 — docs only: D77 confirmed (v0.0.109)
+
+- Task: record Rodrigo's answer «Confirmo tudo» (the five calls made on delegation in C6.3 slice b2, D77) in `ROADMAP.md` and in the status file. Next task: C6.3 slice c; the `recovery-report` «held back» wording (D77 (5)) goes with it.
+- Files: `ROADMAP.md`, the status file. No source, no test, no script changed, so nothing in `RECOVER/` and no change of the toolchain pin.
+- Not run: `npm test` on Node 18/20, CI, macOS (the full `npm test` was run on this tree).
+
+## Round 105 — C6.3 slice b2: the dump holds back files whose content looks like a secret (v0.0.108)
+
+- Task: C6.3 slice b2 (D73, D76). `scripts/emergency-dump.mjs` gets its OWN copy of the content detector (D7: no import of `policy.mjs` for it): a file with a private-key header, an AWS `AKIA`, a GitHub `ghp_` / `github_pat_` or an npm `npm_` token stays out of the stream, the external zip and the tar path (also in `outputs/`). The marker has `secretsHeld` (path + kind), the report a «Held back» section and the console lists them (first 10); never the match. Not scanned: over 1 MiB, empty, NUL byte, unreadable (never a reason to stop the dump). With `--project-only` only the project's held files are listed.
+- Files (1 source): `scripts/emergency-dump.mjs`. Not in `RECOVER/`, so the toolchain pin is unchanged. The `allow` key (slice c) is NOT done.
+- Tests, first (9 red): `test/dump-secret-content.test.mjs` (10: the three write paths, glob characters in a name, the match printed nowhere, `outputs/`, `--project-only`, an empty list, a table of 40 files that ties the copy to `policy.detectSecret` by behaviour, no static import, an unreadable file run as `nobody`). 22 hand mutants: 20 red, 2 survive on purpose (m14 marker order comes from `readdir` and cannot be forced; m19 is equivalent: `b.length === 0` also catches it).
+- Noticed, not fixed: a held file that is in the manifest shows as «missing vs manifest» in the dump report and as MISSING in `recovery-report` (the held list explains it); to fix in slice c (D77).
+- Decisions to confirm: D77 (five calls made on delegation, see ROADMAP).
+- Not run: Node 18/20, CI, macOS, `npm run mutants`. The unreadable-file test needs the user `nobody`. No real token was tested; the samples have the right shape only.
+
+## Round 104 — docs only: D76 confirmed (v0.0.107)
+
+- Task: record Rodrigo's answer «d76 sim» (the six calls made on delegation in C6.3 slice b1) in `ROADMAP.md` and in the status file. He asked only to record it and not to start slice b2.
+- Files: `ROADMAP.md`, the status file. No source, no test, no script changed, so nothing in `RECOVER/` and no change of the toolchain pin.
+- Not run: `npm test` on Node 18/20, CI, macOS, non-root (the full `npm test` and `npm run smoke` were run on this tree).
+
+## Round 103 — C6.3 slice b1: the content detector, manifest and verifier (v0.0.106)
+
+- Task: C6.3 slice b1 (D73; D74 and D75 confirmed by Rodrigo, «d74 sim, d75 sim»). `scripts/policy.mjs` gets `detectSecret(buf)` and `scanFile(path)`: private-key headers, AWS `AKIA`, GitHub `ghp_` / `github_pat_`, npm `npm_`; files over 1 MiB (`SCAN_LIMIT`) or with a NUL byte are not scanned. It returns the kind only. `check-manifest` leaves such a file out of `FILES.manifest` (so out of a delivery) and prints its name and kind, never the match; a LISTED file that now holds a secret is a lost file with a «held back» note. `verify-delivery-zip` refuses a zip whose member holds one (`ESECRET_CONTENT`), delivery only, never `--against`. Built-in: the policy file has no key to switch it off.
+- Files (3 sources): `scripts/policy.mjs`, `scripts/check-manifest.mjs`, `scripts/verify-delivery-zip.mjs`. `policy.mjs` is one of the 5 files of `RECOVER/`: the toolchain digest in `CLAUDE.md` changed. The dump (slice b2, its own copy, D7) and the `allow` key (slice c) are NOT done.
+- Tests, first (8 red; 3 guards already green by design): `test/secret-content.test.mjs` (11: every shape and header, non-secrets by length, boundary and prose, the 1 MiB and NUL limits, `scanFile`, no policy key, `check-manifest` write and check modes, a skipped folder never opened, the verifier, `--against` not scanned, the whole chain through `make-delivery-zip`). Samples are built by concatenation so the project does not catch itself. 31 hand mutants: 28 red; 3 survive and are explained (empty buffer check is equivalent; the size check in `scanFile` only guards memory, `detectSecret` repeats the limit; one extra policy check is equivalent). The real tree has no detection.
+- Decisions to confirm: D76 (six calls made on delegation, see ROADMAP).
+- Not run: Node 18/20, CI, macOS, non-root, `npm run mutants`. No real token was tested; the samples have the right shape only.
+
+## Round 102 — C6.3 slice a: the wider list of credential names (v0.0.105)
+
+- Task: C6.3 slice a (D73, confirmed by Rodrigo). `scripts/policy.mjs` gets the built-in, never-removable name rules: the folders `.ssh` and `.aws` (`SECRET_DIRS`, also in `SKIP_NAMES`, so never walked at any depth) and the file names `.npmrc`, `.netrc`, `.git-credentials`, `*.pem`, `id_rsa*` (`isSecretFileName`, compared in lower case). `neverShipReason` gives a reason for both (the verifier refuses a zip that carries them); `isJunkName` takes the file names (the recovery); `check-manifest` skips them; `emergency-dump` keeps its OWN copy (D7) in the stream, external zip and tar paths. The policy file still only adds; there is no key to release a name rule (the `allow` key of slice c will not reach them).
+- Files (3 sources): `scripts/policy.mjs`, `scripts/check-manifest.mjs`, `scripts/emergency-dump.mjs`. `policy.mjs` is one of the 5 files of `RECOVER/`, so the toolchain digest in `CLAUDE.md` changed (`bump-round` rewrote it).
+- Tests, first (12 red, then green): `test/secret-names.test.mjs` (12: the predicate, the walk rules, reasons, `isJunkName`, a policy file cannot release, `check-manifest --write` with controls, the dump in 3 paths x project nested/at the root of `work/`). 22 hand mutants (each name, case, each folder, each rule, each dump list): all red. Existing tests changed: `policy.test.mjs` (the `SKIP_NAMES` list), `policy-file.test.mjs` (fixture `k.pem` became `k.key`), `emergency-home-noise.test.mjs` (see D74).
+- Behaviour change to confirm (D74): with `work/` as the project root, its own `.npmrc` used to stay in a dump (C9.8); it is now out. D75 holds the calls made on delegation (case, `id_rsa.pub`, `SKIP_NAMES`, the dump's copy).
+- Not run: Node 18/20, CI, macOS, non-root, `npm run mutants`. `verify-delivery-zip` was not run on a zip that carries a secret name (its rule is `neverShipReason`, tested directly).
+
+## Round 101 — D72: the /dump project chat command (v0.0.104)
+
+- Task: D72 (confirmed by Rodrigo, «confirmo tudo, avança»). `/dump project` (also «dump project», «dump projeto») is added to `CLAUDE.md` and to item 17 of the status file: the same three steps as `/dump`, with `--project-only` in step 1 (C6.2), and its own sentence «Dump created (project only): <n>. Send it to the next session with «recovery mode».». If the script refuses (no project root, exit 1) the AI says so in one sentence and offers a plain `/dump`; it does not run it unasked. The plain `/dump` text is untouched.
+- Files: `CLAUDE.md`, the status file (item 17), `test/dump-sentence.test.mjs` +3 (red first: both files define it, the flag, the sentence with recovery mode and without the delivery zip, the refusal case, the two files carry the same sentence, the plain sentence unchanged). 5 hand mutants of the wording (flag missing in each file, sentence differing, refusal wording, plain sentence changed): all red. No script changed, so nothing in `RECOVER/` and no change of the toolchain pin.
+- Also recorded: D71 and D73 confirmed. D73 includes the suggested answer: the `allow` key may release a false positive of the content detector only, never a name rule.
+- Not run: Node 18/20, CI, macOS, non-root. The chat command itself was not rehearsed in a clean chat; G-C7 covered the plain `/dump` only.
+
+## Round 100 — C6.2: emergency-dump --project-only (v0.0.103)
+
+- Task: C6.2 (D70 confirmed by Rodrigo: the whole `work/` stays the default; the option is `--project-only`). `emergency-dump.mjs --project-only` takes ONLY the project root (the folder with `package.json` + `FILES.manifest`), the marker, the report and `RECOVER/`; the rest of `work/` and `outputs/` stay out. Works in all three write paths (the external zip and tar stage only the project folder at the same place inside `work/`, so `projectRootRel` stays right, also for a nested project). The marker has `projectOnly` and the report a «Scope» line. With no project root it refuses (exit 1, no dump) instead of silently widening; a plain `/dump` is untouched and still never fails for lack of a project.
+- Files (1 source): `scripts/emergency-dump.mjs`. Not wired into the chat command: `/dump` is still the three steps of item 17 (D72 asks whether to add `/dump project`).
+- Tests, first (9 red, then green): `test/dump-project-only.test.mjs` (10: three paths x project at the top and nested, no content from outside the project, the whole directory without the option, project at the root of `work/`, refusal with no project and a plain dump with none still working, a project-only dump read by `recovery-report`). 8 hand mutants (filter removed, flag ignored, marker field, no refusal, fallback staging the whole `work/`, nested staging, outputs scanned, outputs included): 6 red; the last two survive ALONE because `outputs/` is left out in two places (the scan and `includeOutputs`; kept on purpose, defence in depth) and are red together.
+- Not run: Node 18/20, CI, macOS, non-root, `npm run mutants`.
+
+## Round 99 — C6.1 slice d3: presets; C6.1 complete (v0.0.102)
+
+- Task: C6.1 slice d3 (D68 and D69 confirmed by Rodrigo, «confirmo, avança»). `chicla.policy.json` takes `"presets": ["cargo", "node", "python"]`: ready-made lists of names (cargo `target`; node `dist`, `build`, `coverage`, `.turbo`; python `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `.tox`, `.eggs`, `build`, `dist`). They are expanded into `names` inside `parsePolicy`, so `check-manifest`, `verify-delivery-zip`, `emergency-dump` and `recovery-report` get them with no change of their own. A preset only adds; an unknown, wrongly cased, non-list or prototype-key (`__proto__`, `constructor`) preset is `EPOLICY_FORMAT`. `parsePolicy` now also reports the chosen `presets` (`NO_POLICY.presets` is empty).
+- Files (1 source): `scripts/policy.mjs`. It is one of the 5 files of `RECOVER/`, so the toolchain digest in `CLAUDE.md` changed (`bump-round` rewrote it).
+- Heads-up, by design: `build` and `dist` skip any file or folder of that name at any depth, source folders included. A preset is opt-in; a project that has a real `src/build/` folder should list names or paths itself instead.
+- Tests, first (3 red, then green): `test/policy-file.test.mjs` +4 (the three lists, expansion, refusals, any depth with whole-segment controls, built-in rules unchanged, `check-manifest` end to end), `test/dump-policy-file.test.mjs` +1 (a preset keeps its names out of the dump). 9 hand mutants (not expanded, unknown accepted, prototype keys via `in`, a renamed cargo name, a dropped `.turbo`, a dropped python `dist`, duplicate presets listed twice, the key refused, the field missing): all red. C6.1 is done (rounds 93 to 99).
+- Not run: Node 18/20, CI, macOS, non-root, `npm run mutants`.
+
+## Round 98 — C6.1 slice d2b: the dump and the recovery apply chicla.policy.json (v0.0.101)
+
+- Task: C6.1 slice d2b (D66 and D67 confirmed by Rodrigo; D68 holds the calls made on delegation, to confirm). `emergency-dump.mjs` drops what the project's `chicla.policy.json` lists in all three write paths (stream: from the file list; external zip and tar: as patterns, glob characters in a listed name turned into `?` so they still match, which can only over-exclude). It reads `policy.mjs` through a guarded import and never stops because of the policy: a missing or broken module is `EPOLICY_IMPORT`, an unusable file keeps its `EPOLICY_*` code; the dump is then made with the built-in rules only and the marker (`policy: { applied, dropped, error }`), the report and the summary say so. `recovery-report.mjs` applies the recovered project's policy to the recovered tree, the baseline tree and the marker hashes; an unusable file is a warning.
+- Files (2 sources): `scripts/emergency-dump.mjs`, `scripts/recovery-report.mjs`. `policy.mjs` is unchanged; `recovery-report.mjs` is one of the 5 files of `RECOVER/`, so the toolchain digest in `CLAUDE.md` changed (`bump-round` rewrote it).
+- Tests, first (9 red, then green): `test/dump-policy-file.test.mjs` (7: the three paths with a name, a path, a path with `[1]*`, a file with a listed name, anchoring and whole-segment controls, no listed content in any member, marker, no file, bad file, missing module), `test/recovery-policy.test.mjs` +2, `test/policy.test.mjs` +1 (the dump names the same file as the policy). 12 hand mutants (no filter, patterns missing, no glob escape, no project dir, name over-match, no precheck, no marker, bad policy fatal in the dump and in the recovery, tree, integrity and baseline ignoring it): all red.
+- Not run: Node 18/20, CI, macOS, non-root, `npm run mutants`. The glob handling was tested with Info-ZIP `zip` and GNU `tar` on this Linux only.
+
+## Round 97 — C6.1 slice d2a: chicla.policy.json (v0.0.100)
+
+- Task: C6.1 slice d2a (D65 confirmed by Rodrigo; D66 and D67 are calls made on delegation, to confirm). An optional `chicla.policy.json` at the project root ADDS «never leaves» rules: `{ "version": 1, "names": [...], "paths": [...] }` (names at any depth; paths from the root with everything below; NFC). It never removes a rule. Without the file nothing changes. A file that cannot be read, parsed or used stops the work with `EPOLICY_READ`/`EPOLICY_PARSE`/`EPOLICY_FORMAT`/`EPOLICY_PATH` (ignoring it would leak).
+- Files (3 sources): `scripts/policy.mjs` (`POLICY_FILE`, `NO_POLICY`, `parsePolicy`, `loadPolicy`, `policySkips`, `neverShipReason(rel, policy)`), `scripts/check-manifest.mjs` (the walk skips what the policy lists), `scripts/verify-delivery-zip.mjs` (refuses a zip that carries it, also in the `--against` check). The policy file is a project file: listed and shipped.
+- NOT done, on purpose (rule 16 and D67): `recovery-report.mjs` and `emergency-dump.mjs` do not read the policy yet (d2b). Until then a name or path listed in the policy stays out of the manifest and the delivery but NOT out of a `/dump`.
+- Tests, first (9 red, then green): `test/policy-file.test.mjs` (parser codes, names and paths, NFC, only-adds, `loadPolicy`, `check-manifest` in a copy of the scripts); `smoke-test-delivery-guards.mjs` section 2b (4 checks: manifest, delivery, verifier, bad file). 13 hand mutants (names/paths ignored, prefix by text, fail-open, unknown key, no NFC, no version, `..` accepted, manifest and verifier ignoring it, a bad file ignored): all red; one needed a second try because its first edit also broke the syntax.
+- Not run: Node 18/20, CI, macOS, non-root, `npm run mutants`.
+
+## Round 96 — C6.1 slice d1: the Cedar corpus rules removed (v0.0.99)
+
+- Task: C6.1 slice d1 (D64, D65 confirmed by Rodrigo). `corpus/real-world` and `corpus/huge` are no rule of Chicla any more: removed from `scripts/policy.mjs` (`PRIVATE_DIRS`, `isPrivateFile`, the `private corpus` reason), `check-manifest.mjs`, `recovery-report.mjs` and `emergency-dump.mjs` (the regex, the report line, the external-zip excludes and the put-back). A `corpus/` folder is an ordinary folder. Comments in `verify-delivery-zip.mjs` and `make-delivery-zip.mjs` follow. No Cedar preset (Cedar migrates after Chicla is finished).
+- Behaviour change on purpose: files under `corpus/real-world/` and `corpus/huge/` now enter the manifest, the delivery and the dump. Slice d is split in d1 (this), d2 (`chicla.policy.json`), d3 (presets) (D65). Gates G-C1 and G-C2 closed by Rodrigo (recorded, not by the AI); D9 marked decided.
+- Rule 16 deviation, reported: 4 source scripts changed (each a deletion of a few lines) plus two comments, because the removal cannot be split without leaving a script and its test out of step; the two smoke tests changed too.
+- Tests, first (red, then green): `test/policy.test.mjs` (corpus paths now null, no `PRIVATE_DIRS`/`isPrivateFile`, +1 test: no script names a corpus rule in code), `test/dump-policy.test.mjs` (corpus files must be KEPT in the stream, zip and tar paths), `test/recovery-policy.test.mjs`, `test/emergency-dump-nozip.test.mjs`, `smoke-test-delivery-guards.mjs`, `smoke-test-emergency.mjs`. 6 hand mutants (a corpus rule put back in each script): all red; two survived at first (the external-zip exclude and a no-op) and the dump test was strengthened.
+- Not run: Node 18/20, CI, macOS, non-root.
+
+## Round 95 — C6.1 slice c: emergency-dump tied to the policy (v0.0.98)
+
+- Task: C6.1 slice c. `emergency-dump.mjs` keeps its own copy of the rules (D7: it must not depend on an import that can break); a test now ties that copy to `scripts/policy.mjs`. The candidates are built from the policy's own lists, so a rule added to the policy is covered at once.
+- Found and fixed: in the `tar.gz` last resort the dump let `*.tsbuildinfo` through (the policy excludes it; not a secret). One `--exclude` added to `emergency-dump.mjs`. Known and left: the tar path does not put back the private corpus `.gitkeep` or `.env.example`/`.sample` (documented in its header); the test only requires those controls in the stream and zip paths.
+- Files: `scripts/emergency-dump.mjs` (one argument), `scripts/policy.mjs` (a comment). `test/dump-policy.test.mjs` (4; the tar case was red first, the other cases pass because the dump already obeyed the policy and are protected by 12 hand mutants of `emergency-dump.mjs`: 11 red, 1 equivalent: `--exclude=.env.*` in the tar path is repeated by the generated list). `policy.mjs` is one of the 5 `RECOVER/` files, so its comment changed the toolchain digest (`bump-round` rewrote the pin in `CLAUDE.md`: `6413e2121ffa…`). ROADMAP: C6.1.
+- Not run: Node 18/20, CI, macOS, non-root.
+
+## Round 94 — C6.1 slice b: recovery-report reads the policy (v0.0.97)
+
+- Task: C6.1 slice b (D63 confirmed by Rodrigo). `recovery-report.mjs` no longer keeps its own junk/private rules: it reads `scripts/policy.mjs` (new `isJunkName`). The policy travels in `RECOVER/` (5 files now) and is covered by the toolchain pin: `emergency-dump.mjs` (one line of its `RECOVER/` list) and `bump-round.mjs` (its pin list) follow; `CLAUDE.md` pin rewritten by `bump-round`. A dump made before this round has 4 files in `RECOVER/` and is refused by the new pin (`EHASH_TOOLCHAIN`), as the pin is meant to do.
+- One deliberate difference: the private-corpus rule in recovery is now anchored at the project root, like in the manifest and the baseline (it matched at any depth before).
+- Files: `scripts/recovery-report.mjs`, `scripts/policy.mjs`, plus the one-line lists in `emergency-dump.mjs`, `bump-round.mjs`. Tests: `test/policy.test.mjs` +2 (red first); `test/recovery-policy.test.mjs` (1, written after the code, a dump made by Python: junk, secrets and private corpus not «New», nested `docs/corpus/...` is a normal file; 5 hand mutants of `recovery-report` red; the first 4 had been red only through the pin digest, which is why it was added); `emergency-recover-folder`, `toolchain-pin`, `emergency-fallback`, `emergency-home-noise` lists gained `policy.mjs`. ROADMAP: C6.1, D63.
+- Not run: Node 18/20, CI, macOS, non-root. `emergency-dump` still holds its own rules (slice c).
+
+## Round 93 — C6.1 slice a: the «never leaves» rules in one place (v0.0.96)
+
+- Task: C6.1 (D60, confirmed by Rodrigo). Slice a: new `scripts/policy.mjs` (pure rules: names skipped, Python artefacts, `.env` secrets, private corpus); `check-manifest.mjs` and `verify-delivery-zip.mjs` read it and no longer keep their own copies. Behaviour kept (same reasons, same strings). D60 to D62 confirmed, D63 (the slices) proposed.
+- Files: `scripts/policy.mjs` (new), `scripts/check-manifest.mjs`, `scripts/verify-delivery-zip.mjs`. `test/policy.test.mjs` (4, red first), 10 hand mutants of `policy.mjs` red (a first survivor killed by an added test). Test and smoke copy lists gained `policy.mjs` (`smoke-test-delivery-guards`, `smoke-test-bump-round`, `collisions-nfc`, `manifest`, `manifest-v2`). ROADMAP: C6.1, D60 to D63.
+- Not run: `npm test` on Node 18/20, CI, macOS, non-root. `recovery-report` and `emergency-dump` still hold their own copy (slices b, c).
+
+## Round 92 — D50 reworded: everything in the roadmap is built before 0.1 (v0.0.95)
+
+- Task: Rodrigo: D50 means no capability that is not already in the roadmap; every card in the roadmap is built BEFORE 0.1. Docs only.
+- Files: `ROADMAP.md` (D50 reworded; D19, D58, the M14 heading and a note in §11 follow; C6.1 to C6.4, C11.1, C11.5 and M14 are no longer «after 0.1»), status file (Snapshot, Next up). No source, script or test change.
+- Not run: `npm test` on Node 18/20, `npm run smoke` (no script changed), CI, macOS, non-root.
+
+## Round 91 — C9.10: round 87 tidied (v0.0.94)
+
+- Task: second of the three tasks Rodrigo allowed in a row. Round 87 (ChatGPT) left a second `# Changelog` heading between two entries and reformatted `package.json`.
+- Files: `CHANGELOG.md` (the second heading removed), `package.json` (`workspaces` and `engines` on one line again; only `"version"` differs from round 86). `test/changelog-heading.test.mjs` (1, red first). No source or script change. ROADMAP: C9.10.
+- Not run: `npm run smoke` (no script changed), Node 18/20, CI, macOS, non-root.
+
+## Round 90 — C9.9: the report inside a dump no longer asks for the last delivery zip (v0.0.93)
+
+- Task: Rodrigo allowed three tasks in a row, exceptionally; this is the first (the string found in round 89).
+- Files: `scripts/emergency-dump.mjs` (one line of the report: the baseline travels inside the dump, nothing else has to come with it). `test/emergency-report-text.test.mjs` (1, red first), 1 hand mutant red. ROADMAP: C9.9. `RECOVER/` files untouched (digest unchanged).
+- Not run: Node 18/20, CI, macOS, non-root.
+
+## Round 89 — D44: the /dump sentence no longer asks for the last delivery zip (v0.0.92)
+
+- Task: Rodrigo confirmed D59 («sim d59») and asked for D44, now unblocked by the G-C7 closure. Docs only.
+- Files: `CLAUDE.md` and item 17 of the status file: the sentence after a `/dump` is now «Dump created: <n>. Send it to the next session with «recovery mode».» (the baseline travels inside the dump, C9.6). `test/dump-sentence.test.mjs` (4, red first: the sentence in both files asks for «recovery mode», not for the zip, and the two files agree). ROADMAP: D59 confirmed, D44 applied. No source, script or toolchain file changed (the `RECOVER/` digest is unchanged).
+- Found, not fixed: the report inside a dump (`scripts/emergency-dump.mjs`) still says «ideally together with the LAST good delivery zip»; it is a script string, outside D44.
+- Not run: Node 18/20, CI, macOS, non-root; `npm run smoke` (no script changed).
+
+## Round 88 — C9.8: the dump leaves out home-directory noise at the top of work/ (v0.0.91)
+
+- Task: Rodrigo chose option A and closed G-C7 (clean chat on Claude and on ChatGPT; ChatGPT recovered with no zip and delivered round 87, which I checked: only metadata differs from round 86, `verify-delivery-zip --against` passes, `npm test` 703/704 with 1 skip). From that rehearsal: the dump carried a 60 MB `uv` binary, `.config`, `.npmrc` (can hold a registry token) and `.wget-hsts`.
+- Files: `scripts/emergency-dump.mjs` (top-level `.local`, `.config`, `.npmrc`, `.wget-hsts` skipped unless `work/` is the project root; named in the report and in `marker.homeSkipped`; the external `zip`/`tar` path skips the same names). `test/emergency-home-noise.test.mjs` (4, red first), 7 hand mutants, all red. ROADMAP: C9.8, D59 (proposed), D58 lifted, D44 unblocked, not applied.
+- Decision by Claude: `recovered*` is NOT skipped (option A listed it): recovery mode works inside `recovered/work/<project>`, so skipping it would drop a recovery session's work (D59).
+- Found, not fixed: round 87 left a second `# Changelog` heading (line 11) and reformatted `package.json` (`workspaces`, `engines`); the `tar.gz` path was checked by hand, not by a test.
+- Not run: `npm run smoke`, Node 18/20, CI, macOS, non-root.
+
+## Round 87 — recovery delivery: recovered from emergency dump (v0.0.90)
+
+- Task: recovery-only delivery; no task was in progress. The emergency dump matches the round 86 baseline exactly (111 files); no project files were lost, added or modified.
+- Files: `CHANGELOG.md`, `package.json`, `CHICLA_PROJECT_STATUS-91.md`, generated fingerprints and `FILES.manifest`. No product code changed.
+- Checks: recovery report, baseline comparison, `check-manifest`, `check-build` and `bump-round --verify` passed. `npm test` was attempted but exceeded the 300-second execution limit; the run did not finish.
+- Not run: `npm run smoke`, Node 18/20, CI, macOS.
+
+## Round 86 — docs only: D58 recorded, wait for the G-C7 rehearsal (v0.0.89)
+
+- Task: Rodrigo answered «esperar pelo G-C7» to the next-task question. ROADMAP gets D58 (confirmed); the status file's «Next up» says no card is waiting. No source, script or test change.
+- Not run: macOS and Node 18/20 locally (CI), non-root.
+
+## Round 85 — C7.3: NFC/NFD collisions are errors in the manifest, on disk and in the delivery zip (v0.0.88)
+
+- Task: Rodrigo chose C7.3 and confirmed D56 (a collision is an ERROR everywhere, «erro em todos»), D57 (`EMANIFEST_COLLISION` for manifest and disk, `EZIP_COLLISION` for the zip) and one slice. Before: the NFC comparison (round 1r) put look-alike names under one key, so a lost file could hide behind its look-alike and a zip's crc32/size check only saw one of two.
+- Files: `scripts/manifest.mjs` (`parseManifest` and `serializeManifest` refuse two different paths with one NFC name; the same path twice stays `EMANIFEST_DUPLICATE`), `scripts/check-manifest.mjs` (two files on disk that collide stop the check and `--write`; the manifest is left as it was), `scripts/verify-delivery-zip.mjs` (`EZIP_COLLISION`, read before names are folded). `docs/manifest.md` explains the new code (its test requires it). `test/collisions-nfc.test.mjs` (6, red first, except the regression guard «manifest NFD, disk NFC, nothing lost», which pins the existing comparison). 8 hand mutants, all red. `emergency-dump` is untouched (D7; C9.3 already lists collisions).
+- Not run: macOS and Node 18/20 locally (CI), non-root; the disk test skips where the file system folds the two names (APFS), so on the Mac CI only the manifest and zip tests run.
+
+## Round 84 — C9.5: tests that break chicla-zip on purpose and check the dump still comes out (v0.0.87)
+
+- Task: Rodrigo confirmed D54 («sim, sem fallback») and D55 («sim, manter») and approved C9.5. The external path of `emergency-dump` (D7: `zip`, then `tar`) already existed but nothing forced it. No source change.
+- Files: `test/emergency-fallback.test.mjs` (4, run on a copy of the tool tree with a broken `zipkit.mjs`: the writer throws; the module does not parse; no `zip` → `.tar.gz`; neither `zip` nor `tar` → exit 1, no dump). The dump is read by Python; the secret `.env` stays out; the marker keeps the hashes; the report says «used zip/tar». The first three passed at once (existing behaviour), so protection was proved by 6 hand mutants, all red (no catch, tar path skipped, `.env` not excluded, hashes not reset, no note in the report, exit 0 with no dump). ROADMAP: D54 and D55 recorded as confirmed; C9.5 closed.
+- Found, not fixed: the `tar -czhf` fallback needs `gzip` on the PATH (a PATH without it gives «dump NOT created»; real machines have it, the test gives it to `tar`).
+- Not run: macOS and Node 18/20 locally (CI), non-root, full `npm run smoke` (no script changed).
+
+## Round 83 — C9.4 slice b: `recovery-report` extracts the dump and the baseline with chicla-zip, no external unzip (v0.0.86)
+
+- Task: Rodrigo «avança» (no open decisions; next = C9.4 slice b). `recovery-report` imports `extractZip` from `./zipkit.mjs` (beside it in `RECOVER/`) or from `packages/chicla-zip/src/` (in the tree); the dump and the `--baseline` zip go through it. A refusal (`EUNSAFE`, `ECOLLISION`…) prints the code and exits 1 with nothing written outside the destination; there is no fallback to `unzip` (D54 proposed). `.tar.gz` dumps (the old emergency path) still use `tar`. **C9.4 is closed.**
+- Files: `scripts/recovery-report.mjs` (source, 1), `test/recovery-nounzip.test.mjs` (5, red first; PATH with node only, `LC_ALL=C`, Python writes the hostile zips; tests 3 and 4 were tightened to need `EUNSAFE` because they passed for the wrong reason). 4 hand mutants, all red (no-op extract, swallowed baseline error, hidden error code, always the tree path: the last one reddens `emergency-recover-folder`). The toolchain pin in `CLAUDE.md` changed with the script (`bump-round`).
+- Found, not fixed: the start line of item 17 still uses `unzip` to take `RECOVER/` out of the dump, because the digest must be checked BEFORE any code from the zip runs (D55 proposed). Slip: I ran `bump-round --help` (no such flag) and it bumped seq 86 → 87 early; harmless, it is this round's number.
+- Not run: macOS and Node 18/20 locally (CI), non-root, `npm run smoke` beyond `smoke-test-emergency` (the only script that reads `recovery-report`; passed), a real dump with a non-UTF-8 locale on macOS.
+
+## Round 82 — C9.4 slice a: the recovery toolchain is pinned in CLAUDE.md and checked before it runs (v0.0.85)
+
+- Task: Rodrigo «avança»; he confirmed both open questions (this round, via AskUserQuestion): `bump-round` writes the digest into `CLAUDE.md` and `--verify` checks it; on a mismatch recovery STOPS (`EHASH_TOOLCHAIN`, exit 3) unless he says `--trust-toolchain`. Digest = sha256 of `sha256sum RECOVER/*.mjs` (a shell reproduces it). The start line of item 17 now compares it in the shell BEFORE running anything from the zip; `recovery-report` run from a `RECOVER/` folder checks it again (second look; a hostile script could skip it, the shell check is the real guard). Run from `scripts/` nothing is checked.
+- Files: `scripts/bump-round.mjs`, `scripts/recovery-report.mjs` (source), `CLAUDE.md` (the pin line), status item 17, `test/toolchain-pin.test.mjs` (5, red first; includes the start line run for real against a good and a swapped toolchain). 6 hand mutants: 5 red, 1 equivalent (the explicit `sort`: the names are already alphabetical). Note: mutating `recovery-report.mjs` also reddens the pin test (its digest changes), so M1 to M3 are red for two reasons.
+- Slice b (extract with `chicla-zip`, no `unzip` in `recovery-report`) is the next round: this one already touches 2 source files plus the pin.
+- Not run: macOS and Node 18/20 locally (CI), non-root; recovery with `--baseline` through the new start line; `sha256sum` on macOS (it has `shasum -a 256`; the start line is untested there, G-C7 rehearsal).
+
+## Round 81 — C9.3: NFC/NFD name collisions at the top of the dump report, on the console and in the marker (v0.0.84)
+
+- Task: Rodrigo «avança» (no open decisions; M9 next). `emergency-dump.mjs` groups the project's true names that fold to the same NFC; the groups go in a section at the TOP of `RECOVERY_REPORT.md`, on the console (names printed) and in `marker.collisions`. They are no longer an «error» line at the end of the report. The dump still comes out (exit 0, zip) with both files in it.
+- Files: `scripts/emergency-dump.mjs` (source), `test/emergency-collisions.test.mjs` (2, red first; skipped where the file system folds the names). 4 hand mutants, all red (marker empty, no console line, wrong threshold, section moved after the regular ones). `smoke-test-emergency` T4 (report and recovery-report warn) still passes.
+- Not run: macOS and Node 18/20 locally (CI), non-root, a case-only collision (the card says NFC/NFD; `recovery-report` and `collisionsOf` already own the wider rules).
+
+## Round 80 — C9.2: the dump carries RECOVER/ (the recovery toolchain, ASCII names) with its sha256 in the marker (v0.0.83)
+
+- Task: Rodrigo «avança» (no open decisions; M9 next). `emergency-dump.mjs` adds `RECOVER/recovery-report.mjs`, `baseline.mjs`, `manifest.mjs`, `zipkit.mjs` (read from the tree that ran, so they match it) and `marker.toolchain` = sha256 of each. The start line in item 17 is now `unzip -q dump.zip 'RECOVER/*' -d $R && node $R/RECOVER/recovery-report.mjs …`; checked on a dump of the real tree (exit 0).
+- Found: the old start line (copy ONE file to /tmp and run it) has been broken since `recovery-report` imports `./baseline.mjs` and `./manifest.mjs` (`ERR_MODULE_NOT_FOUND`, reproduced). No smoke test covered that line; the new test does.
+- Files: `scripts/emergency-dump.mjs` (source), `test/emergency-recover-folder.test.mjs` (2, red first; Python reads the zip), status item 17. 3 hand mutants, all red (hash of less, a missing file, a non-ASCII name).
+- Not run: macOS and Node 18/20 locally (CI), non-root; the zip/tar fallback also gets RECOVER/ but is untested (C9.5); the marker's toolchain hash is not yet CHECKED by anyone (C9.4).
+
+## Round 79 — C9.1: the /dump writes with chicla-zip's writeZipStream, no external `zip` (v0.0.82)
+
+- Task: Rodrigo «avança» (no open decisions; "Next up" = M9). `emergency-dump.mjs` streams every file into the zip with `writeZipStream`; each project file is hashed (sha256) in that same pass; `RECOVERY_MARKER.json` and `RECOVERY_REPORT.md` are written LAST (they need the hashes and the read errors). Past the hash limit (default 300 MB, test option `--hash-limit`) files still go in, unhashed, and the marker says so (`hashLimit`, `hashLimitReached`, `unhashed`). A file that fails mid-read is cut, recorded in `reportErrors`, and the dump goes on.
+- D7 kept: if the writer fails for any reason, the old `zip` / `tar` path runs (hashes redone, the failure recorded). Not tested yet: that is C9.5.
+- Found by the smoke test: a dump with bit 11 on non-ASCII names is extracted by Info-ZIP `unzip` 6.00 as `caf#U00e9` in a C locale, so `recovery-report.mjs` (and the smoke test) now run `unzip` with `LC_ALL=C.UTF-8`. The next session's start line (item 17) only unzips ASCII names, so it is unaffected; C9.2/C9.4 remove the dependency.
+- Files: `scripts/emergency-dump.mjs` (source), `scripts/recovery-report.mjs` (one line), `scripts/smoke-test-emergency.mjs` (one line), `test/emergency-dump-nozip.test.mjs` (4, red first; PATH with node only; Python and `unzip` as readers). 4 hand mutants, all red (no hash update, limit off, limit flag hidden, report name). Empty folders are no longer in the dump (files only).
+- Not run: macOS and Node 18/20 locally (CI), non-root, the fallback path (C9.5), `recovery-report` without `unzip` (C9.4).
+
+## Round 78 — C8.3: --against and --allow-removed pinned on a PATH with node only; M8 closed (v0.0.81)
+
+- Task: Rodrigo «d52 sim. avança» (D52 confirmed). C8.3 asked for `--against` and `--allow-removed` to be ported. They already work without `zip`/`unzip` since rounds 76 and 77, so this round adds no product code: `test/verify-against.test.mjs` (5) pins them on a PATH with node only. Previous zips are made by Python.
+- The tests passed before any change (nothing was left to port): they protect by the mutants. 5 hand mutants of `verify-delivery-zip.mjs`, all red: NFC of `--allow-removed` (survived until a test passed the path in NFD), unwrapping of an upload folder, junk/private exemption, status-file exemption, `--allow-removed` itself. Also pinned: `make-delivery-zip` passes both options on, and a refused delivery leaves no zip.
+- Files: tests and docs only; no source file. M8 (C8.1 to C8.3) is closed. `emergency-dump` and `recovery-report` still use `zip`/`unzip` (M9, next).
+- Not run: macOS and Node 18/20 locally (CI), Windows, non-root; only Node 22. `npm run smoke` not re-run (no script changed).
+
+## Round 77 — C8.2: verify-delivery-zip reads the zip itself, no `unzip`; bit 11 required in the delivery (v0.0.80)
+
+- Task: Rodrigo «avança» (C8.2 of D50). `scripts/verify-delivery-zip.mjs` reads entry bytes with its own reader (local header, stored or deflate) and checks size and crc32 against the central directory: `EZIP_DATA`. Non-ASCII names without the UTF-8 flag (bit 11): `EUTF8_FLAG`, in the delivery only; `--against` uploads are never held to either rule. D52 (proposed, call on delegation): the reader is the script's own, not `chicla-zip`, so the verifier stays independent of the writer.
+- Tests first (5 red): `test/verify-nounzip.test.mjs` (7): the whole chain (make + verify) on a PATH with node only; all-stored and all-deflated zips verify; same-size swap, a flipped byte (deflated and stored), a lying size, a missing bit 11, and the `--against` exemption. 7 hand mutants: all red once two tests were added for the crc and size checks; one explained survivor, the bounds check (the size check catches the same case). `test/manifest-v2.test.mjs`: its re-zip helper now sets bit 11 itself (Info-ZIP does not in every locale).
+- Files: 1 script; tests, docs. Not done: `emergency-dump` and `recovery-report` still use `zip`/`unzip` (M9); C8.3 next.
+- Not run: macOS and Node 18/20 locally (CI), Windows, non-root; only Node 22. `npm run smoke` passed here.
+
+## Round 76 — C8.1: make-delivery-zip writes the zip with chicla-zip, no external `zip` (v0.0.79)
+
+- Task: Rodrigo «d51 sim. avança» (D51 confirmed; next task of D50). `scripts/make-delivery-zip.mjs` writes the delivery with `writeZip` (imported from `packages/chicla-zip/src/zipkit.mjs`): the files of the manifest in manifest order, mode and mtime kept, a non-regular file refused; any failure deletes the partial zip and exits 1. `writeZip`, not `createZip`: the list comes from the manifest, not from walking the tree.
+- Tests first (2 red): `test/make-delivery-nozip.test.mjs` (3): a PATH with node and `unzip` but no `zip`; the zip passes `unzip -tq` and Python `testzip`, lists exactly the manifest; execute bit and mtime survive (Python reads them); module missing: exit 1, no zip. 3 hand mutants: 2 red (mode, mtime), 1 explained survivor (the regular-file check: the manifest lists only files). Fixtures of `smoke-test-delivery-guards.mjs` and `manifest-v2.test.mjs` now copy `zipkit.mjs`; smoke section 4b now fakes a failing writer instead of a failing `zip`.
+- Files: 1 script + the smoke test; tests, docs. Not done: `verify-delivery-zip` still reads with `unzip` (C8.2, next); `emergency-dump` and `recovery-report` still use `zip`/`unzip` (M9).
+- Not run: macOS and Node 18/20 locally (CI), Windows, non-root; only Node 22. `npm run smoke` passed here.
+
+## Round 75 — C5.5 slice b: pack-release script and a CI `pack` job (v0.0.78)
+
+- Task: Rodrigo «avança» (next task of D50). New `scripts/pack-release.mjs <package-dir> --out <dir> [--json]`: `npm pack` in a scratch folder, refuses a private package (`EPRIVATE`) or a tarball without LICENSE (`ELICENSE`), then writes the `.tgz`, `<file>.sha256` and prints release notes (file, size, sha256, contents). Same tree, same sha256. CI job `pack` (Linux, Node 22) runs it on `chicla-zip` and keeps `dist/` as an artifact. Nothing is published.
+- Tests first (9 red): `test/pack-release.test.mjs` (7; `sha256sum -c` and `tar -tzf` as independent readers) and `test/ci.test.mjs` +2. 4 hand mutants: 2 red (private check, LICENSE check); 2 survivors explained: one space instead of two in the `.sha256` line (GNU `sha256sum -c` accepts it), and `--ignore-scripts` removed (the package has no scripts).
+- Files: 1 script, the CI file; tests, docs. D51 is still PROPOSED (not answered).
+- Not run: the new CI job on GitHub (gate G-C10), macOS and Node 18/20 locally, `npm run smoke`, non-root; only Node 22.
+
+## Round 74 — D50 recorded; C5.5 slice a: chicla-zip is packable (v0.0.77)
+
+- Task: Rodrigo discussed the direction and confirmed D50 («d50 sim e avança»): no new capability before 0.1. Next task = C5.5 slice a. `packages/chicla-zip/package.json` (`main`, `exports`, `bin` `chicla-zip`, `files` allowlist, repository), `README.md`, `LICENSE` (copy of the root one). D51 proposed.
+- Tests first (5 red): `packages/chicla-zip/test/package.test.mjs`: `npm pack --dry-run` lists exactly 4 files; the tarball is installed in a clean folder, imported, the bin runs, a zip written by it passes `unzip -tq`. 2 hand mutants red (allowlist widened; main check without realpath).
+- Bug found by the install test: an installed bin (a symlink in `node_modules/.bin`) never ran the CLI. One line in `zipkit.mjs` (`isMain` with `realpathSync`).
+- Not run: macOS and Node 18/20 locally (CI), Windows, `npm run smoke`, non-root; only Node 22. Nothing published (rule 4). The mutant list (`npm run mutants`) was not extended or run.
+
+## Round 73 — the stray folder o/ is removed (v0.0.76)
+
+- Task: remove `o/` (Rodrigo: «remove», D49). It held `o/hello.txt` and `o/dir/b.txt`, the files of the `good()` fixture in `packages/chicla-zip/test/cli.test.mjs`: the leftover of an extraction to a relative `o` in the project root. Nothing referenced it (searched scripts, tests, packages, docs and the roadmap). It had been in the manifest, so in every delivery.
+- Files: the two files deleted; docs. No code, no test changed. The zip is built with `--allow-removed o/hello.txt --allow-removed o/dir/b.txt`.
+- Not known: who created it and when (mtime 2026-10-10 19:37). Not added: a guard against stray files in the root; nothing asked for it.
+- Not run: macOS and Node 18/20 locally (CI), Windows, non-root; only Node 22.
+
+## Round 72 — C7.1 slice c: docs/manifest.md, and a test that keeps it in step with the code (v0.0.75)
+
+- Task: C7.1 slice c (Rodrigo: «a sim, b sim, c sim, c-tarefa sim»; D48 a to c confirmed). New `docs/manifest.md`: the v1 and v2 formats, who writes and reads the manifest, what `check-manifest`, `make-delivery-zip` and `verify-delivery-zip` each check, the exempt baseline and why, the five `EMANIFEST_*` codes, and the limits. Indexed in `docs/README.md`. **C7.1 is closed.**
+- Tests first (4 red before the doc): `test/manifest-docs.test.mjs` (the doc exists and is indexed; shows the exact v2 header; every `EMANIFEST_*` code in the scripts is in the doc and none is in the doc only; says the baseline is exempt and that nothing is decompressed). No script changed.
+- Files: docs and one test; no source file, no product code. Two sentences of the first draft claimed more than was checked (zip64, `unzip -t`) and were cut back.
+- Not run: macOS and Node 18/20 locally (CI), Windows, non-root; only Node 22.
+
+## Round 71 — C7.1 slice b + C7.2: the manifest is written as v2 and checked against the zip (v0.0.74)
+
+- Task: C7.1 slice b (Rodrigo: "avança", then «1 sim, 2 sim, 3 sim, 4 sim» to the four decisions, D48). `check-manifest --write` writes FILES.manifest as v2 (path, crc32, size; no sha256). `verify-delivery-zip` compares crc32 and size of every listed file with the zip's central directory, without decompressing: `EMANIFEST_SIZE` (first) and `EMANIFEST_CRC32`; a v1 manifest is still accepted (paths only). `FILES.baseline.json` is listed but exempt from that check (it hashes the manifest: circular; D48a). `manifest.mjs` gains `crc32` (`zlib.crc32` when present, else a table).
+- Tests first (5 red before the code): `test/manifest-v2.test.mjs` (10; crc32 from Python zlib, bytes from `unzip`; tampered zips: same size, truncated, emptied, older bytes, size only; v1 and `--against` v1 still pass). 6 hand mutants, all red. Old readers moved to the parser: `baseline`, `license` and `manifest` tests, smoke `bump-round` and `delivery-guards`.
+- Files: 3 scripts (`manifest`, `check-manifest`, `verify-delivery-zip`); tests, smoke, docs. Also fixed: the status file's "Current version" line (was v0.0.62).
+- Not built: crc32 comparison between this zip and the previous one (D48c). Open: D48 a to c.
+- Not run: macOS and Node 18/20 locally (CI), Windows, non-root; only Node 22.
+
+## Round 70 — C7.1 slice a2: dump, recovery and delivery read the manifest through the parser (v0.0.73)
+
+- Task: C7.1 slice a2 (Rodrigo: "avança"). `make-delivery-zip.mjs`, `recovery-report.mjs` and `emergency-dump.mjs` read FILES.manifest through `parseManifest` (v1 and v2), so every reader in `scripts/` now does; nothing writes v2 yet. Behaviour on a bad manifest: `make-delivery-zip` aborts with the code (no zip); `emergency-dump` NEVER fails for it (records `EMANIFEST_*` in the report's errors and still makes the zip: its safe() now prints the error code); `recovery-report` without a baseline says «NO USABLE BASE» with the code and lists nothing as new or missing (it used to crash or call everything new), exit 0.
+- Tests first (5 red before the code): `test/manifest-readers.test.mjs` (a scan that no script splits FILES.manifest by hand; dump and recovery with a v2 manifest; dump and recovery with a corrupt one). Hand mutants, red: the recovery guard removed, the code dropped from the dump's error line.
+- Files: the 3 scripts; test, docs. No product code.
+- Next: slice b (`check-manifest --write` writes v2; `verify-delivery-zip` checks crc32 and size against the zip's central directory, C7.2), then c (docs).
+- Run: `check-build`, `npm test`, `npm run smoke`. Not run: macOS and Node 18/20 locally (CI), Windows, non-root.
+
+## Round 69 — C7.1 slice a1: one parser for FILES.manifest v1 and v2 (v0.0.72)
+
+- Task: C7.1 (Rodrigo chose 3 slices, 2026-10-11; a is itself split in a1 and a2 so each round keeps to 3 source files). New `scripts/manifest.mjs`: `parseManifest` reads v1 (one path per line) and v2 (header `# chicla-manifest v2`, then `path<TAB>crc32<TAB>size[<TAB>sha256]`), `serializeManifest` writes either. Errors have codes `EMANIFEST_FORMAT`, `EMANIFEST_DUPLICATE`, `EMANIFEST_UNSAFE` (the manifest is input: `..`, absolute and empty-segment paths are refused). `check-manifest.mjs` and `verify-delivery-zip.mjs` read through it; a corrupt manifest now FAILS them instead of being half-read. Nothing writes v2 yet, so the delivery is unchanged.
+- Tests first (red before the code): `test/manifest.test.mjs` (9: v1, v2, the «#» path, round trip, 12 refusals, serialize refusals, `check-manifest` and `verify-delivery-zip` on a v2 manifest, corrupt manifest). Hand mutants, all red: unsafe check off, duplicate check off, header test loosened to any «#» line.
+- Files: `scripts/manifest.mjs` (new), `scripts/check-manifest.mjs`, `scripts/verify-delivery-zip.mjs`; `smoke-test-delivery-guards`, `smoke-test-bump-round` (it copies the scripts it needs; it broke without `manifest.mjs`) and `layout.test` list the new script.
+- Next: a2 = `make-delivery-zip`, `recovery-report`, `emergency-dump` read through the parser (they still split lines, which is fine until something writes v2); then b = `check-manifest --write` writes v2 and `verify-delivery-zip` checks crc32 and size against the zip's central directory (C7.2); then c = docs.
+- Run: `check-build`, `npm test`, `npm run smoke`. Not run: macOS and Node 18/20 locally (CI will), Windows, non-root.
+
+## Round 68 — D47 confirmed, macOS green (v0.0.71)
+
+- Docs only. D47 (tests skip by a MEASURED probe, never by platform name) confirmed by Rodrigo, 2026-10-11. He also reports that every CI job, macOS included, came back green on the round-66 code (the 41 failures were test assumptions); G-C3 now has fresh evidence on the current code (Node 18, 20, 22 on macOS-latest and Ubuntu), and Rodrigo closes it. Still not checked on a Mac: the exFAT/FAT copy fallback of C2.7, and what macOS does with equivalent names in the 5 skipped tests.
+- Files: `ROADMAP.md`, status file, this entry. No code. Run: `npm test`, `npm run smoke`. Not run: macOS locally, Node 18 and 20 locally, non-root.
 
 ## Round 67 — G-C1 evidence recorded (v0.0.70)
 

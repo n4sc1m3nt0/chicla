@@ -4,6 +4,7 @@
 // Plants files that must NEVER enter the dump, makes known changes against a base zip, and checks
 // (inspecting the zip separately, with unzip -l and a search for the secret marker in the bytes) that the dump is clean
 // and that the recovery reports modified, new and missing files. Exits 1 if anything fails.
+import { importPinned, pinnedFile } from "../test/toolchain-files.mjs";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -11,16 +12,17 @@ import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const { parseManifest } = await importPinned("manifest");
 const T = mkdtempSync(join(tmpdir(), "chicla-w3-"));
 const work = join(T, "work"), proj = join(work, "chicla"), outdir = join(T, "out");
 const SECRET = ["PRIVATE", "MARKER", "9f3a"].join("-"); // assembled at runtime: the literal must not exist in this file, which is part of the dumped copy
 let failed = 0;
 const check = (ok, what, detail) => { console.log(`${ok ? "✓" : "✗"} ${what}${!ok && detail ? `\n    got: ${detail}` : ""}`); if (!ok) failed++; };
-const run = (cmd, args, cwd) => spawnSync(cmd, args, { cwd, encoding: "utf8", maxBuffer: 1 << 28 });
+const run = (cmd, args, cwd) => spawnSync(cmd, args, { cwd, encoding: "utf8", maxBuffer: 1 << 28, env: { ...process.env, LC_ALL: "C.UTF-8" } }); // C9.1: dumps mark UTF-8 names with bit 11; unzip 6.00 needs a UTF-8 locale to honour it
 const put = (rel, text = "x\n") => { const p = join(proj, rel); mkdirSync(dirname(p), { recursive: true }); writeFileSync(p, text); };
 
 // 1. copy of the project (only manifest files that exist) + a scratch file outside the project root
-for (const rel of readFileSync(join(ROOT, "FILES.manifest"), "utf8").split("\n").filter(Boolean)) {
+for (const { path: rel } of parseManifest(readFileSync(join(ROOT, "FILES.manifest"), "utf8"))) { // v2 since C7.1 slice b
   if (!existsSync(join(ROOT, rel))) continue;
   mkdirSync(dirname(join(proj, rel)), { recursive: true }); copyFileSync(join(ROOT, rel), join(proj, rel));
 }
@@ -28,7 +30,7 @@ copyFileSync(join(ROOT, "FILES.manifest"), join(proj, "FILES.manifest")); // the
 put("../scratch-note.txt", "scratch outside the project\n");
 // 2. base zip = the "last delivery" state
 const baseline = join(T, "baseline.zip");
-const names = readFileSync(join(proj, "FILES.manifest"), "utf8").split("\n").filter(Boolean).filter((n) => existsSync(join(proj, n)));
+const names = parseManifest(readFileSync(join(proj, "FILES.manifest"), "utf8")).map((e) => e.path).filter((n) => existsSync(join(proj, n)));
 const z = spawnSync("zip", ["-q", baseline, "-@"], { cwd: proj, input: names.join("\n") + "\n" });
 check(z.status === 0 && existsSync(baseline), "base zip created");
 
@@ -38,11 +40,10 @@ put("packages/chicla-kit/src/new_mod.mjs", "export const ok = true;\n");
 put("packages/chicla-kit/src/broken.mjs", "export function cortado() {\n    if (true) {\n");
 rmSync(join(proj, "packages/chicla-zip/package.json"));
 // 4. things that must NEVER enter the dump
-put("corpus/real-world/extrato.pdf", SECRET); put("corpus/huge/big.pdf", SECRET);
 put(".env", `TOKEN=${SECRET}\n`); put(".venv/lib/x.py", SECRET);
 put("tools/corpus/__pycache__/a.pyc", SECRET);
 // ...and things that must stay
-put(".env.example", "TOKEN=\n"); put("corpus/real-world/.gitkeep", "");
+put(".env.example", "TOKEN=\n"); put("corpus/real-world/ordinary.txt", "no corpus rule (D64)\n");
 
 // 5. dump
 const d = run("node", [join(ROOT, "scripts/emergency-dump.mjs"), "--work", work, "--outdir", outdir, "--no-outputs", "test note"], ROOT);
@@ -50,10 +51,10 @@ const dumpZip = existsSync(outdir) ? readdirSync(outdir).find((f) => f.endsWith(
 check(d.status === 0 && !!dumpZip, "emergency-dump created the zip");
 const dumpPath = join(outdir, dumpZip ?? "does-not-exist.zip");
 const listing = run("unzip", ["-l", dumpPath]).stdout ?? "";
-const NEVER = { "corpus/real-world/extrato.pdf": /real-world\/extrato\.pdf/, "corpus/huge/big.pdf": /huge\/big\.pdf/, ".env": /\/\.env$/m, ".venv/": /\.venv\//, "__pycache__ / *.pyc": /__pycache__|\.pyc$/m };
+const NEVER = { ".env": /\/\.env$/m, ".venv/": /\.venv\//, "__pycache__ / *.pyc": /__pycache__|\.pyc$/m };
 for (const [what, re] of Object.entries(NEVER)) check(!re.test(listing), `outside the zip: ${what}`);
 check(/work\/chicla\/\.env\.example$/m.test(listing), "inside the zip: .env.example");
-check(/work\/chicla\/corpus\/real-world\/\.gitkeep$/m.test(listing), "inside the zip: corpus/real-world/.gitkeep");
+check(/work\/chicla\/corpus\/real-world\/ordinary\.txt$/m.test(listing), "inside the zip: corpus/real-world/ordinary.txt");
 check(listing.includes("work/scratch-note.txt"), "inside the zip: scratch file outside the project root");
 const ex = join(T, "unz"); run("unzip", ["-q", dumpPath, "-d", ex]);
 const leaked = run("grep", ["-rl", SECRET, ex]).stdout.trim();
@@ -61,7 +62,7 @@ check(leaked === "", `secret marker absent from the zip bytes${leaked ? ` (appea
 check(/APP_VERSION|CHANGELOG seq=\d+/.test(readFileSync(join(ex, "RECOVERY_REPORT.md"), "utf8")) && JSON.parse(readFileSync(join(ex, "RECOVERY_MARKER.json"), "utf8")).appVersion === JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).version, "version read from package.json in the marker");
 
 // 6. recovery, with and without baseline
-const rec = (extra, name) => { const o = join(T, name); const r = run("node", [join(ROOT, "scripts/recovery-report.mjs"), dumpPath, "--out", o, ...extra], ROOT); return { r, diff: existsSync(join(o, "RECOVERY_DIFF.md")) ? readFileSync(join(o, "RECOVERY_DIFF.md"), "utf8") : "" }; };
+const rec = (extra, name) => { const o = join(T, name); const r = run("node", [pinnedFile(ROOT, "recovery-report"), dumpPath, "--out", o, ...extra], ROOT); return { r, diff: existsSync(join(o, "RECOVERY_DIFF.md")) ? readFileSync(join(o, "RECOVERY_DIFF.md"), "utf8") : "" }; };
 const section = (diff, title) => (diff.split(/^### /m).find((s) => s.startsWith(title)) ?? "");
 const a = rec(["--baseline", baseline], "rec-baseline");
 check(a.r.status === 0, "recovery-report ran (with baseline)");
@@ -92,7 +93,7 @@ const dumpMini = (m) => {
   const z = existsSync(m.o) ? readdirSync(m.o).find((f) => f.endsWith(".zip")) : undefined;
   return { r, path: z ? join(m.o, z) : null, report: z ? (run("unzip", ["-p", join(m.o, z), "RECOVERY_REPORT.md"]).stdout ?? "") : "" };
 };
-const recZip = (zipPath, extra, name) => { const o = join(T, name); const r = run("node", [join(ROOT, "scripts/recovery-report.mjs"), zipPath, "--out", o, ...extra], ROOT); return { r, diff: existsSync(join(o, "RECOVERY_DIFF.md")) ? readFileSync(join(o, "RECOVERY_DIFF.md"), "utf8") : "" }; };
+const recZip = (zipPath, extra, name) => { const o = join(T, name); const r = run("node", [pinnedFile(ROOT, "recovery-report"), zipPath, "--out", o, ...extra], ROOT); return { r, diff: existsSync(join(o, "RECOVERY_DIFF.md")) ? readFileSync(join(o, "RECOVERY_DIFF.md"), "utf8") : "" }; };
 const mdSection = (md, title) => md.split(/^## /m).find((x) => x.startsWith(title)) ?? "";
 
 // T1 — manifest NFD, disk NFC, no baseline: neither the dump nor recovery-report sees "new" or "missing"

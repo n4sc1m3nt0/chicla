@@ -584,4 +584,25 @@ const reader5 = (() => {
   ];
 })();
 
-export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5];
+// M14 C14.2 (round 141): the wiring of the Windows name checks (windowsNames) in the extractor and the three writers. The pure functions have their own hand mutants (round 140).
+const win14 = (() => {
+  const F = "src/zipkit.mjs", W = ["test/windows-names.test.mjs"];
+  return [
+    { id: "C14.2-extract-check", file: F, tests: W, why: "extractZip refuses a Windows-unsafe name when windowsNames is on",
+      find: "    if (win) { const w = winWhy(", replace: "    if (false) { const w = winWhy(" },
+    { id: "C14.2-default-platform", file: F, tests: W, why: "windowsNames defaults to the platform, not to on (Linux and macOS behave as before)",
+      find: 'if (v === undefined) return process.platform === "win32";', replace: "if (v === undefined) return true;" },
+    { id: "C14.2-option-checked", file: F, tests: W, why: "a windowsNames that is not a boolean is EARG, never silently ignored",
+      find: 'if (typeof v !== "boolean") throw new ZipError("windowsNames', replace: 'if (false) throw new ZipError("windowsNames' },
+    { id: "C14.2-vet-check", file: F, tests: W, why: "the writers refuse a Windows-unsafe name when windowsNames is on",
+      find: "const wwhy = win ? winWhy(", replace: "const wwhy = false ? winWhy(" },
+    { id: "C14.2-write-flag", file: F, tests: W, why: "writeZip hands the flag to the name check",
+      find: "vetName(s, seen, win);\n    let data = Buffer.alloc(0);", replace: "vetName(s, seen, false);\n    let data = Buffer.alloc(0);" },
+    { id: "C14.2-stream-flag", file: F, tests: W, why: "writeZipStream hands the flag to the name check",
+      find: "vetName(s, seen, win);\n      if (dir) { if (s.data?.length || s.stream", replace: "vetName(s, seen, false);\n      if (dir) { if (s.data?.length || s.stream" },
+    { id: "C14.2-reason-null", file: F, tests: W, why: "winWhy reports the problem codes (a hit is never turned into «fine»)",
+      find: "return c.length ? `not valid on Windows", replace: "return c.length > 99 ? `not valid on Windows" },
+  ];
+})();
+
+export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14];

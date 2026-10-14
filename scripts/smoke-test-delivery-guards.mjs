@@ -14,13 +14,15 @@
 //    (a clean project passes) so that a negative does not pass for the wrong reason.
 //  - It hides no failures: it counts them, prints the detail and exits 1.
 import { spawnSync } from "node:child_process";
+import { CHECK_BUILD_COPY, CHECK_MANIFEST_COPY, VERIFY_DELIVERY_COPY, copyFiles, importPinned } from "../test/toolchain-files.mjs";
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const SCRIPTS = ["check-manifest.mjs", "check-build.mjs", "make-delivery-zip.mjs", "baseline.mjs", "verify-delivery-zip.mjs", "archive-changelog.mjs"];
+const { crc32, parseManifest, serializeManifest } = await importPinned("manifest");
+const COPY = [...CHECK_MANIFEST_COPY, ...CHECK_BUILD_COPY, ...VERIFY_DELIVERY_COPY, "scripts/make-delivery-zip.mjs", "packages/chicla-kit/src/make-delivery.mjs", "scripts/archive-changelog.mjs"]; // wrappers, their cores in the kit and the pinned files
 const cleanup = [];
 const tmp = (p) => { const d = mkdtempSync(join(tmpdir(), p)); cleanup.push(d); return d; };
 
@@ -29,6 +31,8 @@ const check = (ok, what, detail = "") => {
   console.log(`  ${ok ? "✓" : "✗"} ${what}`);
   if (ok) passed++; else { failed++; if (detail) console.log(detail.split("\n").map((l) => `      ${l}`).join("\n")); }
 };
+// FILES.manifest is v2 (C7.1 slice b): paths come out of the one parser, never from splitting lines
+const manifestNames = (text) => parseManifest(text).map((e) => e.path);
 const note = (what) => console.log(`  ℹ ${what}`);
 const section = (t) => console.log(`\n${t}`);
 
@@ -51,8 +55,9 @@ const FP = (seq) => `seq=${seq} file=CHICLA_PROJECT_STATUS-${seq}.md app_sha256_
 function makeProject({ seq = 7, clSeq = seq } = {}) {
   const root = tmp("guards-proj-");
   const w = (rel, text) => { mkdirSync(dirname(join(root, rel)), { recursive: true }); writeFileSync(join(root, rel), text); };
-  mkdirSync(join(root, "scripts"));
-  for (const f of SCRIPTS) copyFileSync(join(HERE, f), join(root, "scripts", f));
+  copyFiles(join(HERE, ".."), root, COPY);
+  mkdirSync(join(root, "packages/chicla-zip/src"), { recursive: true }); // C8.1: make-delivery-zip writes the zip with chicla-zip
+  copyFileSync(join(HERE, "..", "packages/chicla-zip/src/zipkit.mjs"), join(root, "packages/chicla-zip/src/zipkit.mjs"));
   w("package.json", '{"name":"fake","private":true,"version":"0.0.1"}\n');
   w("CLAUDE.md", "# rules\n");
   w("README.md", "readme\n");
@@ -60,8 +65,7 @@ function makeProject({ seq = 7, clSeq = seq } = {}) {
   w(`CHICLA_PROJECT_STATUS-${seq}.md`, "# status\n");
   w("packages/chicla-kit/src/lib.mjs", "export const a = 1;\n");
   w("packages/chicla-kit/src/extra.mjs", "export const b = 2;\n");
-  w("corpus/real-world/.gitkeep", "");
-  w("corpus/huge/.gitkeep", "");
+  w("corpus/real-world/ordinary.txt", "no corpus rule (D64): an ordinary file\n");
   w(".env.example", "KEY=\n");
   const m = run(root, "check-manifest.mjs", "--write");
   if (m.status !== 0) throw new Error("check-manifest --write failed while building the fake project:\n" + out(m));
@@ -69,12 +73,10 @@ function makeProject({ seq = 7, clSeq = seq } = {}) {
 }
 // files that must NEVER leave the project
 const plantPrivate = (p) => {
-  p.w("corpus/real-world/private-statement.pdf", "%PDF-1.4 personal data\n");
-  p.w("corpus/huge/big.pdf", "%PDF-1.4 huge\n");
   p.w(".env", "SECRET=1\n");
   p.w("tools/__pycache__/x.pyc", "pyc");
 };
-const PRIVATE_PATHS = ["corpus/real-world/private-statement.pdf", "corpus/huge/big.pdf", ".env", "tools/__pycache__/x.pyc"];
+const PRIVATE_PATHS = [".env", "tools/__pycache__/x.pyc"];
 
 try {
   console.log("delivery guards — smoke test (W6)");
@@ -107,17 +109,17 @@ try {
     };
     const refused = (v, code) => v.status === 1 && v.stderr.includes(code);
     check(refused(tamper("edit-file", (X) => appendFileSync(join(X, "packages/chicla-kit/src/lib.mjs"), "// edited after the baseline\n")), "EBASELINE_MISMATCH"), "a file changed after the baseline was written: refused (EBASELINE_MISMATCH)");
-    check(refused(tamper("extra-file", (X) => { writeFileSync(join(X, "packages/chicla-kit/src/extra.mjs"), "export const b = 2;\n"); const m = join(X, "FILES.manifest"); writeFileSync(join(X, "packages/chicla-kit/src/new.mjs"), "x\n"); writeFileSync(m, readFileSync(m, "utf8") + "packages/chicla-kit/src/new.mjs\n"); }), "EBASELINE_MISMATCH"), "a file the baseline does not list: refused (EBASELINE_MISMATCH)");
+    check(refused(tamper("extra-file", (X) => { writeFileSync(join(X, "packages/chicla-kit/src/extra.mjs"), "export const b = 2;\n"); const m = join(X, "FILES.manifest"); writeFileSync(join(X, "packages/chicla-kit/src/new.mjs"), "x\n"); writeFileSync(m, readFileSync(m, "utf8") + `packages/chicla-kit/src/new.mjs\t${crc32(Buffer.from("x\n")).toString(16).padStart(8, "0")}\t2\n`); }), "EBASELINE_MISMATCH"), "a file the baseline does not list: refused (EBASELINE_MISMATCH)");
     check(refused(tamper("cut", (X) => { const f = join(X, "FILES.baseline.json"); const t = readFileSync(f, "utf8"); writeFileSync(f, t.slice(0, t.length >> 1)); }), "EBASELINE_PARSE"), "a cut baseline: refused (EBASELINE_PARSE)");
     check(refused(tamper("seal", (X) => { const f = join(X, "FILES.baseline.json"); writeFileSync(f, readFileSync(f, "utf8").replace(/[0-9a-f]{64}/, "0".repeat(64))); }), "EBASELINE_SEAL"), "an edited baseline: refused (EBASELINE_SEAL)");
-    check(refused(tamper("gone", (X) => { rmSync(join(X, "FILES.baseline.json")); const m = join(X, "FILES.manifest"); writeFileSync(m, readFileSync(m, "utf8").split("\n").filter((l) => l && l !== "FILES.baseline.json").join("\n") + "\n"); }), "EBASELINE_MISSING"), "no baseline in the zip: refused (EBASELINE_MISSING)");
+    check(refused(tamper("gone", (X) => { rmSync(join(X, "FILES.baseline.json")); const m = join(X, "FILES.manifest"); writeFileSync(m, readFileSync(m, "utf8").split("\n").filter((l) => l && l.split("\t")[0] !== "FILES.baseline.json").join("\n") + "\n"); }), "EBASELINE_MISSING"), "no baseline in the zip: refused (EBASELINE_MISSING)");
   }
 
   // ============================================================================================================
   section("0b. A zip wrapped in a folder is refused (package.json must be at the root of the zip)");
   {
     const p = makeProject(), dir = tmp("guards-out-");
-    const names = readFileSync(join(p.root, "FILES.manifest"), "utf8").split("\n").filter(Boolean);
+    const names = manifestNames(readFileSync(join(p.root, "FILES.manifest"), "utf8"));
     const parent = dirname(p.root), wrapper = p.root.split("/").pop();
     const wrapped = join(dir, "wrapped.zip");
     zipAdd(parent, wrapped, ...[...names, "FILES.manifest"].map((n) => `${wrapper}/${n}`));
@@ -158,14 +160,14 @@ try {
     const p = makeProject();
     plantPrivate(p);
     run(p.root, "check-manifest.mjs", "--write");
-    const manifest = readFileSync(join(p.root, "FILES.manifest"), "utf8").split("\n");
+    const manifest = manifestNames(readFileSync(join(p.root, "FILES.manifest"), "utf8"));
     check(PRIVATE_PATHS.every((f) => !manifest.includes(f)), "check-manifest --write: no private/junk file enters FILES.manifest", manifest.join("\n"));
-    check(["corpus/real-world/.gitkeep", "corpus/huge/.gitkeep", ".env.example"].every((f) => manifest.includes(f)), "…but the .gitkeep files and .env.example (public) stay listed", manifest.join("\n"));
+    check(["corpus/real-world/ordinary.txt", ".env.example"].every((f) => manifest.includes(f)), "…but .env.example and a corpus/ folder (no project-specific rule, D64) stay listed", manifest.join("\n"));
 
     const dir = tmp("guards-out-"), zip = join(dir, "clean.zip");
     const r = run(p.root, "make-delivery-zip.mjs", zip);
     const names = existsSync(zip) ? zipList(zip) : [];
-    check(r.status === 0 && PRIVATE_PATHS.every((f) => !names.includes(f)), "make-delivery-zip: the built zip contains none of the 4 planted files", out(r) + "\n" + names.join("\n"));
+    check(r.status === 0 && PRIVATE_PATHS.every((f) => !names.includes(f)), "make-delivery-zip: the built zip contains none of the 2 planted files", out(r) + "\n" + names.join("\n"));
 
     // the verifier is the 2nd line of defence: it must refuse a zip that carries them (made by hand, bypassing the manifest)
     const bad = join(dir, "bad.zip");
@@ -173,8 +175,31 @@ try {
     zipAdd(p.root, bad, ...PRIVATE_PATHS);
     const v = run(p.root, "verify-delivery-zip.mjs", bad);
     check(v.status === 1 && /must NEVER leave the project/.test(v.stderr), "verify-delivery-zip: refuses the zip with private files", out(v));
-    check(/private corpus \(corpus\/real-world\)/.test(v.stderr) && /\.env file \(secrets\)/.test(v.stderr), "…and says why (private corpus, .env)", out(v));
-    check(/Python artefact/.test(v.stderr), "…and also Python artefacts (4 planted < 8 of the message's truncated list)", out(v));
+    check(/\.env file \(secrets\)/.test(v.stderr) && /Python artefact/.test(v.stderr), "…and says why (.env, Python artefact)", out(v));
+  }
+
+  // ============================================================================================================
+  section("2b. chicla.policy.json adds rules (C6.1 d2, D66)");
+  {
+    const p = makeProject();
+    p.w("chicla.policy.json", JSON.stringify({ version: 1, names: ["scratch"], paths: ["secrets/"] }));
+    p.w("secrets/key.txt", "K\n"); p.w("tools/scratch/s.txt", "s\n"); p.w("tools/keep.txt", "k\n");
+    const POLICY_PRIVATE = ["secrets/key.txt", "tools/scratch/s.txt"];
+    const m = run(p.root, "check-manifest.mjs", "--write");
+    const manifest = manifestNames(readFileSync(join(p.root, "FILES.manifest"), "utf8"));
+    check(m.status === 0 && POLICY_PRIVATE.every((f) => !manifest.includes(f)) && ["chicla.policy.json", "tools/keep.txt"].every((f) => manifest.includes(f)), "check-manifest --write: the listed name and path stay out; the policy file itself and the rest are listed", out(m) + manifest.join("\n"));
+    const dir = tmp("guards-out-"), zip = join(dir, "pol.zip");
+    const r = run(p.root, "make-delivery-zip.mjs", zip);
+    const names = existsSync(zip) ? zipList(zip) : [];
+    check(r.status === 0 && POLICY_PRIVATE.every((f) => !names.includes(f)) && names.includes("chicla.policy.json"), "make-delivery-zip: the built zip has neither planted file and carries the policy file", out(r) + "\n" + names.join("\n"));
+    const bad = join(dir, "bad.zip");
+    copyFileSync(zip, bad);
+    zipAdd(p.root, bad, ...POLICY_PRIVATE);
+    const v = run(p.root, "verify-delivery-zip.mjs", bad);
+    check(v.status === 1 && /must NEVER leave the project/.test(v.stderr) && /listed in chicla\.policy\.json/.test(v.stderr), "verify-delivery-zip: refuses a zip that carries them, and says the policy file is why", out(v));
+    p.w("chicla.policy.json", "{ not json");
+    const v2 = run(p.root, "verify-delivery-zip.mjs", zip), m2 = run(p.root, "check-manifest.mjs", "--write");
+    check(v2.status === 1 && /EPOLICY_PARSE/.test(v2.stderr) && m2.status === 1 && /EPOLICY_PARSE/.test(m2.stderr), "a policy file that cannot be used stops the verifier and the manifest (never silently ignored)", out(v2) + out(m2));
   }
 
   // ============================================================================================================
@@ -214,14 +239,13 @@ try {
     check(v.status === 1 && /says seq=6/.test(v.stderr), "verify-delivery-zip, on its own, refuses a hand-made zip with seq=6", out(v));
   }
 
-  section("4b. `zip` itself fails midway: no partial zip is left");
+  section("4b. the zip writer fails midway: no partial zip is left (C8.1: chicla-zip, no external `zip`)");
   {
     const p = makeProject(), zip = join(tmp("guards-out-"), "partial.zip");
-    const BIN2 = tmp("guards-bin2-");
-    for (const n of ["node", "unzip"]) symlinkSync(join(BIN, n), join(BIN2, n));
-    writeFileSync(join(BIN2, "zip"), '#!/bin/sh\nprintf partial > "$2"\nexit 1\n', { mode: 0o755 });
-    const r = spawnSync(process.execPath, [join(p.root, "scripts/make-delivery-zip.mjs"), zip], { cwd: p.root, encoding: "utf8", env: { ...ENV, PATH: BIN2 } });
-    check(r.status === 1 && /the zip command failed/.test(r.stderr), "fake zip that fails: exit 1 and its own message", out(r));
+    // a stand-in writer that leaves a partial file and then fails
+    writeFileSync(join(p.root, "packages/chicla-zip/src/zipkit.mjs"), 'import { writeFileSync } from "node:fs";\nexport const writeZip = async (out) => { writeFileSync(out, "partial"); throw Object.assign(new Error("disk full"), { code: "EFAKE" }); };\n');
+    const r = spawnSync(process.execPath, [join(p.root, "scripts/make-delivery-zip.mjs"), zip], { cwd: p.root, encoding: "utf8", env: ENV });
+    check(r.status === 1 && /could not write the zip with chicla-zip \(EFAKE/.test(r.stderr), "a writer that fails: exit 1 and its own message", out(r));
     check(!existsSync(zip), "…and the partial zip is deleted", `stayed: ${zip}`);
   }
 
@@ -270,7 +294,7 @@ try {
     const p = makeProject();
     p.w(NAME, "%PDF-1.4 unicode name\n");
     const mw = run(p.root, "check-manifest.mjs", "--write");
-    check(mw.status === 0 && readFileSync(join(p.root, "FILES.manifest"), "utf8").split("\n").includes(NAME), "the manifest lists the file with a unicode name", out(mw));
+    check(mw.status === 0 && manifestNames(readFileSync(join(p.root, "FILES.manifest"), "utf8")).includes(NAME), "the manifest lists the file with a unicode name", out(mw));
 
     const dir = tmp("guards-out-");
     const good = join(dir, "unicode.zip");
@@ -280,7 +304,7 @@ try {
     check(v.status === 0 && !/\?/.test(v.stdout.replace(/\n/g, "")), "verify-delivery-zip, on its own, approves the same zip and prints no names with `?`", out(v));
 
     // negative control: a zip WITHOUT the unicode file must still be refused, with the right name in the message
-    const manifest = readFileSync(join(p.root, "FILES.manifest"), "utf8").split("\n").filter(Boolean);
+    const manifest = manifestNames(readFileSync(join(p.root, "FILES.manifest"), "utf8"));
     const bad = join(dir, "no-unicode.zip");
     zipAdd(p.root, bad, ...manifest.filter((f) => f !== NAME), "FILES.manifest");
     const b = spawnSync(process.execPath, [join(p.root, "scripts/verify-delivery-zip.mjs"), bad], { cwd: p.root, encoding: "utf8", env: ENV3 });
@@ -309,17 +333,18 @@ try {
     const p = makeProject();
     p.w(NAME, "%PDF-1.4 unicode name\n");
     const man = join(p.root, "FILES.manifest");
-    const lines = readFileSync(man, "utf8").split("\n").filter(Boolean).filter((l) => l !== NAME && l !== nfd);
-    writeFileSync(man, [...lines, nfd].sort().join("\n") + "\n"); // manifest "from the Mac": name in NFD
+    const mine = parseManifest(readFileSync(man, "utf8"));
+    const body = Buffer.from("%PDF-1.4 unicode name\n"); // the manifest was written before the file existed: add it under its NFD name
+    writeFileSync(man, serializeManifest([...mine.filter((e) => e.path !== NAME && e.path !== nfd), { path: nfd, crc32: crc32(body), size: body.length }].sort((a, b) => (a.path < b.path ? -1 : 1)))); // manifest "from the Mac": name in NFD
     const r = run(p.root, "check-manifest.mjs");
     check(r.status === 0 && /no file lost/.test(r.stdout) && !/new file\(s\)|LOST/.test(r.stdout + r.stderr), "check-manifest: name in NFD in the manifest and NFC on disk passes, without warnings", out(r));
     // negative control: a really lost file still fails, with the true name from the manifest
-    writeFileSync(man, readFileSync(man, "utf8") + "docs/really-lost.md\n");
+    writeFileSync(man, serializeManifest([...parseManifest(readFileSync(man, "utf8")), { path: "docs/really-lost.md", crc32: 0, size: 0 }]));
     const l = run(p.root, "check-manifest.mjs");
     check(l.status === 1 && l.stderr.includes("docs/really-lost.md") && !l.stderr.includes("日本語"), "…and a really lost file still fails (and only that one)", out(l));
     // --write stays faithful to the disk (the zip is built from these names)
     const w = run(p.root, "check-manifest.mjs", "--write");
-    check(w.status === 0 && readFileSync(man, "utf8").split("\n").includes(NAME), "--write writes the name as it is on disk (NFC here)", out(w));
+    check(w.status === 0 && manifestNames(readFileSync(man, "utf8")).includes(NAME), "--write writes the name as it is on disk (NFC here)", out(w));
   }
 
   console.log(failed ? `\n✗ delivery guards: ${failed} check(s) FAILED, ${passed} passed` : `\n✓ smoke-test-delivery-guards: ${passed} checks passed`);

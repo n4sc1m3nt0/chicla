@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 // Smoke test of scripts/bump-round.mjs (adapted to the Chicla layout).
-// Runs the script AS A PROCESS in a fake project in a temporary folder (copies bump-round.mjs + check-manifest.mjs
+// Runs the script AS A PROCESS in a fake project in a temporary folder (copies bump-round.mjs + check-manifest.mjs + manifest.mjs
 // to <tmp>/scripts), as in production. The "app" leg of the fingerprint is version.mjs
 // (APP_FILE at the top of bump-round.mjs); the fake project reproduces that path and the JS comment format.
 //   node scripts/smoke-test-bump-round.mjs
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { CHECK_MANIFEST_COPY, copyFiles, importPinned } from "../test/toolchain-files.mjs";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+const { parseManifest } = await importPinned("manifest");
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 let passed = 0;
@@ -32,8 +35,7 @@ instructions item 11 above before doing anything else.`;
 
 function makeProject({ seq = 5, appSeq = seq, extraStatus = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), "bump-round-"));
-  mkdirSync(join(root, "scripts"));
-  for (const f of ["bump-round.mjs", "check-manifest.mjs"]) copyFileSync(join(HERE, f), join(root, "scripts", f));
+  copyFiles(join(HERE, ".."), root, [...CHECK_MANIFEST_COPY, "scripts/bump-round.mjs", "packages/chicla-kit/src/bump-round.mjs"]); // wrappers, their cores in the kit and the pinned files
   const appName = "version.mjs";
   const appBody = "export const APP_VERSION = \"0.0.1\"; // Accents — ç ã é · ✓\n";
   const clBody = "# Changelog\n\n## Round 1 — entry with accents: ç ã\n";
@@ -121,7 +123,7 @@ try {
   });
 
   t("bump: FILES.manifest lists -6 and no longer -5", () => {
-    const m = rd(p, "FILES.manifest").split("\n");
+    const m = parseManifest(rd(p, "FILES.manifest")).map((e) => e.path); // v2 since C7.1 slice b
     assert.ok(m.includes("CHICLA_PROJECT_STATUS-6.md") && !m.includes("CHICLA_PROJECT_STATUS-5.md"));
   });
 

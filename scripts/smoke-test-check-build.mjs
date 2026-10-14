@@ -12,6 +12,8 @@ const T = mkdtempSync(join(tmpdir(), "chicla-check-build-"));
 const proj = join(T, "proj");
 mkdirSync(join(proj, "scripts"), { recursive: true });
 copyFileSync(join(ROOT, "scripts/check-build.mjs"), join(proj, "scripts/check-build.mjs"));
+mkdirSync(join(proj, "packages/chicla-kit/src"), { recursive: true }); // C11.1 5a: the script is a wrapper over the core in the kit
+copyFileSync(join(ROOT, "packages/chicla-kit/src/check-build.mjs"), join(proj, "packages/chicla-kit/src/check-build.mjs"));
 let failed = 0;
 const check = (ok, what, detail = "") => { console.log(`${ok ? "✓" : "✗"} ${what}`); if (!ok) { failed++; if (detail) console.log(detail); } };
 const put = (rel, body) => { mkdirSync(join(proj, rel, ".."), { recursive: true }); writeFileSync(join(proj, rel), body); };
@@ -21,7 +23,7 @@ const out = (r) => `exit=${r.status}\n${r.stdout}\n${r.stderr}`;
 put("packages/a/src/ok.mjs", "export const a = 1;\n");
 put("packages/b/src/também-ok.mjs", "export function b() { return 'acentuação ç'; }\n");
 let r = run();
-check(r.status === 0 && /node --check on 3 \.mjs files/.test(r.stdout) && /✓ node --check passed/.test(r.stdout), "all valid: exit 0 and counts the files (including the script itself)", out(r));
+check(r.status === 0 && /node --check on 4 \.mjs files/.test(r.stdout) && /✓ node --check passed/.test(r.stdout), "all valid: exit 0 and counts the files (including the wrapper and its core)", out(r));
 
 put("packages/a/src/partido.mjs", "export function cortado() {\n  if (true) {\n");
 r = run();

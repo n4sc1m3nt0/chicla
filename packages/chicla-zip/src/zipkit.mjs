@@ -157,6 +157,39 @@ export const unsafeNameReason = (name) => {
   if (name.split("/").some((s) => s === "..")) return "escapes the folder (..)";
   return null;
 };
+// M14 (D96, D97): Windows name safety, PURE functions (data in, codes out; no I/O, no platform check), here so that zipkit.mjs stays the one shipped file. They only DETECT and
+// REPORT: a name is never renamed or corrected (D6). C14.2: with `windowsNames: true` (default: true only on win32) the extractor and the writers refuse a hit with EUNSAFE before writing. Long paths are C14.3.
+/** The problem codes, in the order `windowsNameProblems` reports them. */
+export const WIN_CODES = Object.freeze(["EWIN_BACKSLASH", "EWIN_DRIVE", "EWIN_UNC", "EWIN_RESERVED", "EWIN_CHAR", "EWIN_TRAILING", "EWIN_STREAM"]);
+
+const RESERVED = /^(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³]|CONIN\$|CONOUT\$)$/i; // device names, also with an extension or a colon after them
+const FORBIDDEN = /[\u0000-\u001f<>"|?*]/;                                          // the colon is a stream, a slash is a separator
+
+/**
+ * The codes (a new array, no duplicates, in `WIN_CODES` order) of the Windows problems of one entry name; `[]` when there is none.
+ * EWIN_BACKSLASH `\` anywhere · EWIN_DRIVE a drive letter first (`C:foo`, `C:\x`) · EWIN_UNC two leading separators (`\\server\share`, `\\?\`, `//server`) ·
+ * EWIN_RESERVED a segment whose name before the first `.` or `:` is CON, PRN, AUX, NUL, COM1-9, LPT1-9 (also ¹²³), CONIN$ or CONOUT$ · EWIN_CHAR `< > " | ? *` or a control character ·
+ * EWIN_TRAILING a segment ending in a dot or a space (the segments «.» and «..» are not this check's business) · EWIN_STREAM a colon in a segment (`name:stream`), after the drive letter.
+ * `/` and `\` both separate segments. A name that is not a string is a TypeError.
+ */
+export function windowsNameProblems(path) {
+  if (typeof path !== "string") throw new TypeError("name must be a string");
+  const hit = new Set(), drive = /^[A-Za-z]:/.test(path);
+  if (path.includes("\\")) hit.add("EWIN_BACKSLASH");
+  if (drive) hit.add("EWIN_DRIVE");
+  if (/^[\\/]{2}/.test(path)) hit.add("EWIN_UNC");
+  path.split(/[\\/]+/).filter((s) => s !== "").forEach((seg, i) => {
+    const rest = i === 0 && drive ? seg.slice(2) : seg; // the drive letter's own colon is not a stream
+    if (RESERVED.test(seg.split(/[.:]/)[0].trimEnd())) hit.add("EWIN_RESERVED");
+    if (FORBIDDEN.test(rest)) hit.add("EWIN_CHAR");
+    if (seg !== "." && seg !== ".." && /[. ]$/.test(seg)) hit.add("EWIN_TRAILING");
+    if (rest.includes(":")) hit.add("EWIN_STREAM");
+  });
+  return WIN_CODES.filter((c) => hit.has(c));
+}
+// `windowsNames` option: true, false, or undefined (= are we on win32); anything else is EARG. One place for the extractor and the writers.
+const winFlag = (v) => { if (v === undefined) return process.platform === "win32"; if (typeof v !== "boolean") throw new ZipError("windowsNames must be true or false", "EARG"); return v; };
+const winWhy = (name) => { const c = windowsNameProblems(name); return c.length ? `not valid on Windows (${c.join(", ")})` : null; };
 const unsupportedReason = (e) => (e.encrypted ? "is encrypted (not supported)" : e.method === 8 && e.csize === 0 ? "is a deflate entry with no data (a deflate stream is never empty; unzip refuses it too)" : e.method !== 0 && e.method !== 8 ? `compression method ${e.method} not supported (only stored and deflate)` : null);
 const dataStart = (fd, size, e, label) => {
   if (e.localOffset + 30 > size) throw new ZipError(`${label}: local header of «${e.name}» outside the file`);
@@ -322,7 +355,8 @@ const mergeMove = (plan, real, rn, canRetry) => {
   dropBackups();
 };
 
-export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalBytes = 2 ** 33, maxEntries = 1_000_000, filter, legacyEncoding, _rename = renameSync } = {}) => { // _rename: test-only hook (C2.8)
+export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalBytes = 2 ** 33, maxEntries = 1_000_000, filter, legacyEncoding, windowsNames, _rename = renameSync } = {}) => { // _rename: test-only hook (C2.8)
+  const win = winFlag(windowsNames);
   const { path, size, entries: all } = listZip(zipPath, { legacyEncoding }); // C2.6: how names without bit 11 / Unicode Path / UTF-8 are decoded
   if (all.length > maxEntries) throw new ZipError(`${path}: ${all.length} entries, above the limit of ${maxEntries}`);
   const entries = filter ? all.filter(filter) : all, problems = [], skipped = [], seen = new Set(), dirKeys = new Set(), groups = new Map();
@@ -332,6 +366,7 @@ export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalByt
     if (e.isSymlink || e.isSpecial) { skipped.push({ name: e.name, reason: e.isSymlink ? "symlink (never created)" : "special file" }); continue; }
     const segs = pathSegs(e.name);
     if (!segs.length) { skipped.push({ name: e.name, reason: "the destination folder itself (never written to)" }); continue; }
+    if (win) { const w = winWhy(e.name.replace(/\/+$/, "")); if (w) { problems.push(`«${e.name}»: ${w}`); continue; } }
     for (let i = 1; i < segs.length; i++) { const d = segs.slice(0, i).join("/"); if (!dirKeys.has(d)) { dirKeys.add(d); noteName(groups, d, `${d}/`, false); } }
     const key = segs.join("/");
     if (e.isDir) { dirKeys.add(key); noteName(groups, key, `${key}/`, true); }
@@ -499,10 +534,11 @@ const openPartial = (tmp) => { rmSync(tmp, { force: true }); return openSync(tmp
 const dropPartial = (tmp) => { try { rmSync(tmp, { force: true }); } catch { /* already failing */ } };
 // AUDIT-2 A-2: after the rename, the folder entry is made durable too (best effort: not possible on every platform). One place for writeZip and createZip.
 const syncDir = (out) => { try { const d = openSync(dirname(out), "r"); try { fsyncSync(d); } finally { closeSync(d); } } catch { /* best effort */ } };
-const vetName = (s, seen) => {
+const vetName = (s, seen, win) => {
   const name = s?.name; if (typeof name !== "string") throw new ZipError("a source has no name", "EARG");
   const dir = name.endsWith("/"), why = unsafeNameReason(dir ? name.replace(/\/+$/, "") : name);
   if (why) throw new ZipError(`unsafe name «${name}»: ${why}`, "EUNSAFE");
+  const wwhy = win ? winWhy(dir ? name.replace(/\/+$/, "") : name) : null; if (wwhy) throw new ZipError(`unsafe name «${name}»: ${wwhy}`, "EUNSAFE");
   // AUDIT-2 A-3 (D31): the WRITER refuses an empty or «.» segment («./x», «a//b», «a/./b», «a//»): «x» and «./x» in one zip pass `unzip -t`, are a duplicate for
   // Chicla's extractor and for `unzip` the last one wins. The reader and extractor still accept such names from other tools.
   if ((dir ? name.slice(0, -1) : name).split("/").some((g) => g === "" || g === ".")) throw new ZipError(`unsafe name «${name}»: empty or «.» path segment`, "EUNSAFE");
@@ -515,15 +551,15 @@ const attrOf = (s, dir, deterministic) => (((deterministic ? (dir || (s.mode ?? 
 // else from the SOURCE_DATE_EPOCH environment variable, else from each source's `mtime` (none: 1980-01-01 00:00); modes become 0644 (0755 for
 // folders and files with the owner execute bit). The order of `sources` is kept as given. Without it: local-time dates, "now" for a source with no
 // `mtime`, modes as given. `epoch` without `deterministic: true` is refused, and an invalid epoch is an error, never silently ignored.
-export const writeZip = async (outPath, sources, { level = 6, zip64 = "auto", deterministic = false, epoch, sha256 = false, extendedTime = false, _limits } = {}) => {
+export const writeZip = async (outPath, sources, { level = 6, zip64 = "auto", deterministic = false, epoch, sha256 = false, extendedTime = false, windowsNames, _limits } = {}) => {
   const L = { max32: 0xfffffffe, max16: 0xfffe, chunk: 1 << 30, ..._limits };
   if (!Array.isArray(sources)) throw new ZipError("sources must be an array", "EARG");
-  const fixed = checkOpts({ level, zip64, deterministic, epoch, sha256, extendedTime });
+  const fixed = checkOpts({ level, zip64, deterministic, epoch, sha256, extendedTime }), win = winFlag(windowsNames);
   const refuse = (what) => { if (zip64 === false) throw needsZip64(what); };
   if (sources.length > L.max16) refuse(`${sources.length} entries`);
   const now = new Date(), seen = new Set(), items = [];
   for (const s of sources) {
-    const { name, nameBytes, dir } = vetName(s, seen);
+    const { name, nameBytes, dir } = vetName(s, seen, win);
     let data = Buffer.alloc(0);
     if (dir) { if (s.data?.length) throw new ZipError(`«${name}» is a folder and has data`, "EARG"); }
     else if (Buffer.isBuffer(s.data)) data = s.data;
@@ -613,7 +649,7 @@ async function* tapChunks(s, st) { // what the source gives, checked, cut to at 
     }
   } catch (e) { throw srcError(e); }
 }
-export const writeZipStream = async (sink, sources, { level = 6, zip64 = "auto", deterministic = false, epoch, sha256 = false, extendedTime = false, _limits } = {}) => {
+export const writeZipStream = async (sink, sources, { level = 6, zip64 = "auto", deterministic = false, epoch, sha256 = false, extendedTime = false, windowsNames, _limits } = {}) => {
   if (!sink || typeof sink.write !== "function" || typeof sink.end !== "function" || typeof sink.on !== "function") throw new ZipError("sink must be a Writable stream", "EARG");
   const L = { max32: 0xfffffffe, max16: 0xfffe, ..._limits };
   let dead = null, pos = 0; sink.on("error", (e) => { dead ??= e; });
@@ -623,11 +659,11 @@ export const writeZipStream = async (sink, sources, { level = 6, zip64 = "auto",
   const big = (v, o, b) => b.writeBigUInt64LE(BigInt(v), o);
   try {
     if (!Array.isArray(sources)) throw new ZipError("sources must be an array", "EARG");
-    const fixed = checkOpts({ level, zip64, deterministic, epoch, sha256, extendedTime });
+    const fixed = checkOpts({ level, zip64, deterministic, epoch, sha256, extendedTime }), win = winFlag(windowsNames);
     if (zip64 === false && sources.length > L.max16) throw needsZip64(`${sources.length} entries`);
     const now = new Date(), seen = new Set(), items = [];
     for (const s of sources) {
-      const { name, nameBytes, dir } = vetName(s, seen);
+      const { name, nameBytes, dir } = vetName(s, seen, win);
       if (dir) { if (s.data?.length || s.stream !== undefined) throw new ZipError(`«${name}» is a folder and has data`, "EARG"); }
       else {
         if ((s.data === undefined) === (s.stream === undefined)) throw new ZipError(`«${name}» needs exactly one of data and stream`, "EARG");
@@ -858,7 +894,8 @@ export const runCli = async (argv, { out = process.stdout, err = process.stderr 
     return e instanceof UsageError ? fail("EUSAGE", e, 2) : e instanceof ZipError || (typeof e?.syscall === "string" && typeof e.code === "string") ? fail(e.code, e, 1) : fail("EINTERNAL", e, 3); // a system error (ENOENT, EACCES, EISDIR…) is the caller's file, not a bug
   }
 };
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+const isMain = () => { try { return !!process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); } catch { return false; } }; // realpath: an installed bin is a symlink in node_modules/.bin (round 74)
+if (isMain()) {
   for (const s of [process.stdout, process.stderr]) s.on("error", (e) => { if (e.code === "EPIPE") process.exit(1); throw e; }); // the reader closed the pipe (`ls | head`): stop quietly, not with a stack trace (A-1)
   process.exitCode = await runCli(process.argv.slice(2));
 }

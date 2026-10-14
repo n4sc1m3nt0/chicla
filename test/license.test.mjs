@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { importPinned } from './toolchain-files.mjs';
+const { parseManifest } = await importPinned('manifest');
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(root, p), 'utf8');
@@ -25,5 +27,5 @@ test('CLAUDE.md no longer tells the AI to leave the licence open', () => {
 });
 
 test('the licence travels: LICENSE is in FILES.manifest', () => {
-  assert.ok(read('FILES.manifest').split('\n').includes('LICENSE'));
+  assert.ok(parseManifest(read('FILES.manifest')).some((e) => e.path === 'LICENSE'));
 });

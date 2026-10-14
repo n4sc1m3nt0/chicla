@@ -14,7 +14,7 @@ const isDir = (p) => has(p) && statSync(join(root, p)).isDirectory();
 const node = (...args) => spawnSync(process.execPath, args, { cwd: root, encoding: 'utf8' });
 
 const SCRIPTS = [
-  'archive-changelog', 'baseline', 'bump-round', 'check-build', 'check-manifest', 'emergency-dump',
+  'archive-changelog', 'bump-round', 'check-build', 'check-manifest', 'emergency-dump',
   'make-delivery-zip', 'mutants', 'recovery-report', 'verify-delivery-zip',
   'smoke-test-archive-changelog', 'smoke-test-bump-round', 'smoke-test-check-build',
   'smoke-test-delivery-guards', 'smoke-test-emergency', 'smoke-test-mutants',

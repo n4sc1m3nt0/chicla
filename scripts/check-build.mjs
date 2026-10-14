@@ -1,36 +1,20 @@
 #!/usr/bin/env node
 // Build guard: a delivery does not go out if any .mjs file stopped passing `node --check`.
 //
-//   node scripts/check-build.mjs
+//   node scripts/check-build.mjs   -> prints the result; exit 1 and the failing files named, else 0
 //
-// - Walks the tree (skipping node_modules, .git, __MACOSX) and runs `node --check` on every .mjs.
-// - Exits 1 and names the files that failed; exits 0 if all pass.
-// - Does not run the tests: `npm test` and `npm run smoke` remain a step of the round (and of CI).
-// Replaces the `cargo check` of the original workflow: Node is always present (the scripts themselves run on it), so
-// there is no path of "build NOT verified".
+// C11.1 slice 5a (D84): the work lives in packages/chicla-kit/src/check-build.mjs (`checkBuild({ root })`, which never prints, exits or throws). This file is
+// only the wrapper: it re-exports the core (so make-delivery-zip.mjs and the tests import it from here as before) and, when run directly, prints and exits.
 import { fileURLToPath } from "node:url";
-import { spawnSync } from "node:child_process";
-import { readdirSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { realpathSync } from "node:fs";
+import { checkBuild, renderCheckBuild } from "../packages/chicla-kit/src/check-build.mjs";
+export { checkBuild, renderCheckBuild };
 
-const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const SKIP = new Set(["node_modules", ".git", "__MACOSX"]);
-const files = [];
-const walk = (dir) => {
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (e.isSymbolicLink() || SKIP.has(e.name)) continue;
-    const p = join(dir, e.name);
-    if (e.isDirectory()) walk(p);
-    else if (e.isFile() && e.name.endsWith(".mjs")) files.push(p);
-  }
-};
-walk(ROOT);
-
-console.log(`node --check on ${files.length} .mjs files`);
-const bad = [];
-for (const f of files) {
-  const r = spawnSync(process.execPath, ["--check", f], { encoding: "utf8" });
-  if (r.status !== 0) bad.push(`${relative(ROOT, f).split("\\").join("/")}: ${(r.stderr.split("\n").find((l) => /Error/.test(l)) ?? "").slice(0, 100)}`);
+// Runs only as the entry point, never when make-delivery, the kit CLI or a test imports it. The root is the project this file sits in.
+const isEntry = (() => { try { return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); } catch { return false; } })();
+if (isEntry) {
+  const r = checkBuild({ root: fileURLToPath(new URL("..", import.meta.url)) });
+  const { out, err } = renderCheckBuild(r);
+  process.stdout.write(out); process.stderr.write(err);
+  process.exitCode = r.ok ? 0 : 1;
 }
-if (bad.length) { console.error(`\n✗ node --check failed on ${bad.length} file(s). Delivery aborted.\n  ${bad.join("\n  ")}`); process.exit(1); }
-console.log("✓ node --check passed");

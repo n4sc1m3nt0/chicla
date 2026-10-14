@@ -6,43 +6,29 @@
 //   3. regenerates FILES.manifest
 //   4. writes FILES.baseline.json (C9.6: path, size, sha256 of every manifest file, from the final tree), which
 //                       travels in the zip and in every later dump: recovery needs no previous zip
-//   5. zips EXACTLY the files listed in FILES.manifest (+ the manifest itself): the exclusions
-//                       (private corpus, .env, Python artefacts…) live in one place, check-manifest
+//   5. zips (with chicla-zip, no external `zip`: C8.1) EXACTLY the files listed in FILES.manifest (+ the manifest itself): the exclusions
+//                       (.env, Python artefacts…) live in one place, check-manifest
 //   6. verify-delivery-zip on the final zip (+ --against for each upload given)
 //
 //   node scripts/make-delivery-zip.mjs <out.zip> [--against <upload.zip> ...] [--allow-removed <path> ...]
+//
+// C11.1 slice 5e (D84, D88): the work lives in packages/chicla-kit/src/make-delivery.mjs (`makeDelivery({ out, against, allowRemoved, root })`, async, which never prints,
+// exits or throws). This file is only the wrapper: it re-exports the core (so the CLI and the tests import it from here as before) and, when run directly, parses the
+// flags, prints and exits. `chicla make-delivery` runs the same code through the kit CLI.
 import { fileURLToPath } from "node:url";
-import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
-import { BASELINE_FILE, buildBaseline, serializeBaseline } from "./baseline.mjs";
+import { makeDelivery, renderMakeDelivery } from "../packages/chicla-kit/src/make-delivery.mjs";
+export { makeDelivery, renderMakeDelivery };
 
-const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const [out, ...rest] = process.argv.slice(2);
-if (!out || out.startsWith("--")) { console.error("usage: make-delivery-zip.mjs <out.zip> [--against <zip>] [--allow-removed <path>]"); process.exit(2); }
-const outPath = resolve(out);
-const run = (script, ...a) => {
-  const r = spawnSync("node", [resolve(ROOT, "scripts", script), ...a], { stdio: "inherit", cwd: ROOT });
-  if (r.status !== 0) {
-    // If the zip already exists (step 5 failed), it is a REJECTED zip: it is deleted so nobody delivers it by mistake.
-    const hadZip = existsSync(outPath);
-    if (hadZip) rmSync(outPath);
-    console.error(`\n✗ ${script} failed — delivery aborted; ${hadZip ? "the rejected zip was deleted." : "no zip was created/updated."}`);
-    process.exit(1);
-  }
-};
-
-run("check-manifest.mjs");
-run("check-build.mjs");
-// the manifest must list the baseline: a placeholder makes the first delivery pick it up; the real content comes after
-if (!existsSync(resolve(ROOT, BASELINE_FILE))) writeFileSync(resolve(ROOT, BASELINE_FILE), "{}\n");
-run("check-manifest.mjs", "--write");
-if (existsSync(outPath)) rmSync(outPath);
-const names = readFileSync(resolve(ROOT, "FILES.manifest"), "utf8").split("\n").filter(Boolean);
-if (!names.includes("FILES.manifest")) names.push("FILES.manifest");
-if (!names.includes(BASELINE_FILE)) names.push(BASELINE_FILE);
-// from the FINAL tree (manifest included); never lists itself. A failure here aborts the delivery like any other step.
-try { writeFileSync(resolve(ROOT, BASELINE_FILE), serializeBaseline(buildBaseline(ROOT, names))); } catch (e) { console.error(`\n✗ could not write ${BASELINE_FILE}: ${e.message} — delivery aborted; no zip was created/updated.`); process.exit(1); }
-try { execFileSync("zip", ["-q", outPath, "-@"], { cwd: ROOT, input: names.join("\n") + "\n", stdio: ["pipe", "inherit", "inherit"] }); } catch (e) { if (existsSync(outPath)) rmSync(outPath); console.error(`\n✗ the zip command failed — delivery aborted; partial zip deleted.`); process.exit(1); }
-run("verify-delivery-zip.mjs", outPath, ...rest);
-console.log(`\n✓ delivery created and verified: ${outPath}`);
+// Runs only as the entry point (`node scripts/make-delivery-zip.mjs`), never when the kit CLI or a test imports it.
+const isEntry = (() => { try { return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); } catch { return false; } })();
+if (isEntry) {
+  const [out, ...rest] = process.argv.slice(2);
+  const against = rest.flatMap((a, i) => (rest[i - 1] === "--against" ? [resolve(a)] : []));
+  const allowRemoved = rest.flatMap((a, i) => (rest[i - 1] === "--allow-removed" ? [a] : []));
+  const r = await makeDelivery({ out, against, allowRemoved, root: fileURLToPath(new URL("..", import.meta.url)) });
+  const { out: o, err } = renderMakeDelivery(r);
+  process.stdout.write(o); process.stderr.write(err);
+  process.exitCode = r.code === "EDELIVERY_USAGE" ? 2 : r.ok ? 0 : 1;
+}

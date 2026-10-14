@@ -1,8 +1,14 @@
 {
   "name": "chicla-zip",
   "version": "0.0.0",
-  "description": "Ler, verificar, extrair em segurança, escrever e reparar zips (UTF-8 correto em qualquer sistema).",
+  "description": "Read, verify, safely extract, write and repair zips in plain Node, with correct UTF-8 names everywhere. Zero dependencies.",
   "type": "module",
+  "main": "src/zipkit.mjs",
+  "exports": { ".": "./src/zipkit.mjs", "./package.json": "./package.json" },
+  "bin": { "chicla-zip": "src/zipkit.mjs" },
+  "files": ["src/zipkit.mjs", "README.md", "LICENSE"],
   "engines": { "node": ">=18" },
+  "repository": { "type": "git", "url": "git+https://github.com/n4sc1m3nt0/chicla.git", "directory": "packages/chicla-zip" },
+  "keywords": ["zip", "unzip", "archive", "extract", "zip64", "utf-8"],
   "license": "Apache-2.0"
 }

@@ -1,91 +1,165 @@
-.github/workflows/ci.yml
-.gitignore
-CHANGELOG.md
-CHICLA_PROJECT_STATUS-71.md
-CLAUDE.md
-FILES.baseline.json
-LICENSE
-ROADMAP.md
-docs/README.md
-docs/audits/AUDIT-1.md
-docs/audits/AUDIT-2.md
-docs/audits/AUDIT-3.md
-docs/zip-handling.md
-docs/zipkit-RASCUNHO.mjs
-docs/zipkit-plan-ronda-1s.md
-o/dir/b.txt
-o/hello.txt
-package.json
-packages/chicla-kit/package.json
-packages/chicla-kit/src/.gitkeep
-packages/chicla-kit/templates/.gitkeep
-packages/chicla-kit/test/.gitkeep
-packages/chicla-zip/bench/small-files.mjs
-packages/chicla-zip/bench/stream-real.mjs
-packages/chicla-zip/bench/zip64-real.mjs
-packages/chicla-zip/mutants/list.mjs
-packages/chicla-zip/package.json
-packages/chicla-zip/src/.gitkeep
-packages/chicla-zip/src/zipkit.mjs
-packages/chicla-zip/test/.gitkeep
-packages/chicla-zip/test/audit2.test.mjs
-packages/chicla-zip/test/audit3.test.mjs
-packages/chicla-zip/test/bench-small.test.mjs
-packages/chicla-zip/test/cli-c44.test.mjs
-packages/chicla-zip/test/cli-create.test.mjs
-packages/chicla-zip/test/cli-m4-gaps.test.mjs
-packages/chicla-zip/test/cli.test.mjs
-packages/chicla-zip/test/collisions.test.mjs
-packages/chicla-zip/test/crc.test.mjs
-packages/chicla-zip/test/create-stream.test.mjs
-packages/chicla-zip/test/create.test.mjs
-packages/chicla-zip/test/deflate-empty.test.mjs
-packages/chicla-zip/test/differential-python.test.mjs
-packages/chicla-zip/test/digest-changed.test.mjs
-packages/chicla-zip/test/extract-audit1.test.mjs
-packages/chicla-zip/test/extract-escape.test.mjs
-packages/chicla-zip/test/extract-exdev.test.mjs
-packages/chicla-zip/test/extract-fast.test.mjs
-packages/chicla-zip/test/extract-legacy.test.mjs
-packages/chicla-zip/test/extract-m2-gaps.test.mjs
-packages/chicla-zip/test/extract-rollback.test.mjs
-packages/chicla-zip/test/extract.test.mjs
-packages/chicla-zip/test/fsprobe.mjs
-packages/chicla-zip/test/fsprobe.test.mjs
-packages/chicla-zip/test/fuzz-read.test.mjs
-packages/chicla-zip/test/interop.mjs
-packages/chicla-zip/test/interop.test.mjs
-packages/chicla-zip/test/legacy-encoding.test.mjs
-packages/chicla-zip/test/mark-utf8.test.mjs
-packages/chicla-zip/test/open.test.mjs
-packages/chicla-zip/test/read.test.mjs
-packages/chicla-zip/test/stream-limits.test.mjs
-packages/chicla-zip/test/write-collisions.test.mjs
-packages/chicla-zip/test/write-determinism.test.mjs
-packages/chicla-zip/test/write-interop.test.mjs
-packages/chicla-zip/test/write-stream.test.mjs
-packages/chicla-zip/test/write-ut.test.mjs
-packages/chicla-zip/test/write.test.mjs
-packages/chicla-zip/test/zip64.test.mjs
-packages/chicla-zip/test/zipfab.mjs
-scripts/archive-changelog.mjs
-scripts/baseline.mjs
-scripts/bump-round.mjs
-scripts/check-build.mjs
-scripts/check-manifest.mjs
-scripts/emergency-dump.mjs
-scripts/make-delivery-zip.mjs
-scripts/mutants.mjs
-scripts/recovery-report.mjs
-scripts/smoke-test-archive-changelog.mjs
-scripts/smoke-test-bump-round.mjs
-scripts/smoke-test-check-build.mjs
-scripts/smoke-test-delivery-guards.mjs
-scripts/smoke-test-emergency.mjs
-scripts/smoke-test-mutants.mjs
-scripts/verify-delivery-zip.mjs
-test/baseline.test.mjs
-test/ci.test.mjs
-test/layout.test.mjs
-test/license.test.mjs
-version.mjs
+# chicla-manifest v2
+.github/workflows/ci.yml	7b728cec	2988
+.gitignore	6ead6c11	40
+CHANGELOG.md	10f5642b	195629
+CHICLA_PROJECT_STATUS-146.md	02fe1899	77081
+CLAUDE.md	fcff0821	8485
+FILES.baseline.json	bf7baa8d	25688
+LICENSE	1ea3b7b0	10174
+README.md	ab68b187	9903
+ROADMAP.md	28857191	102591
+docs/README.md	d90304dc	1689
+docs/audits/AUDIT-1.md	a56e8d6e	7439
+docs/audits/AUDIT-2.md	e0c1bf46	7749
+docs/audits/AUDIT-3.md	60ae3fb1	4975
+docs/manifest.md	7fff4cf1	6597
+docs/pinned-files-design.md	6256c946	6552
+docs/zip-handling.md	83c151f1	13614
+docs/zipkit-RASCUNHO.mjs	826b4341	22156
+docs/zipkit-plan-ronda-1s.md	69662cda	13236
+package.json	be378184	541
+packages/chicla-kit/package.json	26130e41	318
+packages/chicla-kit/src/.gitkeep	00000000	0
+packages/chicla-kit/src/bump-round.mjs	b4ee761d	13448
+packages/chicla-kit/src/check-build.mjs	c2ba103f	3493
+packages/chicla-kit/src/check-manifest.mjs	0c5b60d5	8579
+packages/chicla-kit/src/cli.mjs	bf5e065c	13697
+packages/chicla-kit/src/emergency-dump.mjs	19b8db66	32088
+packages/chicla-kit/src/make-delivery.mjs	650bf628	7877
+packages/chicla-kit/src/panel.mjs	da6e43a0	5174
+packages/chicla-kit/src/pinned/baseline.mjs	7957bd51	3028
+packages/chicla-kit/src/pinned/manifest.mjs	4d4ba3f2	4514
+packages/chicla-kit/src/pinned/policy.mjs	b53dfd14	9958
+packages/chicla-kit/src/pinned/recovery-report.mjs	bbdef59b	20438
+packages/chicla-kit/src/ui.mjs	f22920fb	4150
+packages/chicla-kit/src/verify-delivery.mjs	dd0e11df	18312
+packages/chicla-kit/templates/.gitkeep	00000000	0
+packages/chicla-kit/test/.gitkeep	00000000	0
+packages/chicla-kit/test/cli-bump-round.test.mjs	1a6b0f33	17945
+packages/chicla-kit/test/cli-check-manifest.test.mjs	fcbb59c3	10497
+packages/chicla-kit/test/cli-dump.test.mjs	aa4d1133	11652
+packages/chicla-kit/test/cli-loads-src.test.mjs	b80eb54e	2438
+packages/chicla-kit/test/cli-make-delivery.test.mjs	690e58ca	14298
+packages/chicla-kit/test/cli-recovery.test.mjs	74a786f9	15067
+packages/chicla-kit/test/cli-style.test.mjs	dd788462	6007
+packages/chicla-kit/test/cli-verify-delivery.test.mjs	6dda2a08	11324
+packages/chicla-kit/test/core-bump-round.test.mjs	3c412928	6412
+packages/chicla-kit/test/core-check-build.test.mjs	c9d57a15	4757
+packages/chicla-kit/test/core-check-manifest.test.mjs	c3db37ea	5056
+packages/chicla-kit/test/core-emergency-dump.test.mjs	c895e2f6	7293
+packages/chicla-kit/test/core-make-delivery.test.mjs	ffdc609b	8093
+packages/chicla-kit/test/core-verify-delivery.test.mjs	4032cd09	7419
+packages/chicla-kit/test/panel.test.mjs	eec9a388	9786
+packages/chicla-kit/test/ui.test.mjs	b523985f	5477
+packages/chicla-zip/LICENSE	1ea3b7b0	10174
+packages/chicla-zip/README.md	02f56e7e	2084
+packages/chicla-zip/bench/small-files.mjs	ada7f228	2802
+packages/chicla-zip/bench/stream-real.mjs	a6076f12	3165
+packages/chicla-zip/bench/zip64-real.mjs	c5737f18	2654
+packages/chicla-zip/mutants/list.mjs	444d7a6d	67916
+packages/chicla-zip/package.json	32447dc7	676
+packages/chicla-zip/src/.gitkeep	00000000	0
+packages/chicla-zip/src/zipkit.mjs	ea8da058	82626
+packages/chicla-zip/test/.gitkeep	00000000	0
+packages/chicla-zip/test/audit2.test.mjs	61d9d0e7	6832
+packages/chicla-zip/test/audit3.test.mjs	2ec59f2e	8595
+packages/chicla-zip/test/bench-small.test.mjs	706dcb25	1773
+packages/chicla-zip/test/cli-c44.test.mjs	372fcd8e	6310
+packages/chicla-zip/test/cli-create.test.mjs	171c2110	13631
+packages/chicla-zip/test/cli-m4-gaps.test.mjs	e488913a	5891
+packages/chicla-zip/test/cli.test.mjs	7e74d0bf	13198
+packages/chicla-zip/test/collisions.test.mjs	0637177a	4124
+packages/chicla-zip/test/crc.test.mjs	0df5eb9b	4136
+packages/chicla-zip/test/create-stream.test.mjs	26551dd3	16647
+packages/chicla-zip/test/create.test.mjs	f8a62207	13629
+packages/chicla-zip/test/deflate-empty.test.mjs	085379b4	2858
+packages/chicla-zip/test/differential-python.test.mjs	b2aa2986	11672
+packages/chicla-zip/test/digest-changed.test.mjs	a1b9f776	10894
+packages/chicla-zip/test/extract-audit1.test.mjs	8956e387	5543
+packages/chicla-zip/test/extract-escape.test.mjs	42439b60	14195
+packages/chicla-zip/test/extract-exdev.test.mjs	e2623861	6335
+packages/chicla-zip/test/extract-fast.test.mjs	52298df6	10867
+packages/chicla-zip/test/extract-legacy.test.mjs	6146e309	2840
+packages/chicla-zip/test/extract-m2-gaps.test.mjs	36989026	3422
+packages/chicla-zip/test/extract-rollback.test.mjs	540a2ebf	7293
+packages/chicla-zip/test/extract.test.mjs	2571e2a8	13254
+packages/chicla-zip/test/fsprobe.mjs	4ad3a817	2446
+packages/chicla-zip/test/fsprobe.test.mjs	515b1f5c	1092
+packages/chicla-zip/test/fuzz-read.test.mjs	1459bb0d	12185
+packages/chicla-zip/test/interop.mjs	d761dc3e	3869
+packages/chicla-zip/test/interop.test.mjs	602e1848	4453
+packages/chicla-zip/test/legacy-encoding.test.mjs	d36bc7fa	6093
+packages/chicla-zip/test/mark-utf8.test.mjs	3483f5e6	9831
+packages/chicla-zip/test/open.test.mjs	2d30606e	7408
+packages/chicla-zip/test/package.test.mjs	f579e4c9	3985
+packages/chicla-zip/test/read.test.mjs	de49899e	9705
+packages/chicla-zip/test/stream-limits.test.mjs	93bac4ee	6832
+packages/chicla-zip/test/windows-names.test.mjs	095e4867	6379
+packages/chicla-zip/test/winnames.test.mjs	be31686e	5332
+packages/chicla-zip/test/write-collisions.test.mjs	26e25811	8042
+packages/chicla-zip/test/write-determinism.test.mjs	d06aecc2	12274
+packages/chicla-zip/test/write-interop.test.mjs	40fa5d30	4601
+packages/chicla-zip/test/write-stream.test.mjs	7236e242	22112
+packages/chicla-zip/test/write-ut.test.mjs	b9263bc6	13781
+packages/chicla-zip/test/write.test.mjs	bbe8f993	16851
+packages/chicla-zip/test/zip64.test.mjs	9e2ae96e	7550
+packages/chicla-zip/test/zipfab.mjs	30173e73	5560
+scripts/archive-changelog.mjs	14131cb1	4682
+scripts/bump-round.mjs	def72e0d	2362
+scripts/check-build.mjs	8fd6dd42	1269
+scripts/check-manifest.mjs	960ac064	1566
+scripts/emergency-dump.mjs	caffce8f	5683
+scripts/make-delivery-zip.mjs	d7fe1000	2502
+scripts/mutants.mjs	5f2c8a56	5957
+scripts/pack-release.mjs	b98fb273	3310
+scripts/recovery-report.mjs	a27285bd	2050
+scripts/smoke-test-archive-changelog.mjs	01cf108a	3158
+scripts/smoke-test-bump-round.mjs	ddd7dd4e	9008
+scripts/smoke-test-check-build.mjs	b7c534cc	2758
+scripts/smoke-test-delivery-guards.mjs	4de7bb77	27576
+scripts/smoke-test-emergency.mjs	b2b1802a	13458
+scripts/smoke-test-mutants.mjs	9fbffaeb	6647
+scripts/verify-delivery-zip.mjs	c9881ad5	3707
+test/baseline.test.mjs	267b4a20	9983
+test/changelog-heading.test.mjs	8af49f49	794
+test/ci.test.mjs	dd51ebc3	4295
+test/collisions-nfc.test.mjs	00aed6f6	5905
+test/dump-allow-held.test.mjs	cf850794	17516
+test/dump-policy-file.test.mjs	579adf3c	8815
+test/dump-policy.test.mjs	4ceb8a1e	5629
+test/dump-project-only.test.mjs	d2256511	8012
+test/dump-secret-content.test.mjs	eaf7a2aa	16081
+test/dump-sentence.test.mjs	e895f073	3063
+test/emergency-collisions.test.mjs	2d329d0b	3423
+test/emergency-dump-nozip.test.mjs	8549aebd	7163
+test/emergency-fallback.test.mjs	612e97d0	6018
+test/emergency-home-noise.test.mjs	c69cc93f	6977
+test/emergency-recover-folder.test.mjs	45cf6bcc	4420
+test/emergency-report-text.test.mjs	e1ef108a	2046
+test/layout.test.mjs	791bb332	4269
+test/license.test.mjs	b55a0cd0	1747
+test/make-delivery-nozip.test.mjs	07ad748e	4750
+test/manifest-docs.test.mjs	ff02dc65	2220
+test/manifest-readers.test.mjs	47055364	5580
+test/manifest-v2.test.mjs	23af25ea	11421
+test/manifest.test.mjs	f72305a0	8188
+test/pack-release.test.mjs	972083d0	4415
+test/pinned-baseline-move.test.mjs	ba6a9a9d	2535
+test/pinned-manifest-move.test.mjs	254b554a	2587
+test/pinned-policy-move.test.mjs	12a90370	2735
+test/pinned-recovery-report-move.test.mjs	77f057a0	3332
+test/pinned-shims-gone.test.mjs	b7e708e1	2400
+test/policy-file.test.mjs	f30662f0	12259
+test/policy.test.mjs	5527f2d0	5028
+test/recovery-nounzip.test.mjs	c81fe9b6	6074
+test/recovery-policy.test.mjs	0ede23e1	5708
+test/secret-allow.test.mjs	e7bd19f0	9962
+test/secret-content.test.mjs	af86fc1e	13739
+test/secret-marker-chain.test.mjs	aaffa6b7	10234
+test/secret-names.test.mjs	18ef4002	10320
+test/toolchain-files.mjs	7fcb143d	4167
+test/toolchain-files.test.mjs	ca93fcbe	4034
+test/toolchain-pin.test.mjs	17fb5b53	7669
+test/verify-against.test.mjs	a62846fe	6012
+test/verify-nounzip.test.mjs	38f0df0e	9058
+version.mjs	add70671	553

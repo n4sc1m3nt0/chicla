@@ -8,7 +8,9 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdir
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BASELINE_FILE, buildBaseline, serializeBaseline, parseBaseline } from '../scripts/baseline.mjs';
+import { importPinned, pinnedFile } from './toolchain-files.mjs';
+const { parseManifest } = await importPinned('manifest');
+const { BASELINE_FILE, buildBaseline, serializeBaseline, parseBaseline } = await importPinned('baseline');
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const sha = (b) => createHash('sha256').update(b).digest('hex');
@@ -62,7 +64,7 @@ test('C9.6: make-delivery-zip ships FILES.baseline.json; a dump is recovered wit
   try {
     // copy of the project (only manifest files that exist), as the other smoke tests do
     const proj = join(T, 'work', 'chicla');
-    for (const rel of readFileSync(join(ROOT, 'FILES.manifest'), 'utf8').split('\n').filter(Boolean)) {
+    for (const { path: rel } of parseManifest(readFileSync(join(ROOT, 'FILES.manifest'), 'utf8'))) {
       if (!existsSync(join(ROOT, rel))) continue;
       mkdirSync(dirname(join(proj, rel)), { recursive: true }); copyFileSync(join(ROOT, rel), join(proj, rel));
     }
@@ -75,7 +77,7 @@ test('C9.6: make-delivery-zip ships FILES.baseline.json; a dump is recovered wit
     // independent reader: unzip + sha256 here, not the code that wrote the baseline
     const listing = run('unzip', ['-Z1', zip]).stdout.split('\n').filter(Boolean);
     assert.ok(listing.includes(BASELINE_FILE), 'the delivery zip has FILES.baseline.json');
-    const manifest = run('unzip', ['-p', zip, 'FILES.manifest']).stdout.split('\n').filter(Boolean);
+    const manifest = parseManifest(run('unzip', ['-p', zip, 'FILES.manifest']).stdout).map((e) => e.path); // v2 since C7.1 slice b
     assert.ok(manifest.includes(BASELINE_FILE), 'FILES.manifest lists the baseline');
     const text = run('unzip', ['-p', zip, BASELINE_FILE]).stdout;
     const base = parseBaseline(text);
@@ -97,7 +99,7 @@ test('C9.6: make-delivery-zip ships FILES.baseline.json; a dump is recovered wit
 
     const rec = (zipPath, extra, name) => {
       const o = join(T, name);
-      const r = run('node', [join(ROOT, 'scripts/recovery-report.mjs'), zipPath, '--out', o, ...extra], ROOT);
+      const r = run('node', [pinnedFile(ROOT, 'recovery-report'), zipPath, '--out', o, ...extra], ROOT);
       return { r, diff: existsSync(join(o, 'RECOVERY_DIFF.md')) ? readFileSync(join(o, 'RECOVERY_DIFF.md'), 'utf8') : '' };
     };
     const section = (diff, t) => diff.split(/^### /m).find((s) => s.startsWith(t)) ?? '';
