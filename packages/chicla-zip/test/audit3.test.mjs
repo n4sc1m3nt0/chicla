@@ -35,6 +35,17 @@ test('A-1 a reader that closes the pipe early: no stack trace, nothing on stderr
   }
 });
 
+// Windows reports a pipe closed by the reader as EOF (libuv UV_EOF) on Node 18 and 20, not EPIPE (CI round 151 log, C14.3 slice d).
+// The preload makes the first write to stdout fail with that code, so it can be seen on any platform.
+for (const code of ['EPIPE', 'EOF']) {
+  test(`A-1 a write to stdout that fails with ${code} (the reader closed the pipe) ends quietly with exit 1`, () => {
+    const pre = join(fresh(), 'preload.cjs');
+    writeFileSync(pre, `const c = ${JSON.stringify(code)}; process.stdout.write = function () { setImmediate(() => process.stdout.emit('error', Object.assign(new Error(c), { code: c }))); return true; };\n`);
+    const r = spawnSync(process.execPath, ['--require', pre, SRC, 'ls', zipOf([{ name: 'a.txt', data: 'x' }])], { encoding: 'utf8' });
+    assert.equal(r.stderr, ''); assert.equal(r.status, 1);
+  });
+}
+
 test('A-2 `--` is not a way to smuggle a command or the --json flag past the options', () => {
   assert.equal(run('--', 'ls', zipOf([{ name: 'a.txt', data: 'x' }])).code, 2, 'the command comes before «--»');
   assert.equal(run('--', 'ls').code, 2, 'nothing but «--» and a word that would be a command');

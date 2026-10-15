@@ -1,5 +1,14 @@
-<!-- CHANGELOG_FINGERPRINT: seq=155 file=CHICLA_PROJECT_STATUS-155.md app_sha256_12=065d37032ef1 changelog_sha256_12=15373dafa5b8 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=156 file=CHICLA_PROJECT_STATUS-156.md app_sha256_12=065d37032ef1 changelog_sha256_12=9a9623cd64ec (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 152 — M14 C14.3 slice d: a closed pipe is also «EOF» on Windows Node 18/20 (v0.0.155)
+
+- Task: C14.3 slice d, from the ninth CI log (round 151 code): Ubuntu and macOS green on every Node (1057 tests, 0 fail), `bench` and `pack` green; Windows Node 22 at 0 fail (619 pass), Node 20 at 1, Node 18 at 2 (was 0/11/13).
+- Test first (red): `audit3.test.mjs` +2 (`EPIPE` control green, `EOF` red): a `--require` preload makes the first stdout write fail with that code; the CLI must print nothing on stderr and exit 1. Test 22 (`A-1`, real pipe) on Windows showed `Error: EOF` with a stack trace: libuv says EOF, not EPIPE, there.
+- Source: `packages/chicla-zip/src/zipkit.mjs`, one condition: the stdout/stderr error handler also exits quietly on `EOF`. The pin in `CLAUDE.md` MOVED (G-C11 due).
+- Test side: `create.test.mjs` test 156 (non-UTF-8 name on disk, Node 18 only) is SKIPPED on Windows with a reason: NTFS names are UTF-16, Node 18 turns the byte path into a valid name, so no such name exists there. Skipped by me, not asked: tell me if you want it back.
+- Mutants: `M14-eof-pipe` added, RED; `M4-epipe` updated to the new line, RED.
+- NOT run: anything on Windows or macOS, `npm test` on Node 18 and 20, `npm run mutants` (full), `npm run smoke` (no script changed). Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
 
 ## Round 151 — M14 C14.3 slice b: cleanup that survives an open handle on Windows (v0.0.154)
 

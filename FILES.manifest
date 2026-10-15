@@ -1,10 +1,10 @@
 # chicla-manifest v2
 .github/workflows/ci.yml	5319b33a	3183
 .gitignore	1b52e6b9	47
-CHANGELOG.md	0494cb70	209652
-CHICLA_PROJECT_STATUS-155.md	83c1137d	82957
-CLAUDE.md	b46a0a81	8485
-FILES.baseline.json	26a70795	26026
+CHANGELOG.md	886f0f09	210988
+CHICLA_PROJECT_STATUS-156.md	5f486c1e	83575
+CLAUDE.md	abbca447	8485
+FILES.baseline.json	58c316b3	26194
 LICENSE	1ea3b7b0	10174
 README.md	ab68b187	9903
 ROADMAP.md	f2c6fcd1	105910
@@ -17,7 +17,7 @@ docs/pinned-files-design.md	6256c946	6552
 docs/zip-handling.md	83c151f1	13614
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	afff6ddc	541
+package.json	6d23a9bb	541
 packages/chicla-kit/package.json	26130e41	318
 packages/chicla-kit/src/.gitkeep	00000000	0
 packages/chicla-kit/src/bump-round.mjs	b4ee761d	13448
@@ -56,13 +56,13 @@ packages/chicla-zip/README.md	02f56e7e	2084
 packages/chicla-zip/bench/small-files.mjs	ada7f228	2802
 packages/chicla-zip/bench/stream-real.mjs	a6076f12	3165
 packages/chicla-zip/bench/zip64-real.mjs	c5737f18	2654
-packages/chicla-zip/mutants/list.mjs	444d7a6d	67916
+packages/chicla-zip/mutants/list.mjs	42be1fdb	68148
 packages/chicla-zip/package.json	32447dc7	676
 packages/chicla-zip/src/.gitkeep	00000000	0
-packages/chicla-zip/src/zipkit.mjs	de9e4c15	84264
+packages/chicla-zip/src/zipkit.mjs	e3d53ad6	84320
 packages/chicla-zip/test/.gitkeep	00000000	0
 packages/chicla-zip/test/audit2.test.mjs	d9eb48bb	6923
-packages/chicla-zip/test/audit3.test.mjs	2ec59f2e	8595
+packages/chicla-zip/test/audit3.test.mjs	358a9a4f	9446
 packages/chicla-zip/test/bench-small.test.mjs	f3923a97	1940
 packages/chicla-zip/test/cleanup-retry.test.mjs	9746628a	6332
 packages/chicla-zip/test/cli-c44.test.mjs	372fcd8e	6310
@@ -72,7 +72,7 @@ packages/chicla-zip/test/cli.test.mjs	7e74d0bf	13198
 packages/chicla-zip/test/collisions.test.mjs	0637177a	4124
 packages/chicla-zip/test/crc.test.mjs	6df94309	4171
 packages/chicla-zip/test/create-stream.test.mjs	d32f18a2	16772
-packages/chicla-zip/test/create.test.mjs	e0f1bc22	14056
+packages/chicla-zip/test/create.test.mjs	c4142c83	14196
 packages/chicla-zip/test/deflate-empty.test.mjs	085379b4	2858
 packages/chicla-zip/test/differential-python.test.mjs	daf9aea7	11750
 packages/chicla-zip/test/digest-changed.test.mjs	a1b9f776	10894
@@ -165,4 +165,4 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	18171c3c	531
+version.mjs	fab2f900	531

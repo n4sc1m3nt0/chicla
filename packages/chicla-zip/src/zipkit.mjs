@@ -907,6 +907,6 @@ export const runCli = async (argv, { out = process.stdout, err = process.stderr 
 };
 const isMain = () => { try { return !!process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); } catch { return false; } }; // realpath: an installed bin is a symlink in node_modules/.bin (round 74)
 if (isMain()) {
-  for (const s of [process.stdout, process.stderr]) s.on("error", (e) => { if (e.code === "EPIPE") process.exit(1); throw e; }); // the reader closed the pipe (`ls | head`): stop quietly, not with a stack trace (A-1)
+  for (const s of [process.stdout, process.stderr]) s.on("error", (e) => { if (e.code === "EPIPE" || e.code === "EOF") process.exit(1); throw e; }); // the reader closed the pipe (`ls | head`): stop quietly, not with a stack trace (A-1); Windows says EOF on Node 18 and 20
   process.exitCode = await runCli(process.argv.slice(2));
 }

@@ -151,7 +151,7 @@ test('writeZip options pass through (level, zip64, deterministic) and a bad one 
   const z = join(base, 'z64.zip'); await createZip(z, root, { zip64: true }); assert.deepEqual(names(z), ['a']);
 });
 
-test('a name on disk that is not valid UTF-8 is refused with EUNSAFE (it cannot be written truthfully)', async () => {
+test('a name on disk that is not valid UTF-8 is refused with EUNSAFE (it cannot be written truthfully)', { skip: WIN && 'NTFS names are UTF-16: Node 18 on Windows turns the byte path into a valid name, so no such name exists there (C14.3 d)' }, async () => {
   const root = tree(fresh(), { 'ok': 'ok' });
   try { writeFileSync(Buffer.concat([Buffer.from(`${root}/caf`), Buffer.from([0xe9])]), 'x'); } catch { return; } // macOS refuses such names: nothing to test there
   await refuses(root, join(base, 'badutf8.zip'), 'EUNSAFE');

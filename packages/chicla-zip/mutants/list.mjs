@@ -550,7 +550,8 @@ const cli4 = (() => {
   { id: "M4-extract-overwrite", file: F, tests: [C], why: "extract --overwrite is passed on", find: 'overwrite: !!flags["--overwrite"], ...(mb', replace: "overwrite: false, ...(mb" },
   { id: "M4-max-bytes-passed", file: F, tests: [C, A3], why: "extract --max-bytes is passed on", find: "...(mb !== undefined ? { maxTotalBytes: Number(mb) } : {})", replace: "" },
   { id: "M4-extract-collisions-line", file: F, tests: [G, C], why: "extract reports equivalent names", find: "for (const c of r.collisions) out.write(`! equivalent names (NFC/case) in the zip", replace: "for (const c of []) out.write(`! equivalent names (NFC/case) in the zip" },
-  { id: "M4-epipe", file: F, tests: [A3], why: "a closed pipe ends the process quietly (A-1)", find: 'if (e.code === "EPIPE") process.exit(1); throw e;', replace: "throw e;" },
+  { id: "M4-epipe", file: F, tests: [A3], why: "a closed pipe ends the process quietly (A-1)", find: 'if (e.code === "EPIPE" || e.code === "EOF") process.exit(1); throw e;', replace: "throw e;" },
+  { id: "M14-eof-pipe", file: F, tests: [A3], why: "Windows reports a closed pipe as EOF on Node 18 and 20: also quiet (C14.3 d)", find: 'e.code === "EPIPE" || e.code === "EOF"', replace: 'e.code === "EPIPE"' },
   ];
 })();
 
