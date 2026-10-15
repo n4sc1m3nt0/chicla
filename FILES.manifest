@@ -1,10 +1,10 @@
 # chicla-manifest v2
 .github/workflows/ci.yml	5319b33a	3183
 .gitignore	1b52e6b9	47
-CHANGELOG.md	fd9be8bb	201523
-CHICLA_PROJECT_STATUS-150.md	6f3a52e5	79991
+CHANGELOG.md	1aa6dcca	202820
+CHICLA_PROJECT_STATUS-151.md	7d5debc9	80756
 CLAUDE.md	ecc0cb4b	8485
-FILES.baseline.json	82d51097	25857
+FILES.baseline.json	dc99584b	25857
 LICENSE	1ea3b7b0	10174
 README.md	ab68b187	9903
 ROADMAP.md	8a366217	103314
@@ -17,7 +17,7 @@ docs/pinned-files-design.md	6256c946	6552
 docs/zip-handling.md	83c151f1	13614
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	a3f5a0e7	541
+package.json	126e70c2	541
 packages/chicla-kit/package.json	26130e41	318
 packages/chicla-kit/src/.gitkeep	00000000	0
 packages/chicla-kit/src/bump-round.mjs	b4ee761d	13448
@@ -83,8 +83,8 @@ packages/chicla-zip/test/extract-legacy.test.mjs	6146e309	2840
 packages/chicla-zip/test/extract-m2-gaps.test.mjs	4a9c63f9	3509
 packages/chicla-zip/test/extract-rollback.test.mjs	540a2ebf	7293
 packages/chicla-zip/test/extract.test.mjs	4596e140	13477
-packages/chicla-zip/test/fsprobe.mjs	997c23b5	2653
-packages/chicla-zip/test/fsprobe.test.mjs	515b1f5c	1092
+packages/chicla-zip/test/fsprobe.mjs	330ce5d5	2998
+packages/chicla-zip/test/fsprobe.test.mjs	b8a18a3e	2292
 packages/chicla-zip/test/fsync-writable.test.mjs	30889f60	2612
 packages/chicla-zip/test/fuzz-read.test.mjs	dfcce897	12211
 packages/chicla-zip/test/interop.mjs	f034b861	4589
@@ -92,7 +92,7 @@ packages/chicla-zip/test/interop.test.mjs	b4dcd714	4753
 packages/chicla-zip/test/legacy-encoding.test.mjs	d36bc7fa	6093
 packages/chicla-zip/test/mark-utf8.test.mjs	3483f5e6	9831
 packages/chicla-zip/test/open.test.mjs	66356831	7502
-packages/chicla-zip/test/package.test.mjs	d328fbc7	4173
+packages/chicla-zip/test/package.test.mjs	f22ed221	4181
 packages/chicla-zip/test/read.test.mjs	de49899e	9705
 packages/chicla-zip/test/stream-limits.test.mjs	0c029790	6959
 packages/chicla-zip/test/windows-names.test.mjs	fb4695dc	6429
@@ -163,4 +163,4 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	fa91ed4b	531
+version.mjs	4a5574d5	531

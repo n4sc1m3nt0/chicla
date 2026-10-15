@@ -1,5 +1,12 @@
-<!-- CHANGELOG_FINGERPRINT: seq=150 file=CHICLA_PROJECT_STATUS-150.md app_sha256_12=065d37032ef1 changelog_sha256_12=bd8a6595db84 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=151 file=CHICLA_PROJECT_STATUS-151.md app_sha256_12=065d37032ef1 changelog_sha256_12=6f4f2d313a18 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 147 — Windows: the zipinfo probe and the second bin call (v0.0.150)
+
+- Task: Rodrigo's «autorizo» after the fourth CI log (`logs_104733593410`). No hang this time (every job under 5 minutes; one clean run proves nothing about the macOS Node 18 stall of round 146). The 3 red tests on Ubuntu and macOS were `main` holding `CHICLA_PROJECT_STATUS-149.md` next to `-150` (the copy-over push does not delete): Rodrigo's `git rm`, no code. Windows 45, 44 and 33: the round 146 fixes did not take effect.
+- Cause 1: `lossyNames` required `zipinfo` to exit 0; on Windows it exits 1 (a warning), so the probe stayed false and 31 tests compared raw names. Now `lossyFromZipinfo` (exported, tested first: red, then green) accepts exit 0 or 1 with non-empty output that is not the name itself. Cause 2: the second call to the installed bin (`ls a.zip --json`) in `package.test.mjs` also needs the shell on Windows (`EINVAL`).
+- Written blind from the log, no source file changed, the pin did not move. Left red on purpose (C14.3): `openZip` of a directory (ENOTZIP, not EISDIR) and, on Node 18/20, cleanup with an open handle.
+- NOT run: anything on Windows or macOS (the next Windows log decides), `npm test` on Node 18 and 20, `npm run mutants`. Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
 
 ## Round 146 — a stuck CI job costs minutes: job timeouts, readers with a timeout (v0.0.149)
 

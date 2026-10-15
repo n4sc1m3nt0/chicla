@@ -62,7 +62,7 @@ test("a packed tarball installs in a clean folder: import works and the bin runs
     writeFileSync(join(proj, "t.mjs"), 'import {writeZip} from "chicla-zip"; await writeZip("a.zip",[{name:"café.txt",data:Buffer.from("hi")}]);');
     execFileSync(process.execPath, ["t.mjs"], { cwd: proj });
     execFileSync("unzip", ["-tq", "a.zip"], { cwd: proj, stdio: "pipe" }); // independent reader
-    const ls = JSON.parse(execFileSync(bin, ["ls", "a.zip", "--json"], { cwd: proj, encoding: "utf8" }));
+    const ls = JSON.parse(execFileSync(bin, ["ls", "a.zip", "--json"], { cwd: proj, encoding: "utf8", ...NPM }));
     assert.equal(ls.ok, true);
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 });

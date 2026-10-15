@@ -24,12 +24,14 @@ export const refusesNoncharacters = probe(['￿.txt']) === -1;
 export const realTmp = () => realpathSync(tmpdir());
 /** Apple's zipinfo writes non-ASCII bytes as «?» (measured on a zip with one UTF-8 name, not guessed from the platform): there, names are
  *  compared with every run of such characters collapsed to one «?» */
+/** decides from one run of `zipinfo -1` on a zip with the single UTF-8 name «é-日.txt»: Info-ZIP exits 1 for warnings (Windows prints the name through the OEM code page and warns), so 0 and 1 both count (round 147) */
+export const lossyFromZipinfo = (r) => !r.error && (r.status === 0 || r.status === 1) && String(r.stdout).trim() !== '' && String(r.stdout).trim() !== 'é-日.txt';
 export const lossyNames = (() => {
   const d = mkdtempSync(join(tmpdir(), 'chicla-fsprobe-'));
   try {
     const z = join(d, 'p.zip'); writeFileSync(z, buildZip([{ name: 'é-日.txt', data: 'x', flags: 0x800 }]));
     const r = spawnSync('zipinfo', ['-1', z], { encoding: 'utf8' });
-    return !r.error && r.status === 0 && r.stdout.trim() !== 'é-日.txt';
+    return lossyFromZipinfo(r);
   } catch { return false; } finally { rmSync(d, { recursive: true, force: true }); }
 })();
 // On Windows the OEM code page turns the UTF-8 bytes of «é» into «+» and a replacement character (round 146): both count as the non-ASCII run there.
