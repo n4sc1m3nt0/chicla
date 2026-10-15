@@ -1,7 +1,7 @@
 {
  "format": "chicla-baseline-v1",
- "created": "2026-10-15T12:37:26.687Z",
- "seal": "4d869b60f883e360f7f8390d1ce6f20aa2195272d9d315fdf557bac460d983eb",
+ "created": "2026-10-15T16:11:29.210Z",
+ "seal": "a85039dffb304409558071465316c489f2355bdc7704b893eb2e3639c7240595",
  "files": [
   {
    "path": ".github/workflows/ci.yml",
@@ -15,13 +15,13 @@
   },
   {
    "path": "CHANGELOG.md",
-   "size": 210988,
-   "sha256": "d2a1045f759baf0aef708bb2adc48ba63fd0df3efcbdbaa8b1bf5590b783bf56"
+   "size": 212282,
+   "sha256": "13ce5fdbba97bfeb55074318ad7caee78bf6e8d2461e3b70460c9169f9abd50e"
   },
   {
-   "path": "CHICLA_PROJECT_STATUS-156.md",
-   "size": 83575,
-   "sha256": "892105d4c6c6b57b51bccc0c861e023dc1c550ea0f0559c9d1aa03d9993ea9fe"
+   "path": "CHICLA_PROJECT_STATUS-157.md",
+   "size": 85124,
+   "sha256": "119d829664958824804d55e2d9a3c08e5339a33f1eadbfc7eb0714c7e527a6a5"
   },
   {
    "path": "CLAUDE.md",
@@ -31,7 +31,7 @@
   {
    "path": "FILES.manifest",
    "size": 8351,
-   "sha256": "fa4ba43e0c211ad720cc97d9c46a3fbe8d98e0e3b62cda4fb874325a178113b6"
+   "sha256": "34b59a87c0c282e11756ece55f63da9cf6f3e2c4a24da1c9ebc5e60ec8d261d6"
   },
   {
    "path": "LICENSE",
@@ -45,8 +45,8 @@
   },
   {
    "path": "ROADMAP.md",
-   "size": 105910,
-   "sha256": "0b39cb204b6cf9972692e886c6886cc34883b1b6cbe753b5fe6a8b570b9f2d3b"
+   "size": 108154,
+   "sha256": "9ded2f19b418423adb9905d7b13f2e04af3a47d7be0b482905785d6d6d084053"
   },
   {
    "path": "docs/README.md",
@@ -96,7 +96,7 @@
   {
    "path": "package.json",
    "size": 541,
-   "sha256": "be657d33e28d56f3223f3bd25fc23179fce96203b2bafef8c1e4ec2073e79cb3"
+   "sha256": "25e4bb478353968998cafa125eb65bce40cec286ee25adb3ce5616c9d9ea9919"
   },
   {
    "path": "packages/chicla-kit/package.json",
@@ -365,8 +365,8 @@
   },
   {
    "path": "packages/chicla-zip/test/create-stream.test.mjs",
-   "size": 16772,
-   "sha256": "24b98e37eecd7319297b635d1fd86639c06f288fb7f1c92fcb0981c8f25d4219"
+   "size": 16891,
+   "sha256": "87306f6844af60069b8116e630c6113c5d98b0323a2568504df684f74faa49ac"
   },
   {
    "path": "packages/chicla-zip/test/create.test.mjs",
@@ -836,7 +836,7 @@
   {
    "path": "version.mjs",
    "size": 531,
-   "sha256": "d208faf0085f58703c611f84adbdca5eb9a902dace021128c6dea9b8e0d77082"
+   "sha256": "e595f59658b25e47c8c3a6c175af9fa5c1940c27175da6672dcfaf87b2d912d9"
   }
  ]
 }

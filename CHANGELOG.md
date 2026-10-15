@@ -1,5 +1,13 @@
-<!-- CHANGELOG_FINGERPRINT: seq=156 file=CHICLA_PROJECT_STATUS-156.md app_sha256_12=065d37032ef1 changelog_sha256_12=9a9623cd64ec (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=157 file=CHICLA_PROJECT_STATUS-157.md app_sha256_12=065d37032ef1 changelog_sha256_12=24c99ebc93d7 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 153 — M14: C14.3 closed, test 128 explained, C14.5 split, C14.6 opened (v0.0.156)
+
+- Task: read the tenth CI log (round 152 code) and close C14.3. D106 to D110 confirmed by Rodrigo («106 sim, 107 sim, 108 sim, 109 sim, 110 no fim»). Ubuntu and macOS green on every Node (1059 and 1052 pass, 0 fail), `bench` (1.3x) and `pack` green; Windows 0 fail on Node 18, 20 and 22 (620 pass, 18 skipped).
+- Test 128 (`create-stream.test.mjs`) was skipped on Windows with no reason: it counts descriptors through `/proc/self/fd`, which exists only on Linux, so it is skipped on macOS and Windows by design. The skip now carries that reason (one line, no logic change).
+- ROADMAP: D106 to D110; C14.3 closed (slice c only if a test or a CI log asks); C14.5 split into (a) the `--windows-names` flag and the `test` warning, (b) the support statement for `chicla-zip` only; new card C14.6 (the `chicla-kit` suite on the `windows` job). C11.4 was never built, so there is no refusal to remove.
+- Source: none changed; the pin did not move. `chicla-kit` has never run on Windows (the `windows` job runs only `chicla-zip`).
+- NOT run: anything on Windows or macOS, `npm test` on Node 18 and 20, `npm run mutants`, `npm run smoke` (no script changed). Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
 
 ## Round 152 — M14 C14.3 slice d: a closed pipe is also «EOF» on Windows Node 18/20 (v0.0.155)
 

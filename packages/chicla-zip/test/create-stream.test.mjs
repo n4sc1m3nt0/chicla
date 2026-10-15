@@ -70,7 +70,7 @@ test('files are read in slices: the read hook runs once per slice, and a file of
   assert.deepEqual((await checkZip(out, { ten: sample(10), eight: sample(8), none: '' })).problems, []);
 });
 
-test('files are opened one at a time, when the writer reaches them (no descriptor per file is held up front)', { skip: !existsSync('/proc/self/fd') }, async () => {
+test('files are opened one at a time, when the writer reaches them (no descriptor per file is held up front)', { skip: !existsSync('/proc/self/fd') && 'the test counts open descriptors through /proc/self/fd, which exists only on Linux (skipped on macOS and Windows)' }, async () => {
   const root = fresh(); for (let i = 0; i < 200; i++) writeFileSync(join(root, `f${String(i).padStart(3, '0')}`), `data ${i}`);
   const open0 = readdirSync('/proc/self/fd').length; let peak = 0;
   await createZip(join(fresh(), 'a.zip'), root, { stream: true, _afterRead: () => { peak = Math.max(peak, readdirSync('/proc/self/fd').length); } });
