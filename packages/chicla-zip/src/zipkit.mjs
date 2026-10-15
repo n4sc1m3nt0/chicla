@@ -34,6 +34,15 @@ import { chmodSync, closeSync, constants, copyFileSync, linkSync, createReadStre
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { open as fsOpen } from "node:fs/promises";
 import { Readable, Transform, Writable } from "node:stream";
+// C14.3 b (D103, D104): on Windows a file with an open handle (or one an antivirus holds for a moment) cannot be removed: rmSync gives EPERM, EBUSY or
+// ENOTEMPTY. `rmBounded` retries those a bounded number of times (8 tries, 20 ms longer each time: about half a second at most) and then throws;
+// `rmQuiet` is for cleanup after a failure: it never throws, so the real error is the one the caller gets and a raw EPERM never replaces it.
+const RM_BUSY = new Set(["EPERM", "EBUSY", "ENOTEMPTY"]), RM_TRIES = 8, RM_STEP_MS = 20;
+const nap = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+const rmBounded = (p, o) => { for (let i = 1; ; i++) { try { return rmSync(p, o); } catch (err) { if (i >= RM_TRIES || !RM_BUSY.has(err?.code)) throw err; nap(i * RM_STEP_MS); } } };
+const rmQuiet = (p, o) => { try { rmBounded(p, o); } catch { /* cleanup never masks the real error (D104) */ } };
+// Waits until a stream has really closed its descriptor (destroying it if it is still open): a file can be removed on Windows only after that.
+const closedStream = (s) => (!s || s.closed ? Promise.resolve() : new Promise((done) => { s.once("close", done); s.destroy(); }));
 import { finished, pipeline } from "node:stream/promises";
 import { once } from "node:events";
 import { createHash } from "node:crypto";
@@ -335,7 +344,7 @@ const mergePlan = (src, dst, overwrite, ops = []) => {
 // `leftBehind` (paths still holding the new content) and `backupDir` (kept, with the originals). `canRetry`: an EXDEV before anything moved
 // returns "retry" so the caller can redo the extraction with the temp folder inside the destination (C2.8). Every move goes through `rn`.
 const mergeMove = (plan, real, rn, canRetry) => {
-  const done = []; let bakDir = null; const dropBackups = () => { if (bakDir) rmSync(bakDir, { recursive: true, force: true }); };
+  const done = []; let bakDir = null; const dropBackups = () => { if (bakDir) rmQuiet(bakDir, { recursive: true, force: true }); };
   for (const [from, to] of plan) {
     let saved = null;
     try {
@@ -343,7 +352,7 @@ const mergeMove = (plan, real, rn, canRetry) => {
       if (st) { bakDir ??= mkdtempSync(join(real, ".chicla-bak-")); saved = join(bakDir, String(done.length)); try { linkSync(to, saved); } catch { copyFileSync(to, saved); } }
       rn(from, to);
     } catch (err) {
-      if (saved) rmSync(saved, { force: true });
+      if (saved) rmQuiet(saved, { force: true });
       if (err.code === "EXDEV" && !done.length && canRetry) { dropBackups(); return "retry"; }
       const left = [];
       for (const o of done.reverse()) { try { if (o.saved) rn(o.saved, o.to); else rn(o.to, o.from); } catch { left.push(o.to); } }
@@ -423,7 +432,7 @@ export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalByt
       if (isSmall(e)) { // fast path; on EEXIST nothing was created and the full diagnosis below decides which error it is
         const data = smallData(fd, size, e, path);
         try { made.add(writeSmall(target, data, e)); files++; bytes += e.usize; continue; }
-        catch (err) { if (err.code !== "EEXIST") { rmSync(target, { force: true }); throw err instanceof ZipError ? err : new ZipError(`«${e.name}»: ${err.message}`); } }
+        catch (err) { if (err.code !== "EEXIST") { rmQuiet(target, { force: true }); throw err instanceof ZipError ? err : new ZipError(`«${e.name}»: ${err.message}`); } }
       }
       let st = null; try { st = lstatSync(target); } catch { /* does not exist */ }
       if (st) {
@@ -434,8 +443,9 @@ export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalByt
       }
       if (e.csize === 0) { if (e.usize !== 0 || e.crc !== 0) throw new ZipError(`«${e.name}»: has no data but declares ${e.usize} bytes`); writeFileSync(target, "", { flag: "wx", mode: 0o600 }); }
       else {
-        try { dataStart(fd, size, e, path); /* before the sink exists: a throw here must not leave a write stream opening a file later */ await streamEntry(path, size, fd, e, createWriteStream(target, { flags: "wx", mode: 0o600 })); }
-        catch (err) { rmSync(target, { force: true }); throw err instanceof ZipError ? err : new ZipError(`«${e.name}»: ${err.message}`); }
+        let sink = null; // the write stream of this entry: closed before a failed target is removed (Windows)
+        try { dataStart(fd, size, e, path); /* before the sink exists: a throw here must not leave a write stream opening a file later */ sink = createWriteStream(target, { flags: "wx", mode: 0o600 }); await streamEntry(path, size, fd, e, sink); }
+        catch (err) { await closedStream(sink); rmQuiet(target, { force: true }); throw err instanceof ZipError ? err : new ZipError(`«${e.name}»: ${err.message}`); }
       }
       const s2 = statSync(target); made.add(`${s2.dev}:${s2.ino}`);
       chmodSync(target, ((e.mode & 0o777) || 0o644) | 0o600);
@@ -450,7 +460,7 @@ export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalByt
   } catch (err) { // C2.4: whatever the file system throws (name too long, no space, permissions) reaches the caller as a ZipError, never raw
     if (err instanceof ZipError) throw err;
     throw new ZipError(`${path}: extraction failed, nothing was kept (${err.code ?? "fs"}: ${err.message})`, "EZIP", { cause: err });
-  } finally { if (fd !== null) closeSync(fd); if (tmp) rmSync(tmp, { recursive: true, force: true }); }
+  } finally { if (fd !== null) closeSync(fd); if (tmp) rmQuiet(tmp, { recursive: true, force: true }); }
   return { files, dirs, bytes, skipped, collisions };
   }
 };
@@ -530,8 +540,8 @@ const checkOpts = ({ level, zip64, deterministic, epoch, sha256, extendedTime })
 };
 // AUDIT-2 A-1: `<out>.partial` is never followed. Whatever sits there (a stale file, a symlink planted in a shared folder) is removed first (a link is
 // removed, not its target), then the file is created exclusively and without following links; a race that recreates it in between is EEXIST, not an overwrite.
-const openPartial = (tmp) => { rmSync(tmp, { force: true }); return openSync(tmp, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o666); };
-const dropPartial = (tmp) => { try { rmSync(tmp, { force: true }); } catch { /* already failing */ } };
+const openPartial = (tmp) => { rmBounded(tmp, { force: true }); return openSync(tmp, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o666); };
+const dropPartial = (tmp) => rmQuiet(tmp, { force: true });
 // AUDIT-2 A-2: after the rename, the folder entry is made durable too (best effort: not possible on every platform). One place for writeZip and createZip.
 const syncDir = (out) => { try { const d = openSync(dirname(out), "r"); try { fsyncSync(d); } finally { closeSync(d); } } catch { /* best effort */ } };
 const vetName = (s, seen, win) => {
@@ -804,13 +814,14 @@ const buildZip = async (outPath, root, { exclude, symlinks = "skip", stream, _af
   if (!streaming) return { ...(await writeZip(outPath, sources, writeOpts)), skipped };
   if (sink) return { ...(await writeZipStream(sink, sources, writeOpts)), skipped };
   const final = resolve(outPath), tmp = `${final}.partial`; // a path: <out>.partial, fsync, atomic rename; the old output stays until the end
+  let ws;
   try {
-    const r = await writeZipStream(createWriteStream(tmp, { fd: openPartial(tmp) }), sources, writeOpts); // the stream owns its descriptor (a FileHandle stream with autoClose: false hangs fh.close() on Node 22); opened here so a bad folder is ENOENT as in writeZip
+    ws = createWriteStream(tmp, { fd: openPartial(tmp) }); const r = await writeZipStream(ws, sources, writeOpts); // the stream owns its descriptor (a FileHandle stream with autoClose: false hangs fh.close() on Node 22); opened here so a bad folder is ENOENT as in writeZip
     const fh = await fsOpen(tmp, "r+"); try { await fh.sync(); } finally { await fh.close(); } // fsync works on the file, so a second descriptor does; it must be able to write ("r" gives EPERM on Windows, round 143)
     renameSync(tmp, final); syncDir(final);
     return { ...r, skipped };
   } catch (err) {
-    dropPartial(tmp);
+    await closedStream(ws); dropPartial(tmp); // the stream owns the descriptor: it must be closed before Windows lets the file go
     throw err instanceof ZipError ? err : new ZipError(`${final}: ${err.message}`, err.code ?? "EZIP", { cause: err });
   }
 };

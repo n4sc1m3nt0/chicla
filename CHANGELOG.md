@@ -1,5 +1,13 @@
-<!-- CHANGELOG_FINGERPRINT: seq=154 file=CHICLA_PROJECT_STATUS-154.md app_sha256_12=065d37032ef1 changelog_sha256_12=2548924992cf (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=155 file=CHICLA_PROJECT_STATUS-155.md app_sha256_12=065d37032ef1 changelog_sha256_12=15373dafa5b8 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 151 — M14 C14.3 slice b: cleanup that survives an open handle on Windows (v0.0.154)
+
+- Task: C14.3 slice b (D103, D104, D105 confirmed by Rodrigo: «103 sim, 104 sim, 105 sim»). Eighth CI log (round 150 code): Ubuntu and macOS green on every Node (1054 tests, 0 fail), `bench` and `pack` green; Windows Node 22 at 0 fail (614 pass), Node 20 at 11, Node 18 at 13. Most of the rest: a failed write or extraction left `.partial` / `.chicla-tmp-*` behind, or the cleanup `rmSync` threw a raw `EPERM` over the real ZipError.
+- Test first (red, 3 of 3): `packages/chicla-zip/test/cleanup-retry.test.mjs` (5) on a Windows-like fake (a descriptor stays open for a while, `rmSync` refuses a path with an open descriptor or the first N calls). Two weak tests were thrown away before the code (one passed before the fix, one asserted nothing).
+- Source: `packages/chicla-zip/src/zipkit.mjs` only: `rmBounded` (8 tries, 20 ms longer each), `rmQuiet` (never throws; the real error wins), `closedStream` (waits for the stream to close); `createZip` `stream: true` and the extractor close their streams before removing; the stale `.partial` is removed with `rmBounded` and is not swallowed. The pin in `CLAUDE.md` MOVED: G-C11 is due again.
+- Hand mutants: 9, 8 red (3 of them only after tests were added); 1 survives and is explained: the extractor does not wait for the sink before removing the target. On Linux with Node 22 `pipeline` already waits for `close`; the difference can only show on Node 18/20 on Windows (G-C13). Not added to `mutants/list.mjs`.
+- NOT run: anything on Windows or macOS, `npm test` on Node 18 and 20, `npm run mutants`, `npm run smoke` (no script changed). Left red on Windows, causes not read (slice d): tests 22, 130, 151, 133/127 may be gone. Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
 
 ## Round 150 — M14 C14.3 slice a: `openZip` of a directory is EISDIR everywhere (v0.0.153)
 
