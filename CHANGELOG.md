@@ -1,5 +1,13 @@
-<!-- CHANGELOG_FINGERPRINT: seq=157 file=CHICLA_PROJECT_STATUS-157.md app_sha256_12=065d37032ef1 changelog_sha256_12=24c99ebc93d7 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=158 file=CHICLA_PROJECT_STATUS-158.md app_sha256_12=065d37032ef1 changelog_sha256_12=88e7046206af (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 154 — M14 C14.5 slice (a): `--windows-names` and the Windows warning in `test` (v0.0.157)
+
+- Task: C14.5 slice (a) (D98, D108): `extract` and `create` take `--windows-names` (= `windowsNames: true` on any platform; without it the default stays «on only on win32»); `chicla-zip test` reports names not valid on Windows as a warning (text line and `warnings.windowsNames` in `--json`, every platform, exit code unchanged). The eleventh CI log (`logs_105045336148-2`) was read: same counts as round 153 (Ubuntu 1059, macOS 1052 pass, 0 fail; Windows 620 pass, 18 skipped, 0 fail on Node 18, 20, 22), nothing new.
+- Tests first (11 red): `cli-windows-names.test.mjs` (12); `cli.test.mjs` two deep-equal checks of the `test --json` warnings now include `windowsNames: []` (D111).
+- Source: `packages/chicla-zip/src/zipkit.mjs` only (usage line, `CMDS`, the `test` command, one option each on `extract` and `create`). The pin MOVED (G-C11 due, at the end of C14.5 by D110).
+- 13 hand mutants `C14.5-*` in `mutants/list.mjs`, each run alone: 12 red at once, 1 survived (`test-text-escape`: the test put the control-character name past the five shown), test tightened, then red. Not run: the full `npm run mutants`.
+- NOT run: anything on Windows or macOS, `npm test` on Node 18 and 20, `npm run smoke` (no script changed), CI. Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
 
 ## Round 153 — M14: C14.3 closed, test 128 explained, C14.5 split, C14.6 opened (v0.0.156)
 

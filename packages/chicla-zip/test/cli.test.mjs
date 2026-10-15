@@ -88,7 +88,7 @@ test('test: a good zip is exit 0 with the count and bytes', () => {
 test('test --json: files, bytes and empty warnings', () => {
   const r = run('test', good(), '--json'); assert.equal(r.code, 0); assert.equal(r.etext, '');
   const j = oneJson(r);
-  assert.deepEqual(j, { ok: true, command: 'test', files: 2, bytes: 27, warnings: { unsafeNames: [], missingUtf8Flag: [] } });
+  assert.deepEqual(j, { ok: true, command: 'test', files: 2, bytes: 27, warnings: { unsafeNames: [], missingUtf8Flag: [], windowsNames: [] } });
 });
 
 test('test: a wrong CRC is exit 1 (text: «✗» on stderr; json: ok:false and a code)', () => {
@@ -203,5 +203,5 @@ test('runCli: something that is not a ZipError is exit 3 (internal error), with 
 test('runCli: a zip written by writeZip is listed and tested through the same entry point (independent of the zipfab helper)', async () => {
   const p = join(fresh(), 'w.zip'); await writeZip(p, [{ name: 'é.txt', data: Buffer.from('written by Chicla') }]);
   const out = sinkOf(); assert.equal(await runCli(['test', p, '--json'], { out, err: sinkOf() }), 0);
-  assert.deepEqual(JSON.parse(out.text()).warnings, { unsafeNames: [], missingUtf8Flag: [] });
+  assert.deepEqual(JSON.parse(out.text()).warnings, { unsafeNames: [], missingUtf8Flag: [], windowsNames: [] });
 });

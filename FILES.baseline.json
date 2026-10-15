@@ -1,7 +1,7 @@
 {
  "format": "chicla-baseline-v1",
- "created": "2026-10-15T16:11:29.210Z",
- "seal": "a85039dffb304409558071465316c489f2355bdc7704b893eb2e3639c7240595",
+ "created": "2026-10-15T22:08:44.501Z",
+ "seal": "c73304979b00b5605b6ec296e29463cc253f709b2c1e1806bc25842e38a2f7e9",
  "files": [
   {
    "path": ".github/workflows/ci.yml",
@@ -15,23 +15,23 @@
   },
   {
    "path": "CHANGELOG.md",
-   "size": 212282,
-   "sha256": "13ce5fdbba97bfeb55074318ad7caee78bf6e8d2461e3b70460c9169f9abd50e"
+   "size": 213663,
+   "sha256": "7a9851ce0c3c3d89213862c0437d24ca4de8b190efb2fd7f4fbf3fb807d47399"
   },
   {
-   "path": "CHICLA_PROJECT_STATUS-157.md",
-   "size": 85124,
-   "sha256": "119d829664958824804d55e2d9a3c08e5339a33f1eadbfc7eb0714c7e527a6a5"
+   "path": "CHICLA_PROJECT_STATUS-158.md",
+   "size": 85936,
+   "sha256": "549a8dadd08eb3cc3d4efc170b0243ae2d852ccab30ff0056066aa54782ad59a"
   },
   {
    "path": "CLAUDE.md",
    "size": 8485,
-   "sha256": "4dd2b9a36058aba867e1360d5ae59f7889a5ae0c6e47747990b2063506c3bf28"
+   "sha256": "5862f90bcfb32ebf9aad18839df4b3a7c9b1bb8af5330d75e72280509647aa10"
   },
   {
    "path": "FILES.manifest",
-   "size": 8351,
-   "sha256": "34b59a87c0c282e11756ece55f63da9cf6f3e2c4a24da1c9ebc5e60ec8d261d6"
+   "size": 8417,
+   "sha256": "bfb56dcd6f63684268dfa3c1b14a84fd7dfc6e3272869187752aa8e5aab478b2"
   },
   {
    "path": "LICENSE",
@@ -45,8 +45,8 @@
   },
   {
    "path": "ROADMAP.md",
-   "size": 108154,
-   "sha256": "9ded2f19b418423adb9905d7b13f2e04af3a47d7be0b482905785d6d6d084053"
+   "size": 108837,
+   "sha256": "b488c0c03ab6d9f359819979afc773c0fc8feb1717963a7b408ccef8ca3a8baa"
   },
   {
    "path": "docs/README.md",
@@ -80,8 +80,8 @@
   },
   {
    "path": "docs/zip-handling.md",
-   "size": 13614,
-   "sha256": "8c2ce43337e5fc319878993e63b7bb5da8407d6c2345787586919f895a3ed0ce"
+   "size": 14092,
+   "sha256": "509e94a7c980b0cf9dd57a940860aa3a3763717364ec61fed784e091d859d530"
   },
   {
    "path": "docs/zipkit-RASCUNHO.mjs",
@@ -96,7 +96,7 @@
   {
    "path": "package.json",
    "size": 541,
-   "sha256": "25e4bb478353968998cafa125eb65bce40cec286ee25adb3ce5616c9d9ea9919"
+   "sha256": "206543997fc68e19f3b48af962f933dae886cb76c7a2d7bc7d145b633ab68c2d"
   },
   {
    "path": "packages/chicla-kit/package.json",
@@ -290,8 +290,8 @@
   },
   {
    "path": "packages/chicla-zip/mutants/list.mjs",
-   "size": 68148,
-   "sha256": "261dfd7801e2ac7e44a55c3a4791ab55954df70e74a7db9c30a16fbdf02bf0b3"
+   "size": 71763,
+   "sha256": "ef735786ed5e157d543dba31335186164399d887f542ed1a11e211b1c50eb096"
   },
   {
    "path": "packages/chicla-zip/package.json",
@@ -305,8 +305,8 @@
   },
   {
    "path": "packages/chicla-zip/src/zipkit.mjs",
-   "size": 84320,
-   "sha256": "b3aca6bbb0171b940cef5f65e0f63b61e460166a5eed364be01287ebeebf22b3"
+   "size": 85014,
+   "sha256": "a106680878a22524dbbf02b32763f4439507609683abc762ea07142fad151488"
   },
   {
    "path": "packages/chicla-zip/test/.gitkeep",
@@ -349,9 +349,14 @@
    "sha256": "5f21c4f808032bcab602eec669731cfb44be519bf6e2ea208c16c910b5732d49"
   },
   {
+   "path": "packages/chicla-zip/test/cli-windows-names.test.mjs",
+   "size": 9310,
+   "sha256": "abb7269e70492ed138036a565bc42add0cbf647f09eba6aa87bd646cbcc73a8f"
+  },
+  {
    "path": "packages/chicla-zip/test/cli.test.mjs",
-   "size": 13198,
-   "sha256": "9225223b1df2fd8ae40b24edcad08fe30e6b8324b8e8321768eb08a2cf6b9802"
+   "size": 13234,
+   "sha256": "58ea117df929e56624d30da9c3521a28daa89252d150fe8d42f4ca934279edcd"
   },
   {
    "path": "packages/chicla-zip/test/collisions.test.mjs",
@@ -836,7 +841,7 @@
   {
    "path": "version.mjs",
    "size": 531,
-   "sha256": "e595f59658b25e47c8c3a6c175af9fa5c1940c27175da6672dcfaf87b2d912d9"
+   "sha256": "e4c70b9488a802752cde022cc95582f201cd7e727d7a4079ae99d851ffbe7b24"
   }
  ]
 }

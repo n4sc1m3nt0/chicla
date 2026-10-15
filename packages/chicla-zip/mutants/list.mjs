@@ -606,4 +606,37 @@ const win14 = (() => {
   ];
 })();
 
-export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14];
+// M14 C14.5 slice (a) (round 154): the command-line face of `windowsNames` (the `--windows-names` flag of `extract` and `create`, the Windows warning of `test`).
+const win145 = (() => {
+  const F = "src/zipkit.mjs", W = ["test/cli-windows-names.test.mjs"], C = "test/cli.test.mjs";
+  return [
+    { id: "C14.5-extract-flag-passed", file: F, tests: W, why: "`extract --windows-names` reaches the extractor",
+      find: '{ maxTotalBytes: Number(mb) } : {}), ...(flags["--windows-names"] ? { windowsNames: true } : {})', replace: '{ maxTotalBytes: Number(mb) } : {}), ...(flags["--windows-names"] ? {} : {})' },
+    { id: "C14.5-create-flag-passed", file: F, tests: W, why: "`create --windows-names` reaches the writer (plain and stream)",
+      find: '{ deterministic: true } : {}), ...(flags["--windows-names"] ? { windowsNames: true } : {})', replace: '{ deterministic: true } : {}), ...(flags["--windows-names"] ? {} : {})' },
+    { id: "C14.5-extract-default-off", file: F, tests: W, why: "without the flag `extract` keeps the platform default (not always on)",
+      find: '{ maxTotalBytes: Number(mb) } : {}), ...(flags["--windows-names"] ? { windowsNames: true } : {})', replace: '{ maxTotalBytes: Number(mb) } : {}), ...(flags["--windows-names"] ? { windowsNames: true } : { windowsNames: true })' },
+    { id: "C14.5-create-default-off", file: F, tests: W, why: "without the flag `create` keeps the platform default (not always on)",
+      find: '{ deterministic: true } : {}), ...(flags["--windows-names"] ? { windowsNames: true } : {})', replace: '{ deterministic: true } : {}), ...(flags["--windows-names"] ? { windowsNames: true } : { windowsNames: true })' },
+    { id: "C14.5-extract-flag-known", file: F, tests: W, why: "`extract` accepts the flag",
+      find: 'bool: ["--overwrite", "--windows-names"], val', replace: 'bool: ["--overwrite"], val' },
+    { id: "C14.5-create-flag-known", file: F, tests: W, why: "`create` accepts the flag",
+      find: '"--overwrite", "--windows-names"], multi', replace: '"--overwrite"], multi' },
+    { id: "C14.5-usage-extract", file: F, tests: W, why: "the usage line names the flag on `extract`",
+      find: "[--max-bytes N] [--windows-names] [--json] · create", replace: "[--max-bytes N] [--json] · create" },
+    { id: "C14.5-usage-create", file: F, tests: W, why: "the usage line names the flag on `create`",
+      find: "[--overwrite] [--windows-names] [--json] · --help", replace: "[--overwrite] [--json] · --help" },
+    { id: "C14.5-test-json-key", file: F, tests: [...W, C], why: "`test --json` lists the Windows names",
+      find: "windowsNames: winBad.map((e) => e.name)", replace: "windowsNames: []" },
+    { id: "C14.5-test-text-line", file: F, tests: W, why: "`test` prints the Windows warning line",
+      find: "if (winBad.length) out.write(", replace: "if (false) out.write(" },
+    { id: "C14.5-test-text-limit", file: F, tests: W, why: "the text line shows at most five names",
+      find: "winBad.slice(0, 5)", replace: "winBad.slice(0, 99)" },
+    { id: "C14.5-test-text-escape", file: F, tests: W, why: "the text line escapes control characters in names (A-3)",
+      find: '${esc(winBad.slice(0, 5).map((e) => e.name).join(", "))}', replace: '${winBad.slice(0, 5).map((e) => e.name).join(", ")}' },
+    { id: "C14.5-test-detects-everywhere", file: F, tests: W, why: "the warning does not depend on the platform",
+      find: "winBad = entries.filter((e) => windowsNameProblems(e.name).length)", replace: 'winBad = entries.filter((e) => process.platform === "win32" && windowsNameProblems(e.name).length)' },
+  ];
+})();
+
+export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14, ...win145];

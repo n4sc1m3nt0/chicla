@@ -14,6 +14,7 @@ A reader written in Node, with zero dependencies, gives the same answer on every
 
 ## 2. What the reader does
 
+- **Windows names (C14.5 a).** `extract` and `create` take `--windows-names` (API: `windowsNames: true`): a name that is not valid on Windows (backslash, drive, UNC, reserved device, forbidden character, trailing dot or space, stream colon) is refused with `EUNSAFE` and nothing is written. Without the flag the default stays «on only on win32». `test` always reports such names as a warning (`warnings.windowsNames`) and never changes the exit code. Names are never renamed.
 - **Names.** In order: Unicode Path extra field (0x7075, only when its CRC matches the name), bit 11, valid UTF-8, cp437. The `legacyEncoding` option chooses another code page for names that have no flag (for example `windows-1252`, using Chicla's own table). The name returned is the real one; nothing is normalised or rewritten.
 - **Integrity.** CRC-32 and size of every file are checked on read and on `testZip`.
 - **Formats.** Stored and deflate, zip64 (reading and writing), extra fields, Unix modes, dates (the UT extra is preferred over the DOS date, which has no time zone and is read as local time).

@@ -4,7 +4,7 @@
 //   node packages/chicla-zip/src/zipkit.mjs ls <zip> [--json]             lists entries (name, size, how the name was decoded)
 //   node packages/chicla-zip/src/zipkit.mjs test <zip> [--json]           decompresses everything and checks CRC and sizes; warns about unsafe names
 //   node packages/chicla-zip/src/zipkit.mjs cat <zip> <name>               writes one file of the zip to stdout
-//   node packages/chicla-zip/src/zipkit.mjs extract <zip> <folder> [--overwrite] [--max-bytes N]
+//   node packages/chicla-zip/src/zipkit.mjs extract <zip> <folder> [--overwrite] [--max-bytes N] [--windows-names]
 //   node packages/chicla-zip/src/zipkit.mjs mark <zip>                     sets the UTF-8 flag (bit 11) on non-ASCII names
 //   Exit codes 0 ok, 1 failed, 2 usage, 3 internal; `--json` prints one JSON line (command line section below, C4.2a). `create` and `--json` for
 //   extract and mark are C4.2b. The library functions (writeZip, createZip, …) are exported.
@@ -831,8 +831,8 @@ const buildZip = async (outPath, root, { exclude, symlinks = "skip", stream, _af
 // `--json` (every command but cat): exactly one line of JSON on stdout, { ok: true, command, ... } or { ok: false, error: { code, message } }, stderr empty.
 // Without it, failures go to stderr as «✗ message» and stdout stays empty. `cat` writes the raw bytes only, so it has no `--json` (a usage error).
 // Warnings never change the exit code. `runCli` never ends the process. C4.2b added `create` and `--json` on extract and mark.
-const USAGE = "usage: zipkit.mjs ls|test|mark <zip> [--json] · cat <zip> <name> · extract <zip> <folder> [--overwrite] [--max-bytes N] [--json] · create <out.zip> <folder> [--exclude GLOB]... [--stream] [--deterministic] [--overwrite] [--json] · --help";
-const CMDS = { ls: { pos: 1, json: true }, test: { pos: 1, json: true }, cat: { pos: 2 }, mark: { pos: 1, json: true }, extract: { pos: 2, json: true, bool: ["--overwrite"], val: ["--max-bytes"] }, create: { pos: 2, json: true, bool: ["--stream", "--deterministic", "--overwrite"], multi: ["--exclude"] } };
+const USAGE = "usage: zipkit.mjs ls|test|mark <zip> [--json] · cat <zip> <name> · extract <zip> <folder> [--overwrite] [--max-bytes N] [--windows-names] [--json] · create <out.zip> <folder> [--exclude GLOB]... [--stream] [--deterministic] [--overwrite] [--windows-names] [--json] · --help";
+const CMDS = { ls: { pos: 1, json: true }, test: { pos: 1, json: true }, cat: { pos: 2 }, mark: { pos: 1, json: true }, extract: { pos: 2, json: true, bool: ["--overwrite", "--windows-names"], val: ["--max-bytes"] }, create: { pos: 2, json: true, bool: ["--stream", "--deterministic", "--overwrite", "--windows-names"], multi: ["--exclude"] } };
 // --exclude GLOB: without «/» it matches a file or folder NAME at any depth; with «/» the whole path from the folder. «*» and «?» never cross «/»; everything else is literal.
 const globRe = (g) => new RegExp(`^${g.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*").replace(/\?/g, "[^/]")}$`);
 const excluder = (globs) => { const res = globs.map((g) => ({ re: globRe(g), whole: g.includes("/") })); return (rel) => res.some(({ re, whole }) => (whole ? re.test(rel) : re.test(rel.slice(rel.lastIndexOf("/") + 1)))); };
@@ -872,18 +872,19 @@ export const runCli = async (argv, { out = process.stdout, err = process.stderr 
       if (json) say({ ok: true, command: "ls", entries: entries.map((e) => ({ name: e.name, size: e.usize, csize: e.csize, method: e.method, crc32: e.crc.toString(16).padStart(8, "0"), isDir: e.isDir, isSymlink: e.isSymlink, nameSource: e.nameSource, flagMissing: e.flagMissing, mtime: e.mtime && !Number.isNaN(+e.mtime) ? e.mtime.toISOString() : null })) });
       else for (const e of entries) out.write(`${String(e.usize).padStart(10)}  ${esc(e.name)}${e.nameSource === "ascii" ? "" : `   [name: ${e.nameSource}${e.flagMissing ? ", NO UTF-8 flag" : ""}]`}\n`);
     } else if (cmd === "test") {
-      const { entries } = listZip(zip), bad = entries.filter((e) => unsafeNameReason(e.name.replace(/\/+$/, "") || "/")), noFlag = entries.filter((e) => e.flagMissing), r = await testZip(zip);
-      if (json) say({ ok: true, command: "test", files: r.files, bytes: r.bytes, warnings: { unsafeNames: bad.map((e) => e.name), missingUtf8Flag: noFlag.map((e) => e.name) } });
+      const { entries } = listZip(zip), bad = entries.filter((e) => unsafeNameReason(e.name.replace(/\/+$/, "") || "/")), noFlag = entries.filter((e) => e.flagMissing), winBad = entries.filter((e) => windowsNameProblems(e.name).length), r = await testZip(zip); // C14.5 a: detects on every platform; a trailing «/» of a folder entry is an empty segment, which the function skips; `..` stays the unsafe-name warning's business
+      if (json) say({ ok: true, command: "test", files: r.files, bytes: r.bytes, warnings: { unsafeNames: bad.map((e) => e.name), missingUtf8Flag: noFlag.map((e) => e.name), windowsNames: winBad.map((e) => e.name) } });
       else {
         out.write(`✓ ${r.files} file(s), ${r.bytes} bytes: CRC and sizes match.\n`);
         if (bad.length) out.write(`! ${bad.length} unsafe name(s) (extraction refuses them): ${esc(bad.slice(0, 5).map((e) => e.name).join(", "))}\n`);
+        if (winBad.length) out.write(`! ${winBad.length} name(s) not valid on Windows (--windows-names makes extract and create refuse them): ${esc(winBad.slice(0, 5).map((e) => e.name).join(", "))}\n`);
         if (noFlag.length) out.write(`! ${noFlag.length} non-ASCII name(s) without the UTF-8 flag: ${esc(noFlag.slice(0, 5).map((e) => e.name).join(", "))} (zipkit.mjs mark fixes it)\n`);
       }
     } else if (cmd === "cat") out.write(readZipFile(zip, arg));
     else if (cmd === "mark") { const r = markUtf8Names(zip); if (json) say({ ok: true, command: "mark", patched: r.patched, total: r.total }); else out.write(`✓ ${esc(zip)}: ${r.patched} of ${r.total} entry(ies) marked with the UTF-8 flag\n`); }
     else if (cmd === "create") {
       if (!flags["--overwrite"] && (() => { try { lstatSync(resolve(zip)); return true; } catch { return false; } })()) throw new ZipError(`${zip} already exists (use --overwrite to replace it)`, "EEXIST"); // D35: same rule as extract; lstat, so a dangling link counts
-      const r = await createZip(zip, arg, { ...(flags["--exclude"] ? { exclude: excluder(flags["--exclude"]) } : {}), ...(flags["--stream"] ? { stream: true } : {}), ...(flags["--deterministic"] ? { deterministic: true } : {}) });
+      const r = await createZip(zip, arg, { ...(flags["--exclude"] ? { exclude: excluder(flags["--exclude"]) } : {}), ...(flags["--stream"] ? { stream: true } : {}), ...(flags["--deterministic"] ? { deterministic: true } : {}), ...(flags["--windows-names"] ? { windowsNames: true } : {}) });
       if (json) say({ ok: true, command: "create", entries: r.entries.length, bytes: r.bytes, skipped: r.skipped, collisions: r.collisions });
       else {
         out.write(`✓ ${r.entries.length} entry(ies), ${r.bytes} bytes → ${esc(zip)}\n`);
@@ -892,7 +893,7 @@ export const runCli = async (argv, { out = process.stdout, err = process.stderr 
       }
     } else {
       const mb = flags["--max-bytes"]; if (mb !== undefined && !/^\d{1,15}$/.test(mb)) throw new UsageError("--max-bytes needs a whole number of bytes (digits only)");
-      const r = await extractZip(zip, arg, { overwrite: !!flags["--overwrite"], ...(mb !== undefined ? { maxTotalBytes: Number(mb) } : {}) });
+      const r = await extractZip(zip, arg, { overwrite: !!flags["--overwrite"], ...(mb !== undefined ? { maxTotalBytes: Number(mb) } : {}), ...(flags["--windows-names"] ? { windowsNames: true } : {}) });
       if (json) say({ ok: true, command: "extract", files: r.files, dirs: r.dirs, bytes: r.bytes, skipped: r.skipped, collisions: r.collisions });
       else {
         out.write(`✓ ${r.files} file(s), ${r.dirs} folder(s) created, ${r.bytes} bytes → ${esc(arg)}\n`);
