@@ -4,7 +4,7 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { listZip, readZipFile, testZip } from '../src/zipkit.mjs';
-import { lossy, lossyNames } from './fsprobe.mjs';
+import { lossy, lossyNames, lossyDiag } from './fsprobe.mjs';
 
 const sha = (b) => createHash('sha256').update(b).digest('hex');
 const want = (expected) => Object.fromEntries(Object.entries(expected).map(([k, v]) => [k, k.endsWith('/') ? null : sha(Buffer.from(v))]));
@@ -35,15 +35,15 @@ print(json.dumps(out))
 export const readers = {
   unzip: (p) => { // Info-ZIP exits 1 for warnings (on Windows it cannot represent non-ASCII names) and still says «No errors detected»: that is a pass only where names are lossy
     const r = run('unzip', ['-t', p]); if (!r) return null;
-    const tested = /No errors detected/.test(r.stdout), ok = tested && (r.status === 0 || (r.status === 1 && lossyNames));
-    return { ok, problems: ok ? [] : [`unzip -t exited ${r.status}: ${tail(r)}`] };
+    const why = `(lossyNames=${lossyNames}; probe ${lossyDiag})`, tested = /No errors detected/.test(r.stdout), ok = tested && (r.status === 0 || (r.status === 1 && lossyNames));
+    return { ok, problems: ok ? [] : [`unzip -t exited ${r.status}: ${tail(r)}`, why] };
   },
   zipinfo: (p, exp) => {
     const r = run('zipinfo', ['-1', p]); if (!r) return null;
     if (r.status !== 0) return { ok: false, problems: [`zipinfo exited ${r.status}`] };
     const m = lossyNames ? lossy : (n) => n; // Apple's zipinfo cannot print non-ASCII names: there it only confirms the names up to those characters
     const names = r.stdout.split('\n').filter(Boolean), problems = diff(Object.fromEntries(names.map((n) => [m(n), null])), Object.fromEntries(Object.keys(exp).map((n) => [m(n), null])));
-    return { ok: !problems.length, problems };
+    return { ok: !problems.length, problems: problems.length ? [...problems, `(lossyNames=${lossyNames}; probe ${lossyDiag})`] : problems };
   },
   python: (p, exp) => {
     const r = run('python3', ['-c', PY, p]); if (!r) return null;

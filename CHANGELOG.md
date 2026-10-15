@@ -1,5 +1,12 @@
-<!-- CHANGELOG_FINGERPRINT: seq=151 file=CHICLA_PROJECT_STATUS-151.md app_sha256_12=065d37032ef1 changelog_sha256_12=6f4f2d313a18 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=152 file=CHICLA_PROJECT_STATUS-152.md app_sha256_12=065d37032ef1 changelog_sha256_12=1488e3a6f415 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 148 — Windows: the lossy-names probe says what it saw, and Windows counts as lossy (v0.0.151)
+
+- Task: Rodrigo's «autorizo» after the fifth CI log (`logs_104869731004`). Ubuntu and macOS green on every Node (1049 ok, 0 fail), no hang (macOS 18 in 5.5 minutes), `main` holds only `-151`. Windows 44, 43 and 32 (was 45, 44 and 33): the `package` fix of round 147 worked, the `lossyNames` probe did not (readers still compared raw names: `missing «é-ß.txt»` next to `unexpected «+�-+�.txt»`), although the pushed code was right and `zipinfo` exits 0 in the readers. THE CAUSE OF THE PROBE'S `false` IS NOT KNOWN.
+- Test first (red): `fsprobe.test.mjs`. `decideLossy(result, platform)` = the probe OR `win32` (the OEM code page rendering «+» and U+FFFD appears in five CI logs); `describeProbe(result)` and `lossyDiag` say what the probe saw (status, error code, first bytes of stdout and stderr); the `unzip` and `zipinfo` readers add `(lossyNames=…; probe …)` to their failure messages; the probe no longer lets a failing `rmSync` escape. Test files only (`fsprobe.mjs`, `interop.mjs`, `fsprobe.test.mjs`).
+- Left red on purpose (C14.3, real findings): `openZip` of a directory (ENOTZIP, not EISDIR) and, on Node 18/20, a failed extraction giving a raw `EPERM` instead of a `ZipError` and a `.partial` left behind (cleanup with an open handle).
+- NOT run: anything on Windows or macOS (this is the third blind attempt at the same probe: if it fails again the message in the log says why), `npm test` on Node 18 and 20, `npm run mutants`. No source file changed, the pin did not move. Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
 
 ## Round 147 — Windows: the zipinfo probe and the second bin call (v0.0.150)
 

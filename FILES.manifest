@@ -1,10 +1,10 @@
 # chicla-manifest v2
 .github/workflows/ci.yml	5319b33a	3183
 .gitignore	1b52e6b9	47
-CHANGELOG.md	1aa6dcca	202820
-CHICLA_PROJECT_STATUS-151.md	7d5debc9	80756
+CHANGELOG.md	1e1490ec	204479
+CHICLA_PROJECT_STATUS-152.md	2811aad1	81407
 CLAUDE.md	ecc0cb4b	8485
-FILES.baseline.json	dc99584b	25857
+FILES.baseline.json	c7fa607f	25857
 LICENSE	1ea3b7b0	10174
 README.md	ab68b187	9903
 ROADMAP.md	8a366217	103314
@@ -17,7 +17,7 @@ docs/pinned-files-design.md	6256c946	6552
 docs/zip-handling.md	83c151f1	13614
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	126e70c2	541
+package.json	d0b2b4a5	541
 packages/chicla-kit/package.json	26130e41	318
 packages/chicla-kit/src/.gitkeep	00000000	0
 packages/chicla-kit/src/bump-round.mjs	b4ee761d	13448
@@ -83,11 +83,11 @@ packages/chicla-zip/test/extract-legacy.test.mjs	6146e309	2840
 packages/chicla-zip/test/extract-m2-gaps.test.mjs	4a9c63f9	3509
 packages/chicla-zip/test/extract-rollback.test.mjs	540a2ebf	7293
 packages/chicla-zip/test/extract.test.mjs	4596e140	13477
-packages/chicla-zip/test/fsprobe.mjs	330ce5d5	2998
-packages/chicla-zip/test/fsprobe.test.mjs	b8a18a3e	2292
+packages/chicla-zip/test/fsprobe.mjs	c0d15eb2	3876
+packages/chicla-zip/test/fsprobe.test.mjs	e3749ca6	3621
 packages/chicla-zip/test/fsync-writable.test.mjs	30889f60	2612
 packages/chicla-zip/test/fuzz-read.test.mjs	dfcce897	12211
-packages/chicla-zip/test/interop.mjs	f034b861	4589
+packages/chicla-zip/test/interop.mjs	21771a50	4755
 packages/chicla-zip/test/interop.test.mjs	b4dcd714	4753
 packages/chicla-zip/test/legacy-encoding.test.mjs	d36bc7fa	6093
 packages/chicla-zip/test/mark-utf8.test.mjs	3483f5e6	9831
@@ -163,4 +163,4 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	4a5574d5	531
+version.mjs	dd5fb4e8	531
