@@ -24,8 +24,10 @@ export const refusesNoncharacters = probe(['￿.txt']) === -1;
 export const realTmp = () => realpathSync(tmpdir());
 /** Apple's zipinfo writes non-ASCII bytes as «?» (measured on a zip with one UTF-8 name, not guessed from the platform): there, names are
  *  compared with every run of such characters collapsed to one «?» */
-/** decides from one run of `zipinfo -1` on a zip with the single UTF-8 name «é-日.txt»: Info-ZIP exits 1 for warnings (Windows prints the name through the OEM code page and warns), so 0 and 1 both count (round 147) */
-export const lossyFromZipinfo = (r) => !r.error && (r.status === 0 || r.status === 1) && String(r.stdout).trim() !== '' && String(r.stdout).trim() !== 'é-日.txt';
+/** the name of the probe zip. It must FIT the Windows OEM code page (é and ß do): for a name that does not (日), Info-ZIP passes the UTF-8 through and the probe wrongly says «not lossy» (round 149) */
+export const PROBE_NAME = 'é-ß.txt';
+/** decides from one run of `zipinfo -1` on a zip with the single UTF-8 name PROBE_NAME: Info-ZIP exits 1 for warnings (Windows prints the name through the OEM code page and warns), so 0 and 1 both count (round 147) */
+export const lossyFromZipinfo = (r) => !r.error && (r.status === 0 || r.status === 1) && String(r.stdout).trim() !== '' && String(r.stdout).trim() !== PROBE_NAME;
 /** what one run of the probe saw, for the failure messages (round 148: the round 147 probe stayed false on Windows and the logs did not say why) */
 export const describeProbe = (r) => `status=${r.status} error=${r.error?.code ?? 'none'} stdout=${JSON.stringify(String(r.stdout ?? '').slice(0, 60))} stderr=${JSON.stringify(String(r.stderr ?? '').slice(0, 80))}`;
 /** the probe, plus the platform: on Windows every CI log (five of them) shows the OEM code page rendering of non-ASCII names, whatever the probe said */
@@ -33,7 +35,7 @@ export const decideLossy = (r, platform) => lossyFromZipinfo(r) || platform === 
 const lossyProbe = (() => {
   const d = mkdtempSync(join(tmpdir(), 'chicla-fsprobe-'));
   try {
-    const z = join(d, 'p.zip'); writeFileSync(z, buildZip([{ name: 'é-日.txt', data: 'x', flags: 0x800 }]));
+    const z = join(d, 'p.zip'); writeFileSync(z, buildZip([{ name: PROBE_NAME, data: 'x', flags: 0x800 }]));
     const r = spawnSync('zipinfo', ['-1', z], { encoding: 'utf8' });
     return { lossy: decideLossy(r, process.platform), diag: describeProbe(r) };
   } catch (e) { return { lossy: process.platform === 'win32', diag: `the probe threw: ${e.message}` }; } finally { try { rmSync(d, { recursive: true, force: true }); } catch { /* a temp folder left behind is not a failure */ } }

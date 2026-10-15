@@ -32,11 +32,21 @@ for i in z.infolist():
 print(json.dumps(out))
 `;
 
+/** the verdict on one `unzip -t` run (round 149). Info-ZIP exits 0 and ends with «No errors detected»; it exits 1 for WARNINGS (on Windows, a name it cannot represent) and then ends with
+ *  «At least one warning-error was detected»; a real error ends with «At least one error was detected» or prints «bad CRC». Warnings pass only where names are lossy: the Python and
+ *  Chicla readers check every CRC of the same zip anyway. */
+export const unzipVerdict = (r, lossyNamesHere) => {
+  const out = String(r.stdout) + String(r.stderr ?? '');
+  if (/bad CRC|At least one error was detected/.test(out)) return false;
+  if (r.status === 0) return /No errors detected/.test(out);
+  return r.status === 1 && lossyNamesHere && /No errors detected|At least one warning-error was detected/.test(out);
+};
+
 export const readers = {
-  unzip: (p) => { // Info-ZIP exits 1 for warnings (on Windows it cannot represent non-ASCII names) and still says «No errors detected»: that is a pass only where names are lossy
+  unzip: (p) => {
     const r = run('unzip', ['-t', p]); if (!r) return null;
-    const why = `(lossyNames=${lossyNames}; probe ${lossyDiag})`, tested = /No errors detected/.test(r.stdout), ok = tested && (r.status === 0 || (r.status === 1 && lossyNames));
-    return { ok, problems: ok ? [] : [`unzip -t exited ${r.status}: ${tail(r)}`, why] };
+    const ok = unzipVerdict(r, lossyNames);
+    return { ok, problems: ok ? [] : [`unzip -t exited ${r.status}: ${tail(r)}`, `(lossyNames=${lossyNames}; probe ${lossyDiag})`] };
   },
   zipinfo: (p, exp) => {
     const r = run('zipinfo', ['-1', p]); if (!r) return null;

@@ -66,3 +66,19 @@ test('a tool that is not installed is reported as not run, never as a pass', asy
   for (const tool of c.skipped) assert.deepEqual(c.result[tool], { ran: false, ok: null, problems: [] });
   t.diagnostic(`ran: ${c.ran.join(', ')}; not run: ${c.skipped.join(', ') || 'none'}`);
 });
+
+// Round 149: the first reading of `unzip -t` exit 1 was wrong. On Windows Info-ZIP warns about names it cannot represent and ends with
+// «At least one warning-error was detected» (not «No errors detected»): 26 differential tests failed on that line. A real error says
+// «At least one error was detected» or «bad CRC».
+test('round 149: unzip -t verdict: warnings pass only where names are lossy, errors and bad CRCs never', async () => {
+  const { unzipVerdict } = await import('./interop.mjs');
+  const ok = { status: 0, stdout: '    testing: a.txt   OK\nNo errors detected in compressed data of z.zip.\n', stderr: '' };
+  const warn = { status: 1, stdout: '    testing: caf+.txt   OK\nAt least one warning-error was detected in z.zip.\n', stderr: '' };
+  assert.equal(unzipVerdict(ok, false), true);
+  assert.equal(unzipVerdict(warn, true), true, 'a warning where names are lossy is a pass');
+  assert.equal(unzipVerdict(warn, false), false, 'a warning where names are exact is a failure');
+  assert.equal(unzipVerdict({ ...warn, stdout: warn.stdout + '    testing: b.bin   bad CRC 1234abcd  (should be 5678ef01)\n' }, true), false, 'a bad CRC is never a warning');
+  assert.equal(unzipVerdict({ status: 2, stdout: 'At least one error was detected in z.zip.\n', stderr: '' }, true), false);
+  assert.equal(unzipVerdict({ status: 1, stdout: 'No errors detected in compressed data of z.zip.\n', stderr: '' }, true), true);
+  assert.equal(unzipVerdict({ status: 0, stdout: '', stderr: '' }, true), false, 'exit 0 without the closing line is not a pass');
+});

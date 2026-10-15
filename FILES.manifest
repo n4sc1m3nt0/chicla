@@ -1,10 +1,10 @@
 # chicla-manifest v2
 .github/workflows/ci.yml	5319b33a	3183
 .gitignore	1b52e6b9	47
-CHANGELOG.md	1e1490ec	204479
-CHICLA_PROJECT_STATUS-152.md	2811aad1	81407
+CHANGELOG.md	432a9c79	206307
+CHICLA_PROJECT_STATUS-153.md	31a9089b	82088
 CLAUDE.md	ecc0cb4b	8485
-FILES.baseline.json	c7fa607f	25857
+FILES.baseline.json	1a900977	25857
 LICENSE	1ea3b7b0	10174
 README.md	ab68b187	9903
 ROADMAP.md	8a366217	103314
@@ -17,7 +17,7 @@ docs/pinned-files-design.md	6256c946	6552
 docs/zip-handling.md	83c151f1	13614
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	d0b2b4a5	541
+package.json	4ca6fe4d	541
 packages/chicla-kit/package.json	26130e41	318
 packages/chicla-kit/src/.gitkeep	00000000	0
 packages/chicla-kit/src/bump-round.mjs	b4ee761d	13448
@@ -83,12 +83,12 @@ packages/chicla-zip/test/extract-legacy.test.mjs	6146e309	2840
 packages/chicla-zip/test/extract-m2-gaps.test.mjs	4a9c63f9	3509
 packages/chicla-zip/test/extract-rollback.test.mjs	540a2ebf	7293
 packages/chicla-zip/test/extract.test.mjs	4596e140	13477
-packages/chicla-zip/test/fsprobe.mjs	c0d15eb2	3876
-packages/chicla-zip/test/fsprobe.test.mjs	e3749ca6	3621
+packages/chicla-zip/test/fsprobe.mjs	d907955b	4114
+packages/chicla-zip/test/fsprobe.test.mjs	b83ebb4b	3651
 packages/chicla-zip/test/fsync-writable.test.mjs	30889f60	2612
 packages/chicla-zip/test/fuzz-read.test.mjs	dfcce897	12211
-packages/chicla-zip/test/interop.mjs	21771a50	4755
-packages/chicla-zip/test/interop.test.mjs	b4dcd714	4753
+packages/chicla-zip/test/interop.mjs	80f4d990	5307
+packages/chicla-zip/test/interop.test.mjs	13d8a89f	6322
 packages/chicla-zip/test/legacy-encoding.test.mjs	d36bc7fa	6093
 packages/chicla-zip/test/mark-utf8.test.mjs	3483f5e6	9831
 packages/chicla-zip/test/open.test.mjs	66356831	7502
@@ -163,4 +163,4 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	dd5fb4e8	531
+version.mjs	3c1b0555	531

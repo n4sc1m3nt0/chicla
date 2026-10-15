@@ -21,8 +21,8 @@ test('lossy: runs of non-ASCII characters (and what Apple prints for them) colla
 // Round 147: on Windows `zipinfo` exits 1 (a warning) while it prints the names through the OEM code page; the probe demanded exit 0, so `lossyNames`
 // stayed false there and the readers compared raw names (31 red tests in the Windows job).
 test('round 147: lossyNames is decided from what zipinfo printed, and an exit code of 1 (warning) still counts', async () => {
-  const { lossyFromZipinfo } = await import('./fsprobe.mjs');
-  assert.equal(lossyFromZipinfo({ status: 0, stdout: 'é-日.txt\n' }), false, 'a reader that prints the name as it is is not lossy');
+  const { lossyFromZipinfo, PROBE_NAME } = await import('./fsprobe.mjs');
+  assert.equal(lossyFromZipinfo({ status: 0, stdout: PROBE_NAME + '\n' }), false, 'a reader that prints the name as it is is not lossy');
   assert.equal(lossyFromZipinfo({ status: 0, stdout: '?-?.txt\n' }), true, 'macOS: «?» for every non-ASCII run');
   assert.equal(lossyFromZipinfo({ status: 1, stdout: '+\ufffd-+\ufffd.txt\n' }), true, 'Windows: warning exit and an OEM-code-page rendering');
   assert.equal(lossyFromZipinfo({ status: 127, stdout: '' }), false, 'no output: nothing to compare');
@@ -33,12 +33,12 @@ test('round 147: lossyNames is decided from what zipinfo printed, and an exit co
 // Round 148: the round 147 probe was still false on Windows (the readers kept comparing raw names) and the cause is not visible from the logs.
 // So: the decision takes the platform into account (five CI logs show the same «+» and U+FFFD for every non-ASCII name there), and the probe says what it saw.
 test('round 148: Windows counts as lossy even when the probe says no, other platforms follow the probe, and the probe describes itself', async () => {
-  const { decideLossy, describeProbe } = await import('./fsprobe.mjs');
+  const { decideLossy, describeProbe, PROBE_NAME } = await import('./fsprobe.mjs');
   const failed = { status: 2, stdout: '' };
   assert.equal(decideLossy(failed, 'win32'), true);
   assert.equal(decideLossy(failed, 'linux'), false);
   assert.equal(decideLossy({ status: 0, stdout: '?-?.txt\n' }, 'darwin'), true);
-  assert.equal(decideLossy({ status: 0, stdout: 'é-日.txt\n' }, 'linux'), false);
+  assert.equal(decideLossy({ status: 0, stdout: PROBE_NAME + '\n' }, 'linux'), false);
   const d = describeProbe({ status: 1, stdout: '+\ufffd-.txt\n', stderr: 'warning: x' });
   assert.match(d, /status=1/); assert.match(d, /error=none/); assert.match(d, /stdout="\+/); assert.match(d, /warning: x/);
   assert.match(describeProbe({ error: Object.assign(new Error('x'), { code: 'ENOENT' }), status: null, stdout: '' }), /error=ENOENT/);

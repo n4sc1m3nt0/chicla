@@ -1,5 +1,12 @@
-<!-- CHANGELOG_FINGERPRINT: seq=152 file=CHICLA_PROJECT_STATUS-152.md app_sha256_12=065d37032ef1 changelog_sha256_12=1488e3a6f415 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=153 file=CHICLA_PROJECT_STATUS-153.md app_sha256_12=065d37032ef1 changelog_sha256_12=4e01dda46dab (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 149 — Windows: the real meaning of `unzip -t` exit 1, and a probe name that fits the OEM code page (v0.0.152)
+
+- Task: Rodrigo's «autorizo» after the sixth CI log (`logs_104879145849`). Ubuntu and macOS green on every Node (1050 ok, 0 fail), no hang, `main` holds only `-152`. Windows 27, 38 and 41 (was 32, 43 and 44): `interop` is green, `package` is green. The probe message of round 148 showed `zipinfo` printing the probe name «é-日.txt» correctly while «é-ß.txt» came out as «+�-+�.txt»: Info-ZIP converts names that FIT the OEM code page (é, ß, ü, ñ) and lets the UTF-8 through when they do not (日). The probe name was the wrong one.
+- My round 147 reading of `unzip -t` exit 1 was wrong: on warnings Info-ZIP ends with «At least one warning-error was detected», not «No errors detected»; that line is the one in the 26 red `differential-python` tests of Node 22. Test first (red): `unzipVerdict(result, lossy)` (exported from `interop.mjs`): exit 0 needs «No errors detected»; exit 1 passes only where names are lossy and the text says warning-error; «bad CRC» and «At least one error was detected» never pass. The Python and Chicla readers check every CRC of the same zip anyway. Probe name `PROBE_NAME = 'é-ß.txt'`; the `win32` rule of round 148 stays as a second guard.
+- Test files only (`interop.mjs`, `fsprobe.mjs` and their tests). No source file changed, the pin did not move. Left red on purpose (C14.3, real findings): `openZip` of a directory (ENOTZIP, not EISDIR) and, on Node 18/20, a failed extraction giving a raw `EPERM` and a `.partial` left behind.
+- NOT run: anything on Windows or macOS (the unzip warning text is taken from the log line, not seen in full), `npm test` on Node 18 and 20, `npm run mutants`. Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
 
 ## Round 148 — Windows: the lossy-names probe says what it saw, and Windows counts as lossy (v0.0.151)
 
