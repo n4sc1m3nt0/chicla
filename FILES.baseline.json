@@ -1,12 +1,12 @@
 {
  "format": "chicla-baseline-v1",
- "created": "2026-10-15T22:08:44.501Z",
- "seal": "c73304979b00b5605b6ec296e29463cc253f709b2c1e1806bc25842e38a2f7e9",
+ "created": "2026-10-15T22:37:41.504Z",
+ "seal": "3896b264b54a37d74202e0d7bca0511d09bf10d52d5724fc835b35ab1cbbe079",
  "files": [
   {
    "path": ".github/workflows/ci.yml",
-   "size": 3183,
-   "sha256": "20dd83dca68dcedfa850a95ed2ce4af5e3c2fc9ab488b7596068764038f097cf"
+   "size": 3610,
+   "sha256": "6f841ae9c28ab057fd5fc6d2404a62295a0b3a00d6ff74987fea084d9f8c2900"
   },
   {
    "path": ".gitignore",
@@ -15,13 +15,13 @@
   },
   {
    "path": "CHANGELOG.md",
-   "size": 213663,
-   "sha256": "7a9851ce0c3c3d89213862c0437d24ca4de8b190efb2fd7f4fbf3fb807d47399"
+   "size": 214554,
+   "sha256": "f907cb1e085e29c13d2ca4a26006139a3af6be2f26e2151f3b538c42e79bbb62"
   },
   {
-   "path": "CHICLA_PROJECT_STATUS-158.md",
-   "size": 85936,
-   "sha256": "549a8dadd08eb3cc3d4efc170b0243ae2d852ccab30ff0056066aa54782ad59a"
+   "path": "CHICLA_PROJECT_STATUS-159.md",
+   "size": 86878,
+   "sha256": "3fdaf55e8e2ea6c30e1e212a6fad753a29183a0d7b79527f2b4eb5f3cfbea537"
   },
   {
    "path": "CLAUDE.md",
@@ -31,7 +31,7 @@
   {
    "path": "FILES.manifest",
    "size": 8417,
-   "sha256": "bfb56dcd6f63684268dfa3c1b14a84fd7dfc6e3272869187752aa8e5aab478b2"
+   "sha256": "2d957c83acb9120341cc63be33a057f94dc12d4260fb66bb2b068b97ea28654f"
   },
   {
    "path": "LICENSE",
@@ -45,8 +45,8 @@
   },
   {
    "path": "ROADMAP.md",
-   "size": 108837,
-   "sha256": "b488c0c03ab6d9f359819979afc773c0fc8feb1717963a7b408ccef8ca3a8baa"
+   "size": 109027,
+   "sha256": "10286bf97630823d2a5fb26af6a802fc77999403e1d2912dda78e6fdedd2bbfc"
   },
   {
    "path": "docs/README.md",
@@ -96,7 +96,7 @@
   {
    "path": "package.json",
    "size": 541,
-   "sha256": "206543997fc68e19f3b48af962f933dae886cb76c7a2d7bc7d145b633ab68c2d"
+   "sha256": "409b5cee8f5f67eabe691e64d5c23c5bdef43fe27387bc3ef3296a9ce55ffd52"
   },
   {
    "path": "packages/chicla-kit/package.json",
@@ -640,8 +640,8 @@
   },
   {
    "path": "test/ci.test.mjs",
-   "size": 5081,
-   "sha256": "46f304c77b700f0db2cd7fb8dfdaa1a3bd3e70481c71ebe54628a105e0d85a72"
+   "size": 7102,
+   "sha256": "4e274e511358490fa994887656c7e2b90b5bc6242c4d3380130bcc0a69fa19cb"
   },
   {
    "path": "test/collisions-nfc.test.mjs",
@@ -841,7 +841,7 @@
   {
    "path": "version.mjs",
    "size": 531,
-   "sha256": "e4c70b9488a802752cde022cc95582f201cd7e727d7a4079ae99d851ffbe7b24"
+   "sha256": "7395ae8a0d60c57473d81975dfaea02139c780ecb623be9da091ddd7efdcb1f0"
   }
  ]
 }

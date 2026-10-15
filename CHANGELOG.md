@@ -1,5 +1,11 @@
-<!-- CHANGELOG_FINGERPRINT: seq=158 file=CHICLA_PROJECT_STATUS-158.md app_sha256_12=065d37032ef1 changelog_sha256_12=88e7046206af (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=159 file=CHICLA_PROJECT_STATUS-159.md app_sha256_12=065d37032ef1 changelog_sha256_12=5da04c6aa385 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 155 — M14 C14.6: the `chicla-kit` suite in the `windows` CI job (v0.0.158)
+
+- Task: C14.6 (D109). D111 confirmed by Rodrigo («d111 sim»). The `windows` job gets a second step, `node --test packages/chicla-kit/test/*.test.mjs`, named after chicla-kit, `if: always()` (a red chicla-zip step never hides it) and `timeout-minutes: 8`; the job stays `continue-on-error` (D99). `chicla-kit` has never run on Windows: this round only makes the CI show what fails.
+- Tests first (2 red, 1 guard): `test/ci.test.mjs` +3. Source: none (`.github/workflows/ci.yml` only), the pin did not move. 5 hand mutants of the YAML (no `if`, wrong glob, no step timeout, no name, no `continue-on-error`) all red.
+- NOT run: the job itself (it needs GitHub: next push, then Rodrigo sends the log; G-C13), anything on Windows or macOS, `npm test` on Node 18 and 20, `npm run smoke`, `npm run mutants`.
 
 ## Round 154 — M14 C14.5 slice (a): `--windows-names` and the Windows warning in `test` (v0.0.157)
 

@@ -1,13 +1,13 @@
 # chicla-manifest v2
-.github/workflows/ci.yml	5319b33a	3183
+.github/workflows/ci.yml	2e6d88e3	3610
 .gitignore	1b52e6b9	47
-CHANGELOG.md	14145606	213663
-CHICLA_PROJECT_STATUS-158.md	b8d7702a	85936
+CHANGELOG.md	5beb6461	214554
+CHICLA_PROJECT_STATUS-159.md	ac924d4a	86878
 CLAUDE.md	d8701c41	8485
-FILES.baseline.json	d86c8c99	26194
+FILES.baseline.json	a7aa11d2	26366
 LICENSE	1ea3b7b0	10174
 README.md	ab68b187	9903
-ROADMAP.md	35db2fa8	108837
+ROADMAP.md	f626cfd2	109027
 docs/README.md	d90304dc	1689
 docs/audits/AUDIT-1.md	a56e8d6e	7439
 docs/audits/AUDIT-2.md	e0c1bf46	7749
@@ -17,7 +17,7 @@ docs/pinned-files-design.md	6256c946	6552
 docs/zip-handling.md	3bdcda31	14092
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	33eb2734	541
+package.json	b23d4cbf	541
 packages/chicla-kit/package.json	26130e41	318
 packages/chicla-kit/src/.gitkeep	00000000	0
 packages/chicla-kit/src/bump-round.mjs	b4ee761d	13448
@@ -126,7 +126,7 @@ scripts/smoke-test-mutants.mjs	9fbffaeb	6647
 scripts/verify-delivery-zip.mjs	c9881ad5	3707
 test/baseline.test.mjs	267b4a20	9983
 test/changelog-heading.test.mjs	8af49f49	794
-test/ci.test.mjs	55c17be9	5081
+test/ci.test.mjs	f3c33870	7102
 test/collisions-nfc.test.mjs	00aed6f6	5905
 test/dump-allow-held.test.mjs	a49cba54	18072
 test/dump-policy-file.test.mjs	579adf3c	8815
@@ -166,4 +166,4 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	6ef5ee4d	531
+version.mjs	3cce8e7e	531

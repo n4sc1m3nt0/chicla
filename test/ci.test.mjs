@@ -98,3 +98,30 @@ test('round 146: every CI job has `timeout-minutes`, so a stuck test costs minut
     assert.ok(Number(m[1]) >= 5 && Number(m[1]) <= 30, `job «${name}»: ${m[1]} minutes is outside 5..30`);
   }
 });
+
+// M14, C14.6 (round 155, D109 confirmed), written before the change: the chicla-kit suite also runs in the `windows` job, informative like the rest (D99), to see what fails there.
+// It is a SECOND step after the chicla-zip step, always run (`if: always()`), so a red chicla-zip never hides the kit result and the two are read separately.
+const winSteps = windows.split(/^      - /m).slice(1); // the steps of the windows job
+const zipStep = winSteps.findIndex((s) => /node --test [^\n]*packages\/chicla-zip\/test\/\*\.test\.mjs/.test(s));
+const kitStep = winSteps.findIndex((s) => /node --test [^\n]*packages\/chicla-kit\/test\/\*\.test\.mjs/.test(s));
+
+test('C14.6: the windows job runs the chicla-kit suite as its own step, after the chicla-zip step, and the chicla-zip step stays', () => {
+  assert.ok(zipStep >= 0, 'the chicla-zip step must stay');
+  assert.ok(kitStep >= 0, 'no step runs packages/chicla-kit/test/*.test.mjs in the windows job');
+  assert.ok(kitStep > zipStep, 'the kit step comes after the zip step');
+  assert.notEqual(kitStep, zipStep, 'two steps, not one command');
+});
+
+test('C14.6: the kit step runs even when the chicla-zip step failed, is named after chicla-kit and has its own time limit', () => {
+  const s = winSteps[kitStep];
+  assert.match(s, /if:\s*(\$\{\{\s*)?(always\(\)|!cancelled\(\))/);
+  assert.match(s, /name:[^\n]*chicla-kit/i);
+  const m = s.match(/timeout-minutes:\s*(\d+)/); assert.ok(m, 'the kit step has no timeout-minutes'); assert.ok(Number(m[1]) >= 3 && Number(m[1]) <= 10, `${m[1]} minutes is outside 3..10`);
+});
+
+test('C14.6 (D99, D109): still informative and only on Windows: the `test` job does not run the kit suite twice, and the chicla-zip step has no `if`', () => {
+  assert.match(windows, /continue-on-error:\s*true/);
+  assert.doesNotMatch(windows, /secrets\.|npm publish/);
+  assert.ok(!/^\s+if:/m.test(winSteps[zipStep]), 'the chicla-zip step runs unconditionally');
+  assert.doesNotMatch(jobs.find((j) => /^test:/.test(j)), /chicla-kit\/test\/\*/);
+});
