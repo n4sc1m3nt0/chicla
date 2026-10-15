@@ -34,20 +34,22 @@ Owner: Rodrigo, who moves between Claude accounts. Nothing is remembered between
 19. **Gates** (`G-C<n> · …`, listed in `ROADMAP.md` §9) are human-only. The AI never marks one done; Rodrigo does, in the next status file.
 20. **Long commands: never get stuck** (Rodrigo, 2026-10-13). Same rules as the section of that name in `CLAUDE.md` (the full text is there; this item is the pointer and the summary). `npm test` takes ~4 min and `npm run mutants` 30+ min, more than a foreground call allows. (a) Never run `npm test`, `npm run mutants`, `npm run smoke` or `check-build` in the foreground: background with a log file, poll with short calls, `sleep` ≤ 60 s. (b) While coding run only the file at hand, with `timeout 120`; the whole `npm test` once per round, after `bump-round`. (c) Mutants: only the round's own, `--only <id> --timeout 60`, one at a time; the full list only when Rodrigo asks, else report it as NOT run (item 18). (d) A command silent for 3 minutes: kill it, read the last 25 log lines, run the one active file once; a second hang means STOP, report it and deliver what builds (item 15). (e) A hang is a finding: name it, never raise a timeout, skip a test or drop a mutant without Rodrigo's word. (f) If the plan needs a whole `npm test` or a mutant run, say so and give the expected time in the first reply.
 
-**Current version:** v0.0.152 (round 149: `unzip -t` verdict and probe name; round 148: Windows probe diagnostics; round 147: Windows zipinfo probe; round 146: CI job timeouts and reader timeouts; round 145: Windows test portability; round 144: `.idea/` in `.gitignore`; round 143: G-C13 findings, `fsync` on a writable handle; round 142: M14 C14.4, the `windows` CI job; round 141: M14 C14.2, the extractor and the writers apply the Windows name checks; round 140: M14 C14.1, the pure Windows name functions; round 139: C11.5 slice c, the read-only panel; round 138: C11.5 slice b, the CLI paints the ✓ ✗ ⚠ marks on a terminal; round 137: docs only, the status file cleaned of a duplicated block; round 136: C11.5 slice a, the pure drawing module `packages/chicla-kit/src/ui.mjs`, not wired yet; round 135 made the CLI import its cores from `src/`).
+**Current version:** v0.0.153 (round 150: M14 C14.3 slice a, `openZip` of a directory is EISDIR; round 149: `unzip -t` verdict and probe name; round 148: Windows probe diagnostics; round 147: Windows zipinfo probe; round 146: CI job timeouts and reader timeouts; round 145: Windows test portability; round 144: `.idea/` in `.gitignore`; round 143: G-C13 findings, `fsync` on a writable handle; round 142: M14 C14.4, the `windows` CI job; round 141: M14 C14.2, the extractor and the writers apply the Windows name checks; round 140: M14 C14.1, the pure Windows name functions; round 139: C11.5 slice c, the read-only panel; round 138: C11.5 slice b, the CLI paints the ✓ ✗ ⚠ marks on a terminal; round 137: docs only, the status file cleaned of a duplicated block; round 136: C11.5 slice a, the pure drawing module `packages/chicla-kit/src/ui.mjs`, not wired yet; round 135 made the CLI import its cores from `src/`).
 
-**Fingerprint:** seq=153 · app=version.mjs ·
+**Fingerprint:** seq=154 · app=version.mjs ·
 app_sha256_12=065d37032ef1 (of everything below the app file's own
 fingerprint comment; unchanged at this seq — rewritten by `scripts/bump-round.mjs`) ·
 changelog=CHANGELOG.md ·
-changelog_sha256_12=4e01dda46dab (hash of `CHANGELOG.md` below its own
-fingerprint line; recomputed by `scripts/bump-round.mjs` at seq 153) · matches the
+changelog_sha256_12=2548924992cf (hash of `CHANGELOG.md` below its own
+fingerprint line; recomputed by `scripts/bump-round.mjs` at seq 154) · matches the
 `STATUS_FILE_FINGERPRINT` comment on line 2–3 of the app file and the
 `CHANGELOG_FINGERPRINT` comment on line 1 of `CHANGELOG.md`. If any of
 these three don't match what you're looking at, stop and see
 instructions item 11 above before doing anything else.
 
-**Last updated (round 149):** 2026-10-15. Sixth CI log read: Ubuntu and macOS green, Windows 27/38/41; the round 148 probe message showed the cause (the probe name did not fit the OEM code page) and that `unzip -t` exit 1 ends with «warning-error», both fixed blind. After pushing this round Rodrigo removes `CHICLA_PROJECT_STATUS-152.md` (the new file is `-153`).
+**Last updated (round 150):** 2026-10-15. Seventh CI log read: Ubuntu and macOS green, Windows 13/12/1; C14.3 slice a done (`openZip` of a directory gives EISDIR, the only Node 22 red); D100, D101, D102 confirmed; the pin moved (G-C11 due once more).
+
+**Previous (round 149):** 2026-10-15. Sixth CI log read: Ubuntu and macOS green, Windows 27/38/41; the round 148 probe message showed the cause (the probe name did not fit the OEM code page) and that `unzip -t` exit 1 ends with «warning-error», both fixed blind. After pushing this round Rodrigo removes `CHICLA_PROJECT_STATUS-152.md` (the new file is `-153`).
 
 **Previous (round 148):** 2026-10-15. Fifth CI log read: Ubuntu and macOS green, Windows 44/43/32; the `lossyNames` probe is still false on Windows for an unknown reason, so the probe now describes itself in failure messages and Windows counts as lossy by rule. After pushing this round Rodrigo removes `CHICLA_PROJECT_STATUS-151.md` (the new file is `-152`).
 
@@ -103,6 +105,7 @@ instructions item 11 above before doing anything else.
 
 ## Snapshot
 
+- Done (part): M14 C14.3 slice a (round 150, 2026-10-15; D100, D101, D102 confirmed by Rodrigo). One line in `openZip` (`fstat` says directory, EISDIR before any read), `open-directory.test.mjs` (3, red first). The pin moved. NOT seen on Windows. Left in C14.3: b (bounded retries of EPERM/EBUSY/ENOTEMPTY), c (long paths), d (Node 18/20-only cases).
 - Done: `unzipVerdict` and probe name `é-ß.txt` (round 149, 2026-10-15; Rodrigo's «autorizo»), tested first; NOT seen on Windows.
 - Done: Windows probe diagnostics and Windows-as-lossy rule (round 148, 2026-10-15; Rodrigo's «autorizo»), tested first; NOT seen on Windows.
 - Done: Windows zipinfo probe and `package` bin call (round 147, 2026-10-14; Rodrigo's «autorizo»): `lossyFromZipinfo` tested first; NOT seen on Windows.
@@ -255,7 +258,7 @@ instructions item 11 above before doing anything else.
 
 ## Next up
 
-**Open decisions:** (suggestion of round 147, not answered yet: `make-delivery-zip` prints the `git rm` line for the files that left the zip, so the old status file is not forgotten.) D99 is CONFIRMED (Rodrigo, 2026-10-14): the `windows` job is informative until green on Node 18, 20 and 22, then blocking. **Task: M14 C14.3** (long paths over 260 characters and `\\?\`, `rename` over an existing folder, `EPERM`/`EBUSY` retry with a bound, symlink privileges), aimed at what the first Windows run showed (see CHANGELOG round 143: modes, reserved names, `npm`, `import()` of `D:\\` paths, `python3`, FIFOs, symlinks; round 145 fixed the test side; what stays red is real: cleanup with open handles on Node 18/20, `openZip` of a directory, long paths; push round 145 and read the next run first). **G-C11 is Rodrigo's and DUE** (the pin moved in rounds 141 and 143). **Rodrigo's to do:** `git rm scripts/baseline.mjs scripts/manifest.mjs scripts/policy.mjs`, `git rm -r --cached .idea` (`.idea/` is in `.gitignore` since round 144; the copy-over push left the files on `main`).
+**Open decisions:** none waiting. D102 (the `git rm` line in `make-delivery-zip`) is confirmed and goes in a small round of its own. **Task: M14 C14.3 slice b** (bounded retries of `EPERM`/`EBUSY`/`ENOTEMPTY` when deleting `.partial` files and temp dirs; Node 18/20 on Windows; read the CI failures first and push round 150 before sizing). **G-C11 is Rodrigo's and DUE** (the pin moved in rounds 141, 143 and 150; D101: he does it once, after slice b). **Rodrigo's to do:** push round 150, then `git rm CHICLA_PROJECT_STATUS-153.md` (the new file is `-154`).
 
 ## Gates
 

@@ -209,7 +209,7 @@ export const openZip = (zipPath, { legacyEncoding } = {}) => {
   // A system error on the zip itself (ENOENT, EACCES, EISDIR...) is a ZipError with the same code; the original stays in `cause`.
   const sys = (err) => err instanceof ZipError || typeof err?.syscall !== "string" || typeof err.code !== "string" ? err : new ZipError(`${path}: ${err.message}`, err.code, { cause: err });
   try { fd = openSync(path, "r"); } catch (err) { throw sys(err); }
-  try { size = fstatSync(fd).size; const c = readCentral(fd, size, path); cdOff = c.cdOff; entries = parseEntries(c.cd, c.total, path, legacy); }
+  try { const st = fstatSync(fd); if (st.isDirectory()) throw Object.assign(new Error("illegal operation on a directory"), { code: "EISDIR", syscall: "read" }); size = st.size; const c = readCentral(fd, size, path); cdOff = c.cdOff; entries = parseEntries(c.cd, c.total, path, legacy); }
   catch (err) { closeSync(fd); throw sys(err); }
   const live = () => { if (fd === null) throw new ZipError(`${path}: the zip handle is closed`, "ECLOSED"); return fd; };
   // Reads ONE file into memory (by name; NFC and NFD count as the same name). Checks CRC and size.

@@ -1,5 +1,13 @@
-<!-- CHANGELOG_FINGERPRINT: seq=153 file=CHICLA_PROJECT_STATUS-153.md app_sha256_12=065d37032ef1 changelog_sha256_12=4e01dda46dab (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=154 file=CHICLA_PROJECT_STATUS-154.md app_sha256_12=065d37032ef1 changelog_sha256_12=2548924992cf (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 150 — M14 C14.3 slice a: `openZip` of a directory is EISDIR everywhere (v0.0.153)
+
+- Task: C14.3 slice a (D100, D101, D102 confirmed by Rodrigo: «100 sim, 101 sim, 102 sim»). Seventh CI log (round 149 code): Ubuntu and macOS green on every Node (1051 tests, 0 fail), `bench` and `pack` green; Windows 13, 12 and 1 red (was 27, 38, 41). The one red of Node 22 is `openZip` of a directory (ENOTZIP-like, not EISDIR).
+- Test first (red): `packages/chicla-zip/test/open-directory.test.mjs` (3): `fs.readSync` returns 0 bytes (what Windows does on a directory), then `openZip`, `listZip` and `readZipFile` must give EISDIR; a control for a plain non-zip file (ENOTZIP); the refused descriptor is closed. 2 red before the fix, 3 green after.
+- Source: `packages/chicla-zip/src/zipkit.mjs`, one line in `openZip`: right after `open`, `fstat` says directory, so EISDIR is raised before any read. The pin in `CLAUDE.md` MOVED (zipkit.mjs is in `RECOVER/`; `bump-round` wrote it): G-C11 is due once more (D101).
+- Left red on Windows, causes NOT read yet (slices b to d): cleanup with an open handle on Node 18/20 (EPERM on `.partial` and temp dirs, the «bad entry» slow path), `ECHANGED` tests, fuzz, `refusals before writing`; only Node 18: tests 22, 117, 151 and the `windows-names` file hook; only Node 20: test 131.
+- NOT run: anything on Windows or macOS, `npm test` on Node 18 and 20, `npm run mutants` (the new test was red before the fix, which is its mutant). Gates G-C11, G-C12, G-C13, G-C4 are Rodrigo's.
 
 ## Round 149 — Windows: the real meaning of `unzip -t` exit 1, and a probe name that fits the OEM code page (v0.0.152)
 
