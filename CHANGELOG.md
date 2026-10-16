@@ -1,5 +1,12 @@
-<!-- CHANGELOG_FINGERPRINT: seq=165 file=CHICLA_PROJECT_STATUS-165.md app_sha256_12=065d37032ef1 changelog_sha256_12=70358d4ced48 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=166 file=CHICLA_PROJECT_STATUS-166.md app_sha256_12=065d37032ef1 changelog_sha256_12=5bcfdb2f6f57 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 162 — D102: the delivery check prints the `git rm` line (v0.0.165)
+
+- Task: D102 (confirmed «102 sim»). Seventeenth CI log read (round 161 code, the `windows` job blocking): Ubuntu and macOS green (1095 tests, 0 fail), `bench` and `pack` ok; Windows 0 red on Node 18, 20, 22 (`chicla-zip` 630 pass, `chicla-kit` 169 pass).
+- `packages/chicla-kit/src/verify-delivery.mjs` only (no new import): `gitRmLine(paths)` and a `left` list in the result; with `--against`, the files of a previous zip that are not in the new one (an old status file, an `--allow-removed` file) come out as ONE `git rm -- <names>` line before «zip ready». Nothing is printed for a rejected zip. Names are single-quoted, `--` comes first, a name with a control character is never printed, more than 30 names make a note and no command. `make-delivery-zip` and `chicla make-delivery` print it too (they relay the verifier).
+- Tests first: `core-git-rm-hint.test.mjs` (10, all red first). 11 hand mutants, all red. The pin did not move.
+- NOT run: the line in a real delivery on GitHub or on another machine, anything on Windows or macOS here, `npm test` on Node 18 and 20 here, `npm run smoke`, `npm run mutants`.
 
 ## Round 161 — M14 D115: the `windows` CI job blocks (v0.0.164)
 

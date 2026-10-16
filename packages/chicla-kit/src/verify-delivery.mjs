@@ -109,9 +109,24 @@ const listUnwrapped = (z) => {
   return everyNested && top.size === 1 ? fs.map((f) => f.slice(f.indexOf("/") + 1)) : fs;
 };
 
+// D102: the `git rm` hint. The names come from ANOTHER zip, so every one is quoted for a POSIX shell, `--` comes first, a name with a control character is never printed
+// (a newline would fake a second command) and more than 30 names make no command at all. Returns { line, note }: both null when there is nothing to say.
+const GIT_RM_MAX = 30, CONTROL = /[\u0000-\u001f\u007f]/;
+const shq = (s) => (/^[A-Za-z0-9._\/@%+=:,-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`);
+export function gitRmLine(paths) {
+  const all = [...new Set(paths)].sort();
+  if (!all.length) return { line: null, note: null };
+  const safe = all.filter((p) => !CONTROL.test(p)), hidden = all.length - safe.length;
+  if (all.length > GIT_RM_MAX) return { line: null, note: `${all.length} file(s) left the zip: too many for one command, compare the two zips by hand` };
+  return {
+    line: safe.length ? `git rm -- ${safe.map(shq).join(" ")}` : null,
+    note: hidden ? `${hidden} name(s) with a control character not listed: remove them by hand` : null,
+  };
+}
+
 /**
  * Verifies the delivered ARTEFACT (the .zip) as the rules above say. `zip` = the delivery; `against` = previous zips (any number); `allowRemoved` = paths
- * whose removal is approved; `root` = the project whose chicla.policy.json applies. Returns { ok, code, zip, files, problems, messages }: `code` is null
+ * whose removal is approved; `root` = the project whose chicla.policy.json applies. Returns { ok, code, zip, files, problems, left, messages } (`left` = the files of the `against` zips that are not in this one, sorted, [] when the zip is rejected: D102): `code` is null
  * when ok, else EVERIFY_FAILED (`problems` lists them, each starting with its own code where it has one), EVERIFY_USAGE (no zip), EZIP_UNREADABLE (not a zip,
  * missing, zip64, a broken central directory) or the code of a policy that cannot be used (EPOLICY*); `messages` is [{ stream: "out" | "err", text }] in the
  * order the script prints them (see `renderVerifyDelivery`). Never prints, exits or throws.
@@ -119,7 +134,7 @@ const listUnwrapped = (z) => {
 export function verifyDelivery({ zip, against = [], allowRemoved = [], root } = {}) {
   const messages = [];
   const say = (stream, text) => messages.push({ stream, text });
-  const result = { ok: true, code: null, zip, files: 0, problems: [], messages };
+  const result = { ok: true, code: null, zip, files: 0, problems: [], left: [], messages };
   if (!zip) { say("err", "usage: verify-delivery-zip.mjs <zip> [--against <zip>] [--allow-removed <path>]"); result.ok = false; result.code = "EVERIFY_USAGE"; return result; }
   // C6.1 d2 (D66): the project's own chicla.policy.json adds to the never-leaves rules; a policy that cannot be used stops the check.
   let POLICY;
@@ -205,12 +220,21 @@ export function verifyDelivery({ zip, against = [], allowRemoved = [], root } = 
       if (!m || m[1] !== n) problems.push(`the status file is -${n} but the CHANGELOG fingerprint says seq=${m ? m[1] : "?"}.`);
     }
 
+    const leftAll = new Set(); // D102: every file of a previous zip that is not in this one (approved removals and old status files included)
     for (const prev of against) {
       const prevFiles = listUnwrapped(prev), prevSet = new Set(prevFiles);
+      for (const f of prevFiles) if (!JUNK.test(f) && !neverShipReason(f) && !set.has(f)) leftAll.add(f);
       const lost = prevFiles.filter((f) => !JUNK.test(f) && !neverShipReason(f) && !set.has(f) && !allowSet.has(f));
       const real = lost.filter((f) => !/^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f));
       if (real.length) problems.push(`${real.length} file(s) that existed in ${leaf(prev)} and are NO LONGER in this zip: ${real.slice(0, 15).join(", ")}${real.length > 15 ? " …" : ""}`);
       else say("out", `✓ nothing lost vs ${leaf(prev)}`);
+    }
+    if (!problems.length && leftAll.size) { // D102: only for a zip that is going to be delivered
+      result.left = [...leftAll].sort();
+      const { line, note } = gitRmLine(result.left);
+      say("out", `! ${result.left.length} file(s) of the previous zip are not in this one; remove them from the repository too:`);
+      if (line) say("out", `  ${line}`);
+      if (note) say("out", `  (${note})`);
     }
 
 
