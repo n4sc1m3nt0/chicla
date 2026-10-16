@@ -16,7 +16,11 @@ test('the helper points at the new file, and the file is byte-identical to the o
   assert.equal(pinnedPath('manifest'), NEW);
   assert.equal(TOOLCHAIN_SOURCES['manifest.mjs'], NEW);
   assert.ok(existsSync(join(ROOT, NEW)));
-  assert.equal(createHash('sha256').update(read(NEW)).digest('hex'), MANIFEST_SHA256);
+  // C14.7 (round 158, D113) added `leaf` to the pinned file (the pin moved on purpose): reverse that ONE edit and the bytes must be the ones that were pinned, so nothing else has changed.
+  const LEAF_IMPORT = 'import { basename } from "node:path";\n';
+  const s = read(NEW).toString('utf8'), at = s.indexOf('// C14.7 (D113)'), end = s.indexOf('export const MANIFEST_V2_HEADER');
+  assert.ok(at > 0 && end > at && s.includes(LEAF_IMPORT), 'the C14.7 block of manifest.mjs is not where this test expects it');
+  assert.equal(createHash('sha256').update((s.slice(0, at) + s.slice(end)).replace(LEAF_IMPORT, '')).digest('hex'), MANIFEST_SHA256);
 });
 
 test('the re-export shim of manifest in the scripts folder is gone (slice 6c): the pinned file is the only copy', () => {
@@ -25,7 +29,7 @@ test('the re-export shim of manifest in the scripts folder is gone (slice 6c): t
 
 test('the pinned file exports the names the cores use', async () => {
   const b = await import(join(ROOT, NEW));
-  assert.deepEqual(Object.keys(b).sort(), ['MANIFEST_V2_HEADER', 'crc32', 'parseManifest', 'serializeManifest']);
+  assert.deepEqual(Object.keys(b).sort(), ['MANIFEST_V2_HEADER', 'crc32', 'leaf', 'parseManifest', 'serializeManifest']);
 });
 
 test('the two TOOLCHAIN maps (bump-round, emergency-dump) read manifest from the new place, never from the shim', () => {

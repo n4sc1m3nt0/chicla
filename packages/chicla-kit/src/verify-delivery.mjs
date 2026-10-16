@@ -33,7 +33,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { BASELINE_FILE, parseBaseline } from "./pinned/baseline.mjs";
 import { neverShipReason as neverShip, loadPolicy, policyAllows, detectSecret } from "./pinned/policy.mjs";
-import { parseManifest } from "./pinned/manifest.mjs";
+import { parseManifest, leaf } from "./pinned/manifest.mjs";
 
 const JUNK = /(^|\/)(node_modules|\.next|\.git|__MACOSX)\/|(^|\/)\.DS_Store$|tsconfig\.tsbuildinfo$/;
 // Names are read from the zip's central directory, in Node, and NOT from `unzip -Z1`: macOS `unzip` writes every
@@ -209,8 +209,8 @@ export function verifyDelivery({ zip, against = [], allowRemoved = [], root } = 
       const prevFiles = listUnwrapped(prev), prevSet = new Set(prevFiles);
       const lost = prevFiles.filter((f) => !JUNK.test(f) && !neverShipReason(f) && !set.has(f) && !allowSet.has(f));
       const real = lost.filter((f) => !/^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f));
-      if (real.length) problems.push(`${real.length} file(s) that existed in ${prev.split("/").pop()} and are NO LONGER in this zip: ${real.slice(0, 15).join(", ")}${real.length > 15 ? " …" : ""}`);
-      else say("out", `✓ nothing lost vs ${prev.split("/").pop()}`);
+      if (real.length) problems.push(`${real.length} file(s) that existed in ${leaf(prev)} and are NO LONGER in this zip: ${real.slice(0, 15).join(", ")}${real.length > 15 ? " …" : ""}`);
+      else say("out", `✓ nothing lost vs ${leaf(prev)}`);
     }
 
 

@@ -1,5 +1,15 @@
-<!-- CHANGELOG_FINGERPRINT: seq=161 file=CHICLA_PROJECT_STATUS-161.md app_sha256_12=065d37032ef1 changelog_sha256_12=6ce8be5909d9 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=162 file=CHICLA_PROJECT_STATUS-162.md app_sha256_12=065d37032ef1 changelog_sha256_12=91df1cb44c25 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 158 — M14 C14.7 slice 2: `leaf`, the last part of a path on Windows (v0.0.161)
+
+- Task: C14.7 (D113). Fourteenth CI log read (round 157 code): Ubuntu and macOS green (1089 tests, 0 fail), `bench` and `pack` ok; `chicla-zip` on Windows 630 pass, 0 fail on Node 18, 20 and 22 (the `fuzz-read` `EPERM` of the last log did not come back); `chicla-kit` on Windows 161 pass, 4 fail of 165 on all three Nodes (it was 27 of 157: slice 1 fixed 23).
+- The 4 left are ONE cause: five places took the last part of a PATH with `p.split("/").pop()`, wrong on win32. Two tests of `verify-delivery --against` print «nothing lost vs C:\…\prev.zip» instead of the file name; one of `recovery-report --baseline` prints «baseline C:\…\base.zip»; and one is a SAFETY gap, not a message: `HERE.split("/").pop() === "RECOVER"` was never true on Windows, so a recovery run from a `RECOVER/` folder SKIPPED the toolchain digest check (`EHASH_TOOLCHAIN`, exit 3) and ran (exit 0). Found by reading the log against the code.
+- Fix: `leaf(p, pm = path)` exported from `packages/chicla-kit/src/pinned/manifest.mjs` (both modules already import it) and used at the five places: `verify-delivery.mjs` (2), `pinned/recovery-report.mjs` (3, among them the RECOVER check). It is `basename` of the platform, never a split on a literal backslash (a backslash in a POSIX name stays).
+- Tests first (red, `SyntaxError` for the missing export): `core-leaf.test.mjs` (4: `path.win32` and `path.posix` on Linux, plus a shape guard that the two sources no longer split a path by hand and that RECOVER is recognised through `leaf`). 7 hand mutants (helper splits by hand, helper ignores `pm`, each of the five call sites reverted): all red. Kit suite on Linux 169 tests: the only red was the pin test, as it must be before `bump-round`.
+- The first full `npm test` after the edit had 3 red, all in the historical move tests `test/pinned-manifest-move.test.mjs` and `test/pinned-recovery-report-move.test.mjs` (they fix the sha256 of the pinned files as they were when moved, and the export list of `manifest`): reworked, not loosened: each now reverses exactly the C14.7 edit and must still give the old sha256, so any OTHER change to those two files stays red (checked with an extra line in each); `leaf` added to the export list. Full run after that: see below.
+- THE PIN MOVED (two RECOVER files: `pinned/manifest.mjs`, `pinned/recovery-report.mjs`): `bump-round` wrote the new digest. G-C11 (Rodrigo\'s, at the end of C14.5, D110) now has a new pin to check.
+- NOT run: anything on Windows or macOS (the Windows effect is proven only by the next CI log, G-C13; the shape guard cannot prove it), `npm test` of the root on Node 18 and 20, `npm run smoke`, `npm run mutants`.
 
 ## Round 157 — M14 C14.7 slice 1: the dump on Windows and the python probe of the kit tests (v0.0.160)
 

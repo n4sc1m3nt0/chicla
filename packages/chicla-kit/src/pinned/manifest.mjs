@@ -5,6 +5,9 @@
 // Errors carry a stable `code`: EMANIFEST_FORMAT, EMANIFEST_DUPLICATE, EMANIFEST_UNSAFE, EMANIFEST_COLLISION (C7.3: two different paths that are the same name in NFC, e.g. «café» composed and decomposed). The manifest is input like any other: a path
 // that leaves the root, is absolute or has an empty segment is refused. `check-manifest --write` writes v2 (slice b of C7.1, without sha256).
 import * as zlib from "node:zlib";
+import { basename } from "node:path";
+// C14.7 (D113): the last part of a PATH, whatever the platform. `p.split("/").pop()` is wrong on win32 (backslashes): it printed whole paths in messages and made `leaf(HERE) === "RECOVER"` never true, which skipped the toolchain digest check (round 157 CI log). `pm` lets a Linux test take the win32 branch; on POSIX a backslash in a name is left alone.
+export const leaf = (p, pm = { basename }) => pm.basename(p);
 export const MANIFEST_V2_HEADER = "# chicla-manifest v2";
 
 const fail = (code, message) => Object.assign(new Error(message), { code });

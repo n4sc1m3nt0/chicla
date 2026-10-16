@@ -23,7 +23,9 @@ test('the helper points at the new file, and the file is the old one with ONLY t
   const s = read(NEW);
   assert.equal(s.split(NEW_FALLBACK).length, 2, 'the new fallback appears once');
   assert.ok(!s.includes(OLD_FALLBACK), 'the old fallback is gone');
-  assert.equal(createHash('sha256').update(s.replace(NEW_FALLBACK, OLD_FALLBACK)).digest('hex'), OLD_SHA256);
+  // C14.7 (round 158, D113) changed five spots of the pinned file on purpose (`leaf` instead of `.split("/").pop()`, and its import): reverse exactly those and the bytes must be the ones that were pinned.
+  const back = s.replace('import { parseManifest, leaf } from "./manifest.mjs";', 'import { parseManifest } from "./manifest.mjs";').replace('leaf(HERE) === "RECOVER"', 'HERE.split("/").pop() === "RECOVER"').replace('leaf(zip)', 'zip.split("/").pop()').replace('leaf(baselineZip)', 'baselineZip.split("/").pop()');
+  assert.equal(createHash('sha256').update(back.replace(NEW_FALLBACK, OLD_FALLBACK)).digest('hex'), OLD_SHA256);
 });
 
 test('the moved file still imports its three siblings by ./ and nothing else from the tree (it must run alone from RECOVER/)', () => {

@@ -1,7 +1,7 @@
 {
  "format": "chicla-baseline-v1",
- "created": "2026-10-16T07:40:36.253Z",
- "seal": "d92bba1293bd3ff51554cfb4dbb5546176bd5f23c947b7d9ffd17b58553764c1",
+ "created": "2026-10-16T08:01:24.630Z",
+ "seal": "74a0b8b01c5c6e1d5b2f4750e906b63beda2d11d6172b1758c2d35e7a80d5e75",
  "files": [
   {
    "path": ".gitattributes",
@@ -20,23 +20,23 @@
   },
   {
    "path": "CHANGELOG.md",
-   "size": 218706,
-   "sha256": "456b0eece92593da53d29b9d32180a64b3bb64cf817981294488ef58142fbedb"
+   "size": 221460,
+   "sha256": "da5b8e83fc9349f5c39e938035df900a011c232b0d91508eca866256c04e8384"
   },
   {
-   "path": "CHICLA_PROJECT_STATUS-161.md",
-   "size": 88571,
-   "sha256": "139758a55c8e658201ac565eb4b16c1c76a632f35804ee6c63b9747c5ce098e9"
+   "path": "CHICLA_PROJECT_STATUS-162.md",
+   "size": 89746,
+   "sha256": "c8e21035f4521b95c58f841a999acb213185791aa2258418d236ef054f4f9530"
   },
   {
    "path": "CLAUDE.md",
    "size": 8485,
-   "sha256": "5862f90bcfb32ebf9aad18839df4b3a7c9b1bb8af5330d75e72280509647aa10"
+   "sha256": "2be968ca1621c009abb88eede983122fe4efdbe9c2cf2467e07c3fa7c6a86086"
   },
   {
    "path": "FILES.manifest",
-   "size": 8670,
-   "sha256": "88394670cc39f1042bdb0c79201050130eb5d42b53bf5ea3815d2e52860428b0"
+   "size": 8728,
+   "sha256": "bfe6d291e3ea9da20df0d90b542c25e7e607f2b629fbed09c0eecc2447cf46f0"
   },
   {
    "path": "LICENSE",
@@ -50,8 +50,8 @@
   },
   {
    "path": "ROADMAP.md",
-   "size": 110616,
-   "sha256": "816e58c56a33e52832407f52c8ee1d9e9040fbe61738029f4841e7147dece9b6"
+   "size": 110739,
+   "sha256": "4eb933296e924bc3dd0f51d3f06ca4ddb432d3168dbb42f186481709d856317b"
   },
   {
    "path": "docs/README.md",
@@ -101,7 +101,7 @@
   {
    "path": "package.json",
    "size": 541,
-   "sha256": "4c38fcb69ae3d0e7f8d4e02de744259f5cdadf66693c92d72ea3caf1260f49e2"
+   "sha256": "e58e47f41be6f6f1f23a5785b82663b33c227888bd54773d4383a324cd64810c"
   },
   {
    "path": "packages/chicla-kit/package.json",
@@ -155,8 +155,8 @@
   },
   {
    "path": "packages/chicla-kit/src/pinned/manifest.mjs",
-   "size": 4514,
-   "sha256": "7a39869c96221aa407d90c3a72131288fae4a5d3baca9702b8a99cc1e15c1f34"
+   "size": 4969,
+   "sha256": "052f36789ec113db487ccdf07cd8331cef8dcb8ae915e7dd7ff6564938f31c08"
   },
   {
    "path": "packages/chicla-kit/src/pinned/policy.mjs",
@@ -165,8 +165,8 @@
   },
   {
    "path": "packages/chicla-kit/src/pinned/recovery-report.mjs",
-   "size": 20438,
-   "sha256": "9f7eaa321bf0f80ed1e88d57fedd5d2424c0bf9f68923f681f11f0c0d8741e67"
+   "size": 20411,
+   "sha256": "99d7747535eb48d4f7412c1fc72348227a79bb0d7ca5203832ec9b917e9cb640"
   },
   {
    "path": "packages/chicla-kit/src/ui.mjs",
@@ -175,8 +175,8 @@
   },
   {
    "path": "packages/chicla-kit/src/verify-delivery.mjs",
-   "size": 18312,
-   "sha256": "fb1364063ab9b5ddd2a2cac6cd7e8d5626f83ced2c3b35b226ae9b77102dad18"
+   "size": 18296,
+   "sha256": "7df9a08f796811b4ac777a816b3078861ab0d49f17c5b541f01a912b37017dfb"
   },
   {
    "path": "packages/chicla-kit/templates/.gitkeep",
@@ -252,6 +252,11 @@
    "path": "packages/chicla-kit/test/core-emergency-dump.test.mjs",
    "size": 7293,
    "sha256": "f255c822bad9f57df01bce57533538f82107d9113c84b6941d09b8f48512a1c2"
+  },
+  {
+   "path": "packages/chicla-kit/test/core-leaf.test.mjs",
+   "size": 2937,
+   "sha256": "22e570d54121b73f8d72188f4026622f0aa0032f016009065fe0a21b0f33516e"
   },
   {
    "path": "packages/chicla-kit/test/core-make-delivery.test.mjs",
@@ -780,8 +785,8 @@
   },
   {
    "path": "test/pinned-manifest-move.test.mjs",
-   "size": 2587,
-   "sha256": "dee2457bde836d8f582de00478329865a167e0941eef340ff5a94e3b96d90ff7"
+   "size": 3152,
+   "sha256": "ba9ecc39f66e54e0a440a39a322a121d181dbe5ef9cace466946a059642655a5"
   },
   {
    "path": "test/pinned-policy-move.test.mjs",
@@ -790,8 +795,8 @@
   },
   {
    "path": "test/pinned-recovery-report-move.test.mjs",
-   "size": 3332,
-   "sha256": "eedbab839bfc87e843ecda438fceb6afa7a64dcce3fa2492b8a642366f25bce3"
+   "size": 3856,
+   "sha256": "8055da7086b1bb5b6d736cc494af794edf70dfa778fa5e9495c20772bcd56dfb"
   },
   {
    "path": "test/pinned-shims-gone.test.mjs",
@@ -866,7 +871,7 @@
   {
    "path": "version.mjs",
    "size": 531,
-   "sha256": "e4aaebffda96ed9b3e6175e7c4a2eda19bda006ce869d7ee329b9e25883cb0e4"
+   "sha256": "f38dddb46167daaf740c7de9d68aa2aade2307c52cbce7fc68a580f262eda8be"
   }
  ]
 }

@@ -26,7 +26,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpath
 import { join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { BASELINE_FILE, parseBaseline } from "./baseline.mjs";
-import { parseManifest } from "./manifest.mjs";
+import { parseManifest, leaf } from "./manifest.mjs";
 import { SKIP_NAMES, PYTHON_DIRS, isJunkName, NO_POLICY, loadPolicy, policySkips, policyAllows } from "./policy.mjs"; // C6.1 slice b: the rules live in policy.mjs (beside this file in RECOVER/)
 // C9.4b: zips are read by chicla-zip, never by the external unzip tool. In RECOVER/ it sits beside this file (zipkit.mjs); in the tree it is under packages/.
 const zipkitUrl = existsSync(fileURLToPath(new URL("./zipkit.mjs", import.meta.url))) ? new URL("./zipkit.mjs", import.meta.url) : new URL("../../../chicla-zip/src/zipkit.mjs", import.meta.url);
@@ -89,7 +89,7 @@ async function recover(o, put) {
   const zip = o.dump, toolchainDigest = o.toolchainDigest, trustToolchain = o.trustToolchain === true;
   const fail = (code, text) => { put("err", text); return { ok: false, code }; };
   if (!zip) return fail("EUSAGE", USAGE);
-  if (HERE.split("/").pop() === "RECOVER") {
+  if (leaf(HERE) === "RECOVER") {
     const names = readdirSync(HERE).filter((n) => n.endsWith(".mjs")).sort();
     const mine = createHash("sha256").update(names.map((n) => `${createHash("sha256").update(readFileSync(join(HERE, n))).digest("hex")}  RECOVER/${n}\n`).join("")).digest("hex");
     const given = toolchainDigest;
@@ -118,7 +118,7 @@ async function recover(o, put) {
   const say = (s = "") => { lines.push(s); put("out", s); };
 
   say(`# RECOVERY DIFF — ${new Date().toISOString()}`);
-  say(`- Dump: ${zip.split("/").pop()} (created ${marker.created})`);
+  say(`- Dump: ${leaf(zip)} (created ${marker.created})`);
   say(`- Note from the previous session: ${marker.note ? `**${marker.note}**` : "(no note)"}`);
   say(`- Declared state: last round in the CHANGELOG ${marker.afterRound}, ${marker.statusFile}, APP_VERSION ${marker.appVersion}`);
   say(`- Recovered project root: ${root}`);
@@ -170,7 +170,7 @@ async function recover(o, put) {
     rmSync(tmp, { recursive: true, force: true });
     // the keys are NFC; the lists carry the true name (from the dump for new/modified, from the baseline for the missing ones)
     compare(baseT.h, baseT.names);
-    against = `baseline ${baselineZip.split("/").pop()} (${Object.keys(baseT.h).length} files)`;
+    against = `baseline ${leaf(baselineZip)} (${Object.keys(baseT.h).length} files)`;
   } else if (embedded) {
     const bh = {}, bNames = {};
     for (const f of embedded.files) { const k = nfc(f.path); if (!(k in bh)) { bh[k] = f.sha256; bNames[k] = f.path; } }
