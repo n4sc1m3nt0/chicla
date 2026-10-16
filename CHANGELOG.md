@@ -1,5 +1,18 @@
-<!-- CHANGELOG_FINGERPRINT: seq=162 file=CHICLA_PROJECT_STATUS-162.md app_sha256_12=065d37032ef1 changelog_sha256_12=91df1cb44c25 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=164 file=CHICLA_PROJECT_STATUS-164.md app_sha256_12=065d37032ef1 changelog_sha256_12=84c24267b779 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 160 — docs only: D114 and D115 confirmed (v0.0.163)
+
+- Task: record Rodrigo's answer «d114 sim, d115 sim» (CLAUDE.md rule 6). `ROADMAP.md`: D114 is CONFIRMED; D115 is CONFIRMED as suggested (the `windows` job flips to blocking after the NEXT log is also green, a round of its own, not built). Status file: Snapshot, Last updated, Next up.
+- No source, no test changed, the pin did not move.
+- NOT run: CI of this round, anything on a real Windows or macOS machine, `npm test` on Node 18 and 20 here, `npm run smoke`, `npm run mutants`.
+
+## Round 159 — M14 C14.5 slice (b): the Windows support statement for `chicla-zip` (v0.0.162)
+
+- Task: C14.5 (b) (D108) and the close of C14.7. Fifteenth CI log read (round 158 code): Ubuntu and macOS green (1093 tests, 0 fail), `bench` and `pack` ok; Windows 0 red on Node 18, 20 and 22: `chicla-zip` 630 pass, 20 skipped, `chicla-kit` 169 pass, 0 skipped (it was 4 red of 165).
+- Docs only: `README.md`, `packages/chicla-zip/README.md` (new «Windows» section: Node 18, 20, 22, CI only, names refused before writing, `--windows-names`, not covered: paths over 260 characters and FAT/exFAT), `ROADMAP.md` (§11, §12, risk line, C11.4 closed as never built, C14.5 and C14.7 rows, D114 on delegation, D115 proposed). `chicla-kit` is NOT declared supported (D108, D114).
+- No source and no test changed, the pin did not move. G-C11 is due now (Rodrigo\'s, D110).
+- NOT run: anything on a real Windows or macOS machine, `npm test` of the root on Node 18 and 20 here, `npm run smoke`, `npm run mutants`, CI of this round.
 
 ## Round 158 — M14 C14.7 slice 2: `leaf`, the last part of a path on Windows (v0.0.161)
 

@@ -32,8 +32,12 @@ chicla-zip create <out.zip> <folder> [--exclude GLOB]... [--stream] [--determini
 
 Exit codes: 0 ok, 1 the command ran and failed, 2 usage, 3 internal. With `--json` stdout is exactly one line.
 
+## Windows
+
+Supported on Node 18, 20 and 22. The whole test suite runs on `windows-latest` in CI with no failures (20 tests are skipped there, each with its reason in the test file). It is checked by CI only, not by hand on a real Windows machine. On Windows, `extract` and `create` refuse a name Windows cannot hold (reserved device names, `<>:"|?*`, a trailing dot or space, streams, drive and UNC paths, backslashes) with `EUNSAFE` before anything is written; on other systems `--windows-names` gives the same check. `chicla-zip test` also warns about such names on every system. Not covered: paths over 260 characters, and a real FAT or exFAT drive.
+
 ## Not supported
 
-Encryption, methods other than stored and deflate, multi-part archives, full Windows support (planned as its own milestone).
+Encryption, methods other than stored and deflate, multi-part archives, paths over 260 characters on Windows.
 
 Licence: Apache-2.0.

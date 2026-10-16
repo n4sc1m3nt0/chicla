@@ -39,7 +39,7 @@ chicla-zip extract <zip> <folder> [--overwrite] [--max-bytes N] [--json]
 chicla-zip create <out.zip> <folder> [--exclude GLOB]... [--stream] [--deterministic] [--overwrite] [--json]
 ```
 
-Full details, options and known limits: [`packages/chicla-zip/README.md`](packages/chicla-zip/README.md) and [`docs/zip-handling.md`](docs/zip-handling.md). Not supported: encryption, methods other than stored and deflate, multi-part archives; Windows has its own milestone (M14).
+Full details, options and known limits: [`packages/chicla-zip/README.md`](packages/chicla-zip/README.md) and [`docs/zip-handling.md`](docs/zip-handling.md). Not supported: encryption, methods other than stored and deflate, multi-part archives. Windows: `chicla-zip` is supported on Node 18, 20 and 22 (the whole suite runs on `windows-latest` in CI; see `packages/chicla-zip/README.md`); `chicla-kit` is not declared supported yet.
 
 ## chicla-kit: the `chicla` command
 
@@ -115,7 +115,7 @@ FILES.manifest · FILES.baseline.json · version.mjs
 
 Built: the reader, safe extraction, the writer (zip64, streaming, deterministic output), repair and the `chicla-zip` CLI, hardening (fuzzing, differential tests against Python, mutants, CI, benchmark), the single policy, the v2 manifest, verified delivery with a baseline, emergency dump and recovery, and the six `chicla` subcommands.
 
-Next: moving the kit cores from `scripts/` into `packages/chicla-kit/src/` in slices (the pinned recovery files last), then a dependency-free terminal UI (C11.5), `chicla update`, `chicla init` for each supported agent, Windows support (M14), the open gates (security review, release) and the 0.1 release. The plan, with every card and decision, is in [`ROADMAP.md`](ROADMAP.md).
+Next: moving the kit cores from `scripts/` into `packages/chicla-kit/src/` in slices (the pinned recovery files last), then a dependency-free terminal UI (C11.5), `chicla update`, `chicla init` for each supported agent, the kit on Windows (M14), the open gates (security review, release) and the 0.1 release. The plan, with every card and decision, is in [`ROADMAP.md`](ROADMAP.md).
 
 ## Licence
 
