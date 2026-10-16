@@ -25,11 +25,10 @@ jobs:
       - run: node scripts/bump-round.mjs --verify
       - run: npm run smoke
 
-  # M14, C14.4 (D99): the whole chicla-zip suite (and since C14.6 the chicla-kit suite, a second step) and the independent readers on Windows, Node 18, 20 and 22. Separate job and `continue-on-error`: Windows is NOT
-  # supported yet (C14.3 and C14.5 follow), so a red here is information, not a blocked push. When it is green on all three, D99 flips it to blocking.
+  # M14, C14.4 (D99): the whole chicla-zip suite (and since C14.6 the chicla-kit suite, a second step) and the independent readers on Windows, Node 18, 20 and 22. Separate job. BLOCKING since round 161 (D115, flipping
+  # D99): it was green on Node 18, 20 and 22 in two logs in a row, so a red here now turns the run red. Declared supported: chicla-zip only (D114).
   # `shell: bash` (Git for Windows) expands the glob the same way on every Node version. The readers are CHECKED first: a skipped reader proves nothing.
   windows:
-    continue-on-error: true
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -56,8 +55,8 @@ jobs:
           python3 -c "import zipfile; print('python zipfile ok')"
           (unzip -v | head -n 1) || echo "no unzip on this runner (not required)"
       - run: node --test packages/chicla-zip/test/*.test.mjs
-      # C14.6 (D109): the chicla-kit suite, informative like the whole job (D99). Its own step, always run, so a red chicla-zip never hides it; chicla-kit is NOT declared supported on Windows until this is read.
-      - name: chicla-kit suite (C14.6, informative)
+      # C14.6 (D109): the chicla-kit suite, blocking like the whole job (D115). Its own step, always run, so a red chicla-zip never hides it; chicla-kit is still NOT declared supported on Windows (D114).
+      - name: chicla-kit suite (C14.6)
         if: always()
         timeout-minutes: 8
         run: node --test packages/chicla-kit/test/*.test.mjs

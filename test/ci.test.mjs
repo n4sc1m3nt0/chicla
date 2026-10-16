@@ -82,8 +82,8 @@ test('C14.4: unzip is reported where present, never required (the Windows runner
   assert.match(windows, /unzip[^\n]*\|\|/);
 });
 
-test('C14.4 (D99): the job is informative, continue-on-error, until Windows is green (C14.3, C14.5); it never publishes and uses no secret', () => {
-  assert.match(windows, /continue-on-error:\s*true/);
+test('C14.4 (D99, flipped by D115 in round 161): the job is BLOCKING, no `continue-on-error` anywhere in it; it never publishes and uses no secret', () => {
+  assert.doesNotMatch(windows, /continue-on-error/);
   assert.doesNotMatch(windows, /secrets\.|npm publish/);
 });
 
@@ -119,9 +119,25 @@ test('C14.6: the kit step runs even when the chicla-zip step failed, is named af
   const m = s.match(/timeout-minutes:\s*(\d+)/); assert.ok(m, 'the kit step has no timeout-minutes'); assert.ok(Number(m[1]) >= 3 && Number(m[1]) <= 10, `${m[1]} minutes is outside 3..10`);
 });
 
-test('C14.6 (D99, D109): still informative and only on Windows: the `test` job does not run the kit suite twice, and the chicla-zip step has no `if`', () => {
-  assert.match(windows, /continue-on-error:\s*true/);
+test('C14.6 (D109, D115): the kit step blocks too and runs only on Windows: the `test` job does not run the kit suite twice, and the chicla-zip step has no `if`', () => {
+  assert.doesNotMatch(windows, /continue-on-error/);
   assert.doesNotMatch(windows, /secrets\.|npm publish/);
   assert.ok(!/^\s+if:/m.test(winSteps[zipStep]), 'the chicla-zip step runs unconditionally');
   assert.doesNotMatch(jobs.find((j) => /^test:/.test(j)), /chicla-kit\/test\/\*/);
+});
+
+// M14 (round 161, D115 confirmed by Rodrigo, «d115 sim»; condition of D115: two green `windows` logs in a row, met by the logs of rounds 158 and 160), written before the change:
+// the `windows` job blocks. A red there must turn the run red, so nothing in it may swallow a failure.
+test('D115: no step of the windows job swallows a failure: the two `node --test` commands end the line, with no `|| true` or `|| exit 0`', () => {
+  for (const i of [zipStep, kitStep]) {
+    const line = winSteps[i].split('\n').find((l) => /node --test /.test(l));
+    assert.ok(line, 'the step has a node --test line');
+    assert.doesNotMatch(line, /\|\|/);
+  }
+});
+
+test('D115: the kit step is no longer named «informative» and still runs after a red chicla-zip step (`if: always()`)', () => {
+  const s = winSteps[kitStep];
+  assert.doesNotMatch(s, /name:[^\n]*informative/i);
+  assert.match(s, /if:\s*(\$\{\{\s*)?always\(\)/);
 });

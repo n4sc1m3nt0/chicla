@@ -1,7 +1,7 @@
 {
  "format": "chicla-baseline-v1",
- "created": "2026-10-16T08:32:09.679Z",
- "seal": "91dcf6fdae45d2ae2cffcc8d7cfe853961071057a51fbcbadde3906b91bfd392",
+ "created": "2026-10-16T08:51:24.020Z",
+ "seal": "f0d2e956f1621ba6643fc290f10e4c9d8d4f4a800a10eb87b2ea0c299cee5fe8",
  "files": [
   {
    "path": ".gitattributes",
@@ -10,8 +10,8 @@
   },
   {
    "path": ".github/workflows/ci.yml",
-   "size": 3610,
-   "sha256": "6f841ae9c28ab057fd5fc6d2404a62295a0b3a00d6ff74987fea084d9f8c2900"
+   "size": 3560,
+   "sha256": "94f55f5287028559ade0bac9b7e4b219992299e42a7d95e6fd147891de37130d"
   },
   {
    "path": ".gitignore",
@@ -20,13 +20,13 @@
   },
   {
    "path": "CHANGELOG.md",
-   "size": 223033,
-   "sha256": "1c8c3634503c6cc91eedc38b31ee24e1fd9c0451088e26c1d3aade8aa04f6cfa"
+   "size": 223995,
+   "sha256": "2780f527859e0912e6a48666d3916260cbb675c683ee2b08296b9cff205833d4"
   },
   {
-   "path": "CHICLA_PROJECT_STATUS-164.md",
-   "size": 91931,
-   "sha256": "1e53e665757cb2a673ed54abee85657b82315461df9fe3ca4658242231b05259"
+   "path": "CHICLA_PROJECT_STATUS-165.md",
+   "size": 93207,
+   "sha256": "972bf32d4cc225aa2522ab6a8b482e679572dec463501d3f1dce93b195ac9775"
   },
   {
    "path": "CLAUDE.md",
@@ -36,7 +36,7 @@
   {
    "path": "FILES.manifest",
    "size": 8729,
-   "sha256": "d4d174f25fc5e78fa6fa178ce7451502530b5640755d03f844b3bae6b3a773d9"
+   "sha256": "6a4e7b40ebbb3322af933459587e2b58f08f2da081ded297af05da2a505b6f00"
   },
   {
    "path": "LICENSE",
@@ -50,8 +50,8 @@
   },
   {
    "path": "ROADMAP.md",
-   "size": 112558,
-   "sha256": "d948ac2dc43079b067508a02d407b809fd6df724528cee0482dc5d81f3bb7284"
+   "size": 112808,
+   "sha256": "0b9fbc5ea3be291fdcf630496ad047a6e8eec8d57ff6da0f74f20eed5b51cecc"
   },
   {
    "path": "docs/README.md",
@@ -101,7 +101,7 @@
   {
    "path": "package.json",
    "size": 541,
-   "sha256": "95d15fc17c059daa30a8ac29db0393da86e6f5e8bb64c764d316924570c22113"
+   "sha256": "f2176e69d0ddfc919ac005ab0d4009037fd314290bcc465f1f734cbdd0aa5d2f"
   },
   {
    "path": "packages/chicla-kit/package.json",
@@ -665,8 +665,8 @@
   },
   {
    "path": "test/ci.test.mjs",
-   "size": 7102,
-   "sha256": "4e274e511358490fa994887656c7e2b90b5bc6242c4d3380130bcc0a69fa19cb"
+   "size": 8044,
+   "sha256": "85828a0f6d988622a9caa64dfea02af623ffd9b13b630657d6a05d210f83c004"
   },
   {
    "path": "test/collisions-nfc.test.mjs",
@@ -871,7 +871,7 @@
   {
    "path": "version.mjs",
    "size": 531,
-   "sha256": "e36ccd6c34d5d9f7b6c56643ba2f75d46458dc762a2c610de5ed42350041054b"
+   "sha256": "a0ecc73234efc76f3c1b8ff527273af24bcab6e3a2744a6e8ae9f813184dc9a9"
   }
  ]
 }

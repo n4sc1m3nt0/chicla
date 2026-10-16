@@ -1,5 +1,12 @@
-<!-- CHANGELOG_FINGERPRINT: seq=164 file=CHICLA_PROJECT_STATUS-164.md app_sha256_12=065d37032ef1 changelog_sha256_12=84c24267b779 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=165 file=CHICLA_PROJECT_STATUS-165.md app_sha256_12=065d37032ef1 changelog_sha256_12=70358d4ced48 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 161 — M14 D115: the `windows` CI job blocks (v0.0.164)
+
+- Task: D115 (confirmed «d115 sim», condition: two green `windows` logs in a row). Sixteenth CI log read (round 160 code): Ubuntu and macOS green (1093 tests, 0 fail), `bench` and `pack` ok; Windows 0 red on Node 18, 20, 22 (`chicla-zip` 630 pass, 20 skipped; `chicla-kit` 169 pass); the `fuzz-read` `EPERM` flake did not come back.
+- `.github/workflows/ci.yml`: `continue-on-error` removed from the `windows` job; the kit step is now «chicla-kit suite (C14.6)» (still `if: always()`). `test/ci.test.mjs`: 2 tests changed, 2 new (3 red first). 7 hand mutants of the YAML, all red.
+- No source changed, the pin did not move. A red on Windows now turns the run red; `chicla-kit` is still NOT declared supported there (D114).
+- NOT run: the first CI run with the job blocking, anything on a real Windows or macOS machine, `npm test` on Node 18 and 20 here, `npm run smoke`, `npm run mutants`.
 
 ## Round 160 — docs only: D114 and D115 confirmed (v0.0.163)
 
