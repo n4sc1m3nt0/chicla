@@ -1,5 +1,12 @@
-<!-- CHANGELOG_FINGERPRINT: seq=159 file=CHICLA_PROJECT_STATUS-159.md app_sha256_12=065d37032ef1 changelog_sha256_12=5da04c6aa385 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=160 file=CHICLA_PROJECT_STATUS-160.md app_sha256_12=065d37032ef1 changelog_sha256_12=cc17f391ccb2 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 156 — M14 D112: `.gitattributes`, every checkout is LF (v0.0.159)
+
+- Task: D112 (confirmed by Rodrigo, «d112 sim»; D113 confirmed too, «d113 sim»), from the round 155 CI log (the eleventh/twelfth runs): `chicla-zip` green on Windows (630 pass, 20 skipped, 0 fail on Node 18, 20, 22); `chicla-kit` on the new Windows step: 111 pass, 34 fail on all three Nodes. 15 of the 34 are CRLF (no `.gitattributes`, the runner's `core.autocrlf=true`: `FILES.manifest` lines ended in `\r`, the shebang test, `make-delivery`, `verify-delivery`, `bump-round`, `check-manifest`), reproduced on Linux on a CRLF copy of the tree before any change. The other 19 are `emergency-dump` and `recovery-report` (C14.7, D113).
+- Tests first: `test/gitattributes.test.mjs` (4; 3 red first; the control shows that without the file `core.autocrlf=true` gives CRLF, with real `git`). New file: `.gitattributes` (`* text=auto eol=lf`, `*.zip`, `*.tgz`, `*.png` binary). 6 hand mutants of it, all red.
+- Source: none; the pin did not move. ROADMAP: D112, D113 and card C14.7.
+- NOT run: the fix on Windows (the next push shows how many of the 15 go away), the 19 dump/recovery failures (not diagnosed), `npm test` on Node 18 and 20, `npm run smoke`, `npm run mutants`, macOS.
 
 ## Round 155 — M14 C14.6: the `chicla-kit` suite in the `windows` CI job (v0.0.158)
 

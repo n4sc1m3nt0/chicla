@@ -1,0 +1,7 @@
+# D112 (round 156): every checkout is LF, on any platform and whatever core.autocrlf says. On the Windows runner the default
+# core.autocrlf=true wrote CRLF into FILES.manifest (crc32 and size no longer true), the shebang and 15 chicla-kit tests (round 155 CI log).
+* text=auto eol=lf
+# Never touched by line-ending conversion.
+*.zip binary
+*.tgz binary
+*.png binary
