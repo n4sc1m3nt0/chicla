@@ -49,6 +49,8 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { copyFileSync, createReadStream, createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
+// C14.7 (D113): every `rel` of the scan is made here, with «/» whatever the platform: the rest of the core compares and splits it with «/» (project root, `dir.split("/")`, `projRel`), and on win32 `path.relative` gives backslashes (round 156 CI log). `pm` lets a Linux test take the win32 branch; on POSIX a backslash in a name is a name character and is left alone.
+export const relPosix = (root, p, pm = { relative, sep }) => pm.relative(root, p).split(pm.sep).join("/");
 import { tmpdir } from "node:os";
 import { parseManifest } from "./pinned/manifest.mjs";
 
@@ -135,11 +137,11 @@ async function dump(o, say) {
         }
         if (!e.isFile()) continue;
         let st; try { st = statSync(p); } catch { continue; }
-        if (e.name.endsWith(".zip")) { zips.push({ rel: relative(root, p), size: st.size }); continue; }
+        if (e.name.endsWith(".zip")) { zips.push({ rel: relPosix(root, p), size: st.size }); continue; }
         if (skipFile(e.name)) continue;
         const kind = scanKind(p, st.size);
-        const file = { rel: relative(root, p), size: st.size, mtime: st.mtimeMs, mode: st.mode & 0o7777 };
-        if (kind) { held.push({ base: prefix, rel: file.rel.split(sep).join("/"), kind, file }); continue; } // `file` kept: the project's `allow` may release it below (C6.3 c2)
+        const file = { rel: relPosix(root, p), size: st.size, mtime: st.mtimeMs, mode: st.mode & 0o7777 };
+        if (kind) { held.push({ base: prefix, rel: file.rel, kind, file }); continue; } // `file` kept: the project's `allow` may release it below (C6.3 c2)
         files.push(file);
       }
     };
@@ -305,7 +307,7 @@ ${errors.length ? `\n## Errors while generating this report (the zip was created
   const viaWriter = async () => {
     const { writeZipStream } = await import(new URL("../../chicla-zip/src/zipkit.mjs", import.meta.url).href);
     const fileSource = (base, root, f) => ({
-      name: `${base}/${f.rel.split(sep).join("/")}`, mtime: new Date(f.mtime), mode: f.mode,
+      name: `${base}/${f.rel}`, mtime: new Date(f.mtime), mode: f.mode,
       stream: async function* () { // a file that fails mid-read ends here, is recorded, and the dump goes on
         const h = base === "work" && wantsHash(f) ? createHash("sha256") : null;
         try { for await (const c of createReadStream(join(root, f.rel))) { h?.update(c); yield c; } if (h) hashes[projRel(f.rel)] = h.digest("hex"); }

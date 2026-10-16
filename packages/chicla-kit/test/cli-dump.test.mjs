@@ -6,6 +6,7 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { findPython } from './python-probe.mjs';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
@@ -13,7 +14,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const SCRIPT = join(ROOT, 'scripts/emergency-dump.mjs');
-const PY = spawnSync('sh', ['-c', 'command -v python3'], { encoding: 'utf8' }).stdout.trim();
+const PY = findPython(); // C14.7: no `sh`, see python-probe.mjs
 const skip = !PY && 'no python3';
 const imp = (f) => import(pathToFileURL(join(ROOT, f)).href);
 const { main } = await imp('packages/chicla-kit/src/cli.mjs');
