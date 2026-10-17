@@ -1,5 +1,14 @@
-<!-- CHANGELOG_FINGERPRINT: seq=173 file=CHICLA_PROJECT_STATUS-173.md app_sha256_12=065d37032ef1 changelog_sha256_12=86285fe38383 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=174 file=CHICLA_PROJECT_STATUS-174.md app_sha256_12=065d37032ef1 changelog_sha256_12=c3feacb389ad (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 170 — G-C5 ZIP-001: which end-of-central-directory record is the real one (v0.0.173)
+
+- Task (Rodrigo: «1 sim, 2 sim, 3 sim, 4 sim» to D123 to D126, after ChatGPT's security review of the round 169 tree). ZIP-001 and ZIP-002 were both reproduced here on the unchanged tree first; this round fixes ZIP-001 only (ZIP-002 is round 171, C15.2).
+- `readCentral`: every end record whose comment fits the end of the file is a candidate. With one, nothing changes. With several, the one whose central directory ends exactly where the record starts (zip64: where the zip64 record starts) is taken; not exactly one, or more than 8 candidates, is `EAMBIGUOUS`. The reviewer's fix (`===` on the comment length) was tried on paper and does NOT work: the false record of the review ends at the end of the file too, so it was not applied.
+- Tests: `eocd-ambiguity.test.mjs` (10, 7 red before the fix). Mutants `R170-*` (8): 7 RED, 1 explained survivor (`R170-eocd-swallow-all`). Docs: `docs/zip-handling.md` §2 and §7, ROADMAP D123 to D126 and new M15 (C15.1 to C15.5).
+- Files: `packages/chicla-zip/src/zipkit.mjs` (the only source file), the new test, `mutants/list.mjs`. THE PIN MOVED (`zipkit.mjs` is in `RECOVER/`): G-C11 is due again.
+- Rodrigo's CI log (`logs_105808351383.zip`, 12 jobs, the commit is not named in it): 0 fail on every job, Ubuntu 1148 of 1150 pass, macOS 1141, Windows `chicla-zip` 630 and `chicla-kit` 214, `bench` 1.0x, `pack-kit` built `chicla-kit-0.0.0.tgz` (first time seen). G-C14 recorded as closed by Rodrigo (his word; the output was not shown to Claude).
+- Seen (Node 22, Linux): the whole `npm test` after `bump-round`, 1160 tests, 1159 pass, 0 fail, 1 skipped (415 s; a first run was cut off by the session at test 1109, not a failure, and was run again from the start); `check-build` ok; the 8 mutants alone. NOT run: `npm run smoke` (no script changed), the full mutant list, CI, Node 18 and 20, macOS, Windows.
 
 ## Round 169 — CI and mutants triage: the Windows Node 18 fuzz cleanup, the invalid mutant, `onlyOn` (v0.0.172)
 

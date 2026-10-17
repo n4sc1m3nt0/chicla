@@ -641,4 +641,27 @@ const win145 = (() => {
   ];
 })();
 
-export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14, ...win145];
+// Round 170 / G-C5 ZIP-001 (D123): which end-of-central-directory record is the real one when a comment can hold false ones.
+const eocd170 = (() => {
+  const F = "src/zipkit.mjs", E = "test/eocd-ambiguity.test.mjs";
+  return [
+    { id: "R170-eocd-always-last", file: F, tests: [E], why: "with several candidates the reader weighs them, it does not just take the last one",
+      find: "if (cands.length === 1) f = fields(cands[0]);", replace: "if (true) f = fields(cands[0]);" },
+    { id: "R170-eocd-no-fit-test", file: F, tests: [E], why: "a candidate counts only if its central directory ends where the record starts",
+      find: "if (g.cdOff + g.cdSize === g.endsAt) fit.push(g);", replace: "fit.push(g);" },
+    { id: "R170-eocd-fit-loose", file: F, tests: [E], why: "the fit is exact: a false record that claims an empty directory at offset 0 does not fit",
+      find: "if (g.cdOff + g.cdSize === g.endsAt) fit.push(g);", replace: "if (g.cdOff + g.cdSize <= g.endsAt) fit.push(g);" },
+    { id: "R170-eocd-zip64-ends-at", file: F, tests: [E], why: "for a zip64 record the directory has to end at the zip64 record, not at the plain one",
+      find: "endsAt = u64(l, 8);", replace: "endsAt = tailPos + e;" },
+    { id: "R170-eocd-ambiguous-passes", file: F, tests: [E], why: "two records that both fit are refused, never one picked",
+      find: "if (fit.length !== 1) throw", replace: "if (fit.length < 1) throw" },
+    { id: "R170-eocd-no-cap", file: F, tests: [E], why: "more than 8 candidates are refused without parsing them",
+      find: "if (cands.length > MAX_EOCD_CANDIDATES) throw", replace: "if (false) throw" },
+    { id: "R170-eocd-code", file: F, tests: [E], why: "the refusal carries the code EAMBIGUOUS",
+      find: "${fit.length} fit)`, \"EAMBIGUOUS\")", replace: "${fit.length} fit)`, \"EZIP\")" },
+    { id: "R170-eocd-swallow-all", file: F, tests: [E], why: "only a ZipError of a candidate is swallowed; a bug is not hidden as an ambiguity",
+      find: "if (!(err instanceof ZipError)) throw err; /* a record", replace: "if (false) throw err; /* a record", survives: "no test can make a candidate throw something that is not a ZipError: fields() only throws ZipError (u64, readAt and the checks)" },
+  ];
+})();
+
+export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14, ...win145, ...eocd170];

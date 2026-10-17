@@ -19,6 +19,7 @@ A reader written in Node, with zero dependencies, gives the same answer on every
 - **Integrity.** CRC-32 and size of every file are checked on read and on `testZip`.
 - **Formats.** Stored and deflate, zip64 (reading and writing), extra fields, Unix modes, dates (the UT extra is preferred over the DOS date, which has no time zone and is read as local time).
 - **Refused, with a code:** encrypted entries, other compression methods, multi-part zips, truncated zips, a damaged central directory, a deflate entry that has zero data bytes (D20).
+- **Which end record (G-C5 ZIP-001, D123).** A zip comment can hold bytes that look like an end-of-central-directory record. With one candidate nothing changes. With several, the reader takes the one whose central directory ends exactly where the record starts (for zip64, where the zip64 record starts); if that is not exactly one, or there are more than 8 candidates, it refuses with `EAMBIGUOUS` and reads nothing. Bytes after the record are still tolerated when there is only one candidate. Python's `zipfile` takes the last candidate without this check and reads such a zip as empty.
 - **Memory.** Only the central directory is read whole. `readZipFile` loads one file and takes `maxBytes`.
 
 ## 3. What extraction promises
@@ -70,7 +71,7 @@ On Linux, `é` as one character (NFC) and as `e` plus a combining accent (NFD), 
 - **No encryption, no other compression methods, no multi-part zips**, for reading or writing.
 - **Streamed zips** (every file zip64 with a data descriptor): verified with `unzip` 6.00, Python `zipfile` and the Chicla reader, including 4.1 GiB; **not verified** on macOS (Finder, Archive Utility, `ditto`) or with 7z.
 - **Where it was run.** CI runs the `chicla-zip` suite on Ubuntu, macOS and Windows with Node 18, 20 and 22; the Windows job is blocking (D115) and the last log read (round 162 code) was green on all nine. **Not run:** a real Windows machine, a FAT or exFAT drive, macOS Finder or Archive Utility, and 7-Zip on streamed zips. A green CI runner is not a person using those tools.
-- **Messages** are English plain strings (D18). Tests assert error codes: `EARG`, `EUNSAFE`, `EDUP`, `EZIP64`, `ECHANGED`, `ERECURSE`, `ESYMLINK`, `ESOURCE`, `EEXIST`, `ECOLLISION`, `ENOENT`, `EZIP`.
+- **Messages** are English plain strings (D18). Tests assert error codes: `EARG`, `EUNSAFE`, `EDUP`, `EZIP64`, `ECHANGED`, `ERECURSE`, `ESYMLINK`, `ESOURCE`, `EEXIST`, `ECOLLISION`, `ENOENT`, `EAMBIGUOUS`, `EZIP`.
 - **Performance budget:** large files at most 1.5 times `unzip`; 20 000 small files at most 3 times `unzip` on tmpfs (D15).
 
 ## 8. The command line

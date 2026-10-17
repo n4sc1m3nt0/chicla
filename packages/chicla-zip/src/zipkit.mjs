@@ -89,24 +89,41 @@ const readAt = (fd, pos, len) => {
 const MAX_CENTRAL = 1 << 30;
 
 // ---------- central directory ----------
+// G-C5 ZIP-001 (D123): more than one record can look like the EOCD (every candidate whose comment fits the end of the file, so a
+// false one can sit inside the zip comment). With one candidate nothing changes. With several, the one whose central directory
+// ends exactly where the record starts (the zip64 record, for a zip64 one) is taken; if that is not exactly one, EAMBIGUOUS.
+const MAX_EOCD_CANDIDATES = 8;
 const readCentral = (fd, size, label) => {
   const tailLen = Math.min(size, 22 + 65535), tailPos = size - tailLen, tail = readAt(fd, tailPos, tailLen);
-  let e = -1;
-  for (let i = tail.length - 22; i >= 0; i--) if (tail.readUInt32LE(i) === 0x06054b50 && i + 22 + tail.readUInt16LE(i + 20) <= tail.length) { e = i; break; }
-  if (e < 0) throw new ZipError(`${label}: not a zip (no end-of-central-directory record)`, "ENOTZIP");
-  let total = tail.readUInt16LE(e + 10), cdSize = tail.readUInt32LE(e + 12), cdOff = tail.readUInt32LE(e + 16);
-  const disk = tail.readUInt16LE(e + 4), cdDisk = tail.readUInt16LE(e + 6);
-  if (total === 0xffff || cdSize === 0xffffffff || cdOff === 0xffffffff) {
-    const loc = tailPos + e - 20;
-    if (loc < 0) throw new ZipError(`${label}: zip64 without locator`);
-    const l = readAt(fd, loc, 20);
-    if (l.readUInt32LE(0) !== 0x07064b50) throw new ZipError(`${label}: zip64 without locator`);
-    if (l.readUInt32LE(4) > 0 || l.readUInt32LE(16) > 1) throw new ZipError(`${label}: multi-part zips are not supported`);
-    const z = readAt(fd, u64(l, 8), 56);
-    if (z.readUInt32LE(0) !== 0x06064b50 || u64(z, 4) < 44) throw new ZipError(`${label}: invalid zip64 record`);
-    total = u64(z, 32); cdSize = u64(z, 40); cdOff = u64(z, 48);
-    if (z.readUInt32LE(16) || z.readUInt32LE(20)) throw new ZipError(`${label}: multi-part zips are not supported`);
-  } else if ((disk && disk !== 0xffff) || (cdDisk && cdDisk !== 0xffff)) throw new ZipError(`${label}: multi-part zips are not supported`);
+  const cands = [];
+  for (let i = tail.length - 22; i >= 0; i--) if (tail.readUInt32LE(i) === 0x06054b50 && i + 22 + tail.readUInt16LE(i + 20) <= tail.length) { cands.push(i); if (cands.length > MAX_EOCD_CANDIDATES) throw new ZipError(`${label}: ambiguous end-of-central-directory record (more than ${MAX_EOCD_CANDIDATES} candidates)`, "EAMBIGUOUS"); }
+  if (!cands.length) throw new ZipError(`${label}: not a zip (no end-of-central-directory record)`, "ENOTZIP");
+  const fields = (e) => { // what the record at tail[e] says, and where the central directory it describes has to end
+    let total = tail.readUInt16LE(e + 10), cdSize = tail.readUInt32LE(e + 12), cdOff = tail.readUInt32LE(e + 16), endsAt = tailPos + e;
+    const disk = tail.readUInt16LE(e + 4), cdDisk = tail.readUInt16LE(e + 6);
+    if (total === 0xffff || cdSize === 0xffffffff || cdOff === 0xffffffff) {
+      const loc = tailPos + e - 20;
+      if (loc < 0) throw new ZipError(`${label}: zip64 without locator`);
+      const l = readAt(fd, loc, 20);
+      if (l.readUInt32LE(0) !== 0x07064b50) throw new ZipError(`${label}: zip64 without locator`);
+      if (l.readUInt32LE(4) > 0 || l.readUInt32LE(16) > 1) throw new ZipError(`${label}: multi-part zips are not supported`);
+      endsAt = u64(l, 8);
+      const z = readAt(fd, endsAt, 56);
+      if (z.readUInt32LE(0) !== 0x06064b50 || u64(z, 4) < 44) throw new ZipError(`${label}: invalid zip64 record`);
+      total = u64(z, 32); cdSize = u64(z, 40); cdOff = u64(z, 48);
+      if (z.readUInt32LE(16) || z.readUInt32LE(20)) throw new ZipError(`${label}: multi-part zips are not supported`);
+    } else if ((disk && disk !== 0xffff) || (cdDisk && cdDisk !== 0xffff)) throw new ZipError(`${label}: multi-part zips are not supported`);
+    return { total, cdSize, cdOff, endsAt };
+  };
+  let f;
+  if (cands.length === 1) f = fields(cands[0]);
+  else {
+    const fit = [];
+    for (const e of cands) { try { const g = fields(e); if (g.cdOff + g.cdSize === g.endsAt) fit.push(g); } catch (err) { if (!(err instanceof ZipError)) throw err; /* a record that does not even parse is not the one */ } }
+    if (fit.length !== 1) throw new ZipError(`${label}: ambiguous end-of-central-directory record (${cands.length} candidates, ${fit.length} fit)`, "EAMBIGUOUS");
+    f = fit[0];
+  }
+  const { total, cdSize, cdOff } = f;
   if (cdSize > MAX_CENTRAL) throw new ZipError(`${label}: central directory too large`);
   if (total * 46 > cdSize) throw new ZipError(`${label}: impossible entry count (${total} entries do not fit in ${cdSize} bytes)`);
   if (cdOff + cdSize > size) throw new ZipError(`${label}: central directory outside the file (truncated zip?)`);
