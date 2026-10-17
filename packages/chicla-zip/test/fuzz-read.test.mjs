@@ -59,6 +59,8 @@ const snap = (root, skip) => {
 const diff = (a, b) => [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => a[k] !== b[k]).sort();
 const okError = (e) => e instanceof ZipError && typeof e.code === 'string';
 
+// Windows: an antivirus or the indexer may hold a file of the case for a moment, and Node 18's rmSync then fails with ENOTEMPTY (CI, 2026-10-17, windows 18). The test's own cleanup retries, like the library's rmBounded (C14.3 b).
+const RM = { recursive: true, force: true, maxRetries: 8, retryDelay: 25 };
 const fuzzLoop = async () => {
   const seed = Number(process.env.CHICLA_FUZZ_READ_SEED ?? 20261009), N = Number(process.env.CHICLA_FUZZ_READ_N ?? 1500), rnd = prng(seed);
   const base = mkdtempSync(join(tmpdir(), 'chicla-zip-fuzzread-')), seeds = Object.entries(SEEDS).map(([k, f]) => [k, f()]);
@@ -81,9 +83,9 @@ const fuzzLoop = async () => {
       } catch (e) { if (e instanceof assert.AssertionError || /non-ZipError/.test(e?.message ?? '')) throw e; throw new Error(`${label}: ${e?.stack ?? e}`); }
       assert.ok(Date.now() - t0 < CASE_MS, `${label}: took ${Date.now() - t0} ms (limit ${CASE_MS})`);
       const leaked = diff(before, snap(w, 'parent/out')); assert.deepEqual(leaked, [], `${label}: changed outside the destination: ${leaked.join(', ')}`);
-      rmSync(w, { recursive: true, force: true });
+      rmSync(w, RM);
     }
-  } finally { rmSync(base, { recursive: true, force: true }); }
+  } finally { rmSync(base, RM); }
   console.log(`FUZZ_READ_OUTCOME ${JSON.stringify(outcome)}`);
 };
 

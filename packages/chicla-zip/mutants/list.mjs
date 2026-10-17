@@ -2,6 +2,8 @@
 // Add an entry when a round "breaks a guarantee on purpose" (ROADMAP §3.2); `find` must occur exactly once in `file`.
 // A survivor that is understood and accepted gets `survives: "reason"`; the run then fails if it ever dies (the reason is stale).
 const D = "test/differential-python.test.mjs";
+// onlyOn: the tests of these mutants need a case-sensitive file system that keeps any bytes in a name; macOS and Windows refuse the zips or the names and the tests then skip their assertions (seen on a Mac, round 168: five survivors that Linux kills).
+const LINUX = ["linux"];
 const writer = [
   { id: "C5.2-write-central-crc", file: "src/zipkit.mjs", find: "h.writeUInt32LE(it.crc, 16);\n", replace: "h.writeUInt32LE(0, 16);\n", tests: [D],
     why: "writeZip: the central directory carries each file's CRC-32" },
@@ -118,11 +120,11 @@ export const extract2 = [
   { id: "C5.3b-C1", file: "src/zipkit.mjs", tests: ["test/collisions.test.mjs"],
     why: "collisions: names fold by upper then lower case, so Greek final sigma matches",
     find: "s.normalize(\"NFC\").toUpperCase().toLowerCase().normalize(\"NFC\")",
-    replace: "s.normalize(\"NFC\").toLowerCase()" },
+    replace: "s.normalize(\"NFC\").toLowerCase()", onlyOn: LINUX },
   { id: "C5.3b-C2", file: "src/zipkit.mjs", tests: ["test/collisions.test.mjs"],
     why: "collisions: the folders implied by a file's path are noted too",
     find: "if (!dirKeys.has(d)) { dirKeys.add(d); noteName(groups, d, `${d}/`, false); }",
-    replace: "if (!dirKeys.has(d)) { dirKeys.add(d); }" },
+    replace: "if (!dirKeys.has(d)) { dirKeys.add(d); }", onlyOn: LINUX },
   { id: "C5.3b-X1", file: "src/zipkit.mjs", tests: ["test/extract-rollback.test.mjs", "test/extract-exdev.test.mjs"],
     why: "extractZip puts the temp folder inside a destination that is the root of a mount",
     find: "const wheres = real ? (sameVolume(dirname(real), real) ? [dirname(real), real] : [real]) : [base];",
@@ -328,7 +330,7 @@ const writer3 = (() => {
   { id: "M3c-unsafe-name", file: F, tests: [C, A2], why: "createZip refuses an unsafe name (EUNSAFE)",
     find: "unsafeNameReason(name); if (why) throw new ZipError(", replace: "unsafeNameReason(name); if (false) throw new ZipError(", survives: "redundant: the writer (vetName) refuses the same name with the same EUNSAFE before any byte is written, streamed or not; createZip only says it earlier, at listing time" },
   { id: "M3c-utf8-name", file: F, tests: [C], why: "createZip refuses a name that is not valid UTF-8",
-    find: "if (!Buffer.from(nm, \"utf8\").equals(b)) throw", replace: "if (false) throw" },
+    find: "if (!Buffer.from(nm, \"utf8\").equals(b)) throw", replace: "if (false) throw", onlyOn: LINUX },
   { id: "M3c-recurse", file: F, tests: [C, CS], why: "createZip refuses an output inside the folder it reads (ERECURSE)",
     find: "if (out === top || out.startsWith(inside)) throw", replace: "if (false) throw" },
   { id: "M3c-recurse-root", file: F, tests: [C, CS, SL], why: "createZip refuses an output that is the folder itself",
@@ -425,7 +427,7 @@ const extract3 = (() => {
   { id: "M2-coll-two", file: F, tests: [COL, X], why: "collisions: a group needs two or more spellings",
     find: "const collisions = [...groups.values()].filter((g) => g.real && g.names.size > 1)", replace: "const collisions = [...groups.values()].filter((g) => g.real && g.names.size > 0)" },
   { id: "M2-coll-files", file: F, tests: [COL], why: "collisions: files are noted",
-    find: "seen.add(key); declared += e.usize; noteName(groups, key, key, true);", replace: "seen.add(key); declared += e.usize;" },
+    find: "seen.add(key); declared += e.usize; noteName(groups, key, key, true);", replace: "seen.add(key); declared += e.usize;", onlyOn: LINUX },
   { id: "M2-coll-folders", file: F, tests: [COL], why: "collisions: explicit folder entries are noted",
     find: "dirKeys.add(key); noteName(groups, key, `${key}/`, true);", replace: "dirKeys.add(key);" },
   { id: "M2-coll-case", file: F, tests: [COL], why: "collisions: names that differ only in case are one group",
@@ -548,8 +550,8 @@ const cli4 = (() => {
   { id: "M4-create-skipped-line", file: F, tests: [CC], why: "create says what it skipped", find: "for (const k of r.skipped) out.write(`! skipped: ${esc(k.name)} (${k.reason})\\n`);\n        for (const c of r.collisions) out.write(`! equivalent names (NFC/case) in the folder", replace: "for (const c of r.collisions) out.write(`! equivalent names (NFC/case) in the folder" },
   { id: "M4-max-bytes-digits", file: F, tests: [A3], why: "--max-bytes takes digits only (A-4)", find: "!/^\\d{1,15}$/.test(mb)", replace: "!/\\d{1,15}/.test(mb)" },
   { id: "M4-extract-overwrite", file: F, tests: [C], why: "extract --overwrite is passed on", find: 'overwrite: !!flags["--overwrite"], ...(mb', replace: "overwrite: false, ...(mb" },
-  { id: "M4-max-bytes-passed", file: F, tests: [C, A3], why: "extract --max-bytes is passed on", find: "...(mb !== undefined ? { maxTotalBytes: Number(mb) } : {})", replace: "" },
-  { id: "M4-extract-collisions-line", file: F, tests: [G, C], why: "extract reports equivalent names", find: "for (const c of r.collisions) out.write(`! equivalent names (NFC/case) in the zip", replace: "for (const c of []) out.write(`! equivalent names (NFC/case) in the zip" },
+  { id: "M4-max-bytes-passed", file: F, tests: [C, A3], why: "extract --max-bytes is passed on", find: "...(mb !== undefined ? { maxTotalBytes: Number(mb) } : {})", replace: "...{}" },
+  { id: "M4-extract-collisions-line", file: F, tests: [G, C], why: "extract reports equivalent names", find: "for (const c of r.collisions) out.write(`! equivalent names (NFC/case) in the zip", replace: "for (const c of []) out.write(`! equivalent names (NFC/case) in the zip", onlyOn: LINUX },
   { id: "M4-epipe", file: F, tests: [A3], why: "a closed pipe ends the process quietly (A-1)", find: 'if (e.code === "EPIPE" || e.code === "EOF") process.exit(1); throw e;', replace: "throw e;" },
   { id: "M14-eof-pipe", file: F, tests: [A3], why: "Windows reports a closed pipe as EOF on Node 18 and 20: also quiet (C14.3 d)", find: 'e.code === "EPIPE" || e.code === "EOF"', replace: 'e.code === "EPIPE"' },
   ];

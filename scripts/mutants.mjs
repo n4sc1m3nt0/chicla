@@ -2,8 +2,9 @@
 // C5.3 — the mutants that must stay red. For each entry of the list: change ONE piece of the source in a COPY of the package,
 // run only the test files named in the entry, and require them to fail. A mutant the tests do not catch is a promise broken.
 //   node scripts/mutants.mjs [--pkg <dir>] [--list <file>] [--only <id>] [--timeout <seconds per run>]
-// List entry: { id, file, find, replace, tests: [files], why, survives? }. `find` must occur exactly once in `file`;
+// List entry: { id, file, find, replace, tests: [files], why, survives?, onlyOn? }. `find` must occur exactly once in `file`;
 // `survives` (a reason) marks a survivor that is understood and accepted; if it then dies, the reason is stale and the run fails.
+// `onlyOn` (a list of process.platform values) marks a mutant whose tests can go red only there (the case-folding and invalid-UTF-8 names of the collision tests need a case-sensitive file system: Linux); elsewhere it is reported as «not run here» and is neither red nor a survivor (round 169).
 // Anything the tests create through os.tmpdir() lands in a private folder that is removed at the end; a path hard-coded outside it (a mount like /dev/shm) is not covered, so a mutant that leaks there must not name that test file.
 // Progress goes to STDERR as it happens (the baseline, then one line «[i/n] STATE id seconds» per mutant: a full run takes minutes); STDOUT holds only the final table and the count.
 // Exit 0: every mutant behaved as listed. 1: a survivor, a stale or invalid entry, or a stale explanation. 2: usage, or the
@@ -34,8 +35,10 @@ for (const m of list) {
   if (seen.has(m.id)) usage(`duplicate id ${m.id}`);
   seen.add(m.id);
   if (m.find === m.replace) usage(`entry ${m.id}: find and replace are the same`);
+  if (m.onlyOn !== undefined && !(Array.isArray(m.onlyOn) && m.onlyOn.length && m.onlyOn.every((x) => typeof x === "string" && x))) usage(`entry ${m.id}: onlyOn must be a non-empty list of platform names`);
 }
 const todo = only ? list.filter((m) => m.id === only) : list;
+const here = (m) => !m.onlyOn || m.onlyOn.includes(process.platform);
 if (!todo.length) usage(`no mutant with id ${only}`);
 
 const T = mkdtempSync(join(tmpdir(), "chicla-mutants-"));
@@ -46,7 +49,7 @@ const runTests = (files) => spawnSync(process.execPath, ["--test", ...files], { 
 const finish = (code) => { rmSync(T, { recursive: true, force: true }); process.exit(code); };
 
 // Baseline: the same tests, nothing changed. Red here means the run proves nothing.
-const files = [...new Set(todo.flatMap((m) => m.tests))];
+const files = [...new Set(todo.filter(here).flatMap((m) => m.tests))];
 const progress = (line) => console.error(`mutants: ${line}`);
 progress(`baseline: ${files.length} test file(s), ${todo.length} mutant(s) to judge`);
 const t0 = Date.now(), base = runTests(files);
@@ -65,6 +68,7 @@ for (const m of todo) {
   const original = readFileSync(target, "utf8");
   const n = original.split(m.find).length - 1;
   const row = (state, extra = "") => { rows.push(`${state.padEnd(22)}${m.id}  ${m.why}${extra}`); progress(`[${i}/${todo.length}] ${state.split(" ")[0].padEnd(8)} ${m.id}  ${((Date.now() - started) / 1000).toFixed(1)}s`); };
+  if (!here(m)) { row("not run here", ` — only on ${m.onlyOn.join("/")} (this is ${process.platform}): its tests cannot go red on this file system`); continue; }
   if (n !== 1) { bad++; row("STALE", ` — «find» found ${n} times in ${m.file}, must be exactly once`); continue; }
   try {
     writeFileSync(target, original.replace(m.find, () => m.replace));
@@ -80,5 +84,6 @@ for (const m of todo) {
   } finally { writeFileSync(target, original); }
 }
 console.log(rows.join("\n"));
-console.log(`\n${todo.length} mutant(s): ${bad ? `${bad} not as listed` : "all as listed"}`);
+const skipped = todo.filter((m) => !here(m)).length;
+console.log(`\n${todo.length} mutant(s): ${bad ? `${bad} not as listed` : "all as listed"}${skipped ? ` (${skipped} not run on ${process.platform})` : ""}`);
 finish(bad ? 1 : 0);

@@ -44,6 +44,14 @@ await new Promise((done) => {
 });
 rmSync(join(pkg, "test/slow.test.mjs"));
 
+// Round 169: `onlyOn`. A mutant for another platform is «not run here»: no red, no survivor, exit 0; on this platform it is judged as usual; a bad value is a usage error.
+r = run([KILL, { ...LIVE, onlyOn: [process.platform === "linux" ? "win32" : "linux"] }]);
+check(r.status === 0 && /not run here +neg-id/.test(r.stdout) && /1 not run on/.test(r.stdout), "onlyOn another platform: «not run here», exit 0", out(r));
+r = run([KILL, { ...LIVE, onlyOn: [process.platform] }]);
+check(r.status === 1 && /SURVIVED +neg-id/.test(r.stdout), "onlyOn this platform: judged as usual (a survivor is still exit 1)", out(r));
+r = run([KILL, { ...LIVE, onlyOn: "linux" }]);
+check(r.status === 2 && /onlyOn must be/.test(r.stderr), "onlyOn that is not a list: usage error, exit 2", out(r));
+
 r = run([KILL, LIVE]);
 check(r.status === 1 && /SURVIVED +neg-id/.test(r.stdout), "an unexplained survivor: exit 1", out(r));
 

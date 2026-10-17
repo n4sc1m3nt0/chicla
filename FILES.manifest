@@ -2,11 +2,11 @@
 .gitattributes	44424052	367
 .github/workflows/ci.yml	72813154	4036
 .gitignore	1b52e6b9	47
-CHANGELOG.md	0e6e3c62	231986
-CHICLA_PROJECT_STATUS-172.md	f9821153	104986
+CHANGELOG.md	b062f96a	233628
+CHICLA_PROJECT_STATUS-173.md	66f870f3	105693
 CLAUDE.md	4def13e4	8485
 CONTRIBUTING.md	816ec6e1	1896
-FILES.baseline.json	ff527648	30596
+FILES.baseline.json	3b74b380	30596
 LICENSE	1ea3b7b0	10174
 README.md	794913ae	10780
 ROADMAP.md	07354990	118582
@@ -21,7 +21,7 @@ docs/release.md	d8b69aa7	4536
 docs/zip-handling.md	966fea0e	14313
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	adebe29a	541
+package.json	31ffa872	541
 packages/chicla-kit/LICENSE	1ea3b7b0	10174
 packages/chicla-kit/README.md	b1bb6309	5092
 packages/chicla-kit/package.json	e4592d26	547
@@ -80,7 +80,7 @@ packages/chicla-zip/README.md	6aac183e	2859
 packages/chicla-zip/bench/small-files.mjs	ada7f228	2802
 packages/chicla-zip/bench/stream-real.mjs	a6076f12	3165
 packages/chicla-zip/bench/zip64-real.mjs	c5737f18	2654
-packages/chicla-zip/mutants/list.mjs	0446b86d	71935
+packages/chicla-zip/mutants/list.mjs	133e97d3	72293
 packages/chicla-zip/package.json	7921012d	676
 packages/chicla-zip/src/.gitkeep	00000000	0
 packages/chicla-zip/src/zipkit.mjs	cd3b3948	85014
@@ -112,7 +112,7 @@ packages/chicla-zip/test/extract.test.mjs	4596e140	13477
 packages/chicla-zip/test/fsprobe.mjs	d907955b	4114
 packages/chicla-zip/test/fsprobe.test.mjs	b83ebb4b	3651
 packages/chicla-zip/test/fsync-writable.test.mjs	30889f60	2612
-packages/chicla-zip/test/fuzz-read.test.mjs	dfcce897	12211
+packages/chicla-zip/test/fuzz-read.test.mjs	1818ea8c	12458
 packages/chicla-zip/test/interop.mjs	80f4d990	5307
 packages/chicla-zip/test/interop.test.mjs	13d8a89f	6322
 packages/chicla-zip/test/legacy-encoding.test.mjs	d36bc7fa	6093
@@ -138,7 +138,7 @@ scripts/check-build.mjs	8fd6dd42	1269
 scripts/check-manifest.mjs	960ac064	1566
 scripts/emergency-dump.mjs	caffce8f	5683
 scripts/make-delivery-zip.mjs	d7fe1000	2502
-scripts/mutants.mjs	5f2c8a56	5957
+scripts/mutants.mjs	c46d9f18	6834
 scripts/pack-release.mjs	b98fb273	3310
 scripts/recovery-report.mjs	a27285bd	2050
 scripts/smoke-test-archive-changelog.mjs	01cf108a	3158
@@ -146,7 +146,7 @@ scripts/smoke-test-bump-round.mjs	ddd7dd4e	9008
 scripts/smoke-test-check-build.mjs	b7c534cc	2758
 scripts/smoke-test-delivery-guards.mjs	f24f41cb	27592
 scripts/smoke-test-emergency.mjs	b2b1802a	13458
-scripts/smoke-test-mutants.mjs	9fbffaeb	6647
+scripts/smoke-test-mutants.mjs	ca09f5cc	7429
 scripts/verify-delivery-zip.mjs	c9881ad5	3707
 test/baseline.test.mjs	267b4a20	9983
 test/changelog-heading.test.mjs	8af49f49	794
@@ -193,4 +193,4 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	0355a32c	531
+version.mjs	8bacff84	531

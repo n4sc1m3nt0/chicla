@@ -1,5 +1,13 @@
-<!-- CHANGELOG_FINGERPRINT: seq=172 file=CHICLA_PROJECT_STATUS-172.md app_sha256_12=065d37032ef1 changelog_sha256_12=012ff744ce1f (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=173 file=CHICLA_PROJECT_STATUS-173.md app_sha256_12=065d37032ef1 changelog_sha256_12=86285fe38383 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 169 — CI and mutants triage: the Windows Node 18 fuzz cleanup, the invalid mutant, `onlyOn` (v0.0.172)
+
+- Task (Rodrigo: «mutantes e ci», then «avança»). CI log read (round 168 code): 16 of 17 jobs green; `windows (18)` had one red of 629, `fuzz-read` test 422, `ENOTEMPTY` in the TEST's own cleanup (`rmSync` of the case folder; the library's `rmBounded` is not involved). Second sighting of this flake after round 157 (`EPERM`): the two `rmSync` calls of the fuzz child now retry (`maxRetries: 8, retryDelay: 25`).
+- Mutants (Rodrigo's run, macOS): 6 «not as listed». `M4-max-bytes-passed` was INVALID on every platform (`replace: ""` left `, ,`): now `"...{}"`, RED. The other five (`C5.3b-C1`, `C5.3b-C2`, `M2-coll-files`, `M3c-utf8-name`, `M4-extract-collisions-line`) survive only on macOS: the file system refuses those zips and names, the tests skip their assertions. Run alone on Linux they are all RED. Not a test gap.
+- New: list field `onlyOn: ["linux"]` on those five; `scripts/mutants.mjs` reports a mutant for another platform as «not run here» (neither red nor survivor, exit 0, counted in the last line); bad `onlyOn` is exit 2. 3 new checks in `smoke-test-mutants.mjs`.
+- Files: `scripts/mutants.mjs` (source), `packages/chicla-zip/mutants/list.mjs`, `packages/chicla-zip/test/fuzz-read.test.mjs`, `scripts/smoke-test-mutants.mjs`. The pin did not move.
+- Seen: `fuzz-read.test.mjs` 9 of 9, `smoke-test-mutants` all green, the 6 mutants alone on Linux (Node 22). NOT run: the full mutant list (Rodrigo), CI, Node 18 and 20, Windows (the fix is unconfirmed until CI), macOS (`onlyOn` unconfirmed there).
 
 ## Round 168 — docs only: what rounds 166 and 167 had not run, now run (v0.0.171)
 
