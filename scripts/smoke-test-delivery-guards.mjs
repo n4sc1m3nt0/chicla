@@ -14,7 +14,7 @@
 //    (a clean project passes) so that a negative does not pass for the wrong reason.
 //  - It hides no failures: it counts them, prints the detail and exits 1.
 import { spawnSync } from "node:child_process";
-import { CHECK_BUILD_COPY, CHECK_MANIFEST_COPY, VERIFY_DELIVERY_COPY, copyFiles, importPinned } from "../test/toolchain-files.mjs";
+import { LOADER, CHECK_BUILD_COPY, CHECK_MANIFEST_COPY, VERIFY_DELIVERY_COPY, copyFiles, importPinned } from "../test/toolchain-files.mjs";
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { crc32, parseManifest, serializeManifest } = await importPinned("manifest");
-const COPY = [...CHECK_MANIFEST_COPY, ...CHECK_BUILD_COPY, ...VERIFY_DELIVERY_COPY, "scripts/make-delivery-zip.mjs", "packages/chicla-kit/src/make-delivery.mjs", "scripts/archive-changelog.mjs"]; // wrappers, their cores in the kit and the pinned files
+const COPY = [...CHECK_MANIFEST_COPY, ...CHECK_BUILD_COPY, ...VERIFY_DELIVERY_COPY, "scripts/make-delivery-zip.mjs", "packages/chicla-kit/src/make-delivery.mjs", LOADER, "scripts/archive-changelog.mjs"]; // wrappers, their cores in the kit and the pinned files
 const cleanup = [];
 const tmp = (p) => { const d = mkdtempSync(join(tmpdir(), p)); cleanup.push(d); return d; };
 

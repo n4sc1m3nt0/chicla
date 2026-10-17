@@ -1,6 +1,6 @@
 # Chicla — Roadmap
 
-*Side project do Rodrigo · rascunho 1 · 2026-10-07 · nasce do zipkit e do framework de workflow do Cedar (que vem do Paper Golf)*
+*Side project do Rodrigo · rascunho 1 · 2026-10-07 · nasce do zipkit e de um workflow feito à mão antes do Chicla*
 
 ## 1. O que é
 
@@ -18,24 +18,24 @@ O Chicla dá a qualquer coding agent uma memória de projeto que sobrevive a ses
 | D1 | ~~Nome Chicla~~ → **Chicla** (D22); packages `chicla-zip` (núcleo) e `chicla-kit` (framework) | decidido (2026-10-08); renomeado em 2026-10-09 |
 | D2 | O **escritor de zips** entra no âmbito desde o início | decidido |
 | D3 | Zero dependências, Node 18+, ESM, tipos por JSDoc; `zlib.crc32` quando existir, com alternativa em JS. **Why (written down in round 58; the reasons are Claude's reconstruction, confirmed by Rodrigo asking for them to be recorded):** (1) a zip is hostile input and every dependency is third-party code on that path; owning the reader, extractor and writer lets each guarantee be proved by tests and mutants; (2) the same answer on every machine with Node 18+, independent of `unzip`, `zip`, `ditto` and their versions and locales (`docs/zip-handling.md`); (3) the kit runs in fresh chats where only Node and the zip exist, so an install step would fail exactly when recovery is needed; (4) no `node_modules`, no third-party security updates, no supply-chain exposure for whoever installs from npm. Cost, accepted: a zip stack that mature libraries (`fflate`, `yauzl`) already offer, and more work for things like the terminal UI (C11.5). Scope: the core packages; an OPTIONAL separate package with dependencies (e.g. a richer terminal UI) is not excluded | decided (proposed in the first rounds; confirmed by Rodrigo, 2026-10-09; reasons recorded 2026-10-10) |
-| D4 | Repositório próprio, separado do Cedar; monorepo com dois packages versionados à parte | decided (proposed in the first rounds; confirmed by Rodrigo, 2026-10-09) |
-| D5 | O Chicla usa o seu próprio workflow desde o M0 (rondas, ficheiro de estado, fingerprints, gates), começando por copiar os scripts do Cedar tal como estão | decided (proposed in the first rounds; confirmed by Rodrigo, 2026-10-09) |
+| D4 | Repositório próprio; monorepo com dois packages versionados à parte | decided (proposed in the first rounds; confirmed by Rodrigo, 2026-10-09) |
+| D5 | O Chicla usa o seu próprio workflow desde o M0 (rondas, ficheiro de estado, fingerprints, gates), começando por copiar os scripts de origem tal como estão | decided (proposed in the first rounds; confirmed by Rodrigo, 2026-10-09) |
 | D6 | Segurança por omissão: extrai para pasta nova; o despejo só leva a raiz do projeto, o resto é opcional | decided (proposed in the first rounds; confirmed by Rodrigo, 2026-10-09) |
-| D7 | O `/dump` nunca falha por causa do Chicla: mantém-se um caminho de emergência com `zip`/`tar` | regra herdada do Cedar |
+| D7 | O `/dump` nunca falha por causa do Chicla: mantém-se um caminho de emergência com `zip`/`tar` | regra herdada |
 | D8 | ~~Mensagens por chaves (pt e en)~~ **Substituída por D18** | cancelada (2026-10-08) |
 | D9 | Licença | decidida: Apache-2.0 (D46, 2026-10-11); G-C2 fechado por Rodrigo (2026-10-12) |
 | D10 | `chicla update` existe mas é sempre manual (diff e confirmação); atualizações automáticas continuam fora de âmbito | decided (proposed in the first rounds; confirmed by Rodrigo, 2026-10-09) |
 | D11 | Windows fora de âmbito no 0.1, mas o CLI recusa com mensagem clara (C11.4); a decisão de um marco próprio fica em G-C4 | decided (proposed in the first rounds; confirmed by Rodrigo, 2026-10-09) |
 | D12 | Distribuição por GitHub, sem npm: repositório público, instalação com `npm i github:<utilizador>/chicla#v0.1.0` ou `.tgz` de um release; o `chicla update` (C11.3) trata das atualizações | decidido (2026-10-08); the «sem npm» part is replaced by D41 (2026-10-10) |
 | D13 | A versão da app é o `version` do `package.json` da raiz e sobe em cada entrega; a perna app do fingerprint é `version.mjs`; as versões de `chicla-zip` e `chicla-kit` (D4) só mudam nos lançamentos | decidido (2026-10-08); confirmado por Rodrigo (2026-10-08) |
-| D14 | Os ficheiros do workflow (`CLAUDE.md`, estado, `CHANGELOG.md`, `ROADMAP.md`, `FILES.manifest`) ficam na raiz, como no Cedar: os scripts procuram-nos aí e o Claude Code só carrega o `CLAUDE.md` da raiz | decidido (2026-10-08) |
+| D14 | Os ficheiros do workflow (`CLAUDE.md`, estado, `CHANGELOG.md`, `ROADMAP.md`, `FILES.manifest`) ficam na raiz: os scripts procuram-nos aí e o Claude Code só carrega o `CLAUDE.md` da raiz | decidido (2026-10-08) |
 | D15 | Orçamento de desempenho para 20 000 ficheiros pequenos: **3×** o `unzip` em tmpfs (era 2×). Razão: os cortes baratos esgotaram-se na ronda 9; chegar a 2× pedia um desenho maior (worker threads) com riscos que não compensam. Reabre-se só se o 3× deixar de se cumprir | decidido (Rodrigo, 2026-10-08) |
 | D16 | Colisão de nomes equivalentes num sistema de ficheiros que as funde: erro `ECOLLISION`, nada escrito (a extração é atómica); nunca escrever por cima de um ficheiro já extraído do mesmo zip. Corrige o texto de §5 | decidido (Claude, por delegação de Rodrigo, 2026-10-08); confirmado por Rodrigo, 2026-10-09 |
 | D17 | O Chicla não apaga pastas `.chicla-tmp-*` que não criou nesta chamada: apagar por padrão de nome na pasta de alguém é pior do que um resto visível após um crash (`SIGKILL`). O resto fica documentado; quem quiser, apaga à mão | decidido (Claude, por delegação de Rodrigo, 2026-10-08); confirmado por Rodrigo, 2026-10-09 |
 | D18 | Messages are English only: no pt/en keys, no translation layer. Tests assert error `code`s, never message text. Replaces D8; the CLAUDE.md rule 6 follows | decided (Rodrigo, 2026-10-08) |
 | D19 | Windows becomes its own milestone, M14, after the 0.1 line (**«after the 0.1 line» replaced by D50, round 92: M14 is built before 0.1**); until it is done the CLI refuses with a clear message (C11.4). Replaces the open question of D11 | decided (Rodrigo, 2026-10-08); G-C4 stays his to close |
 | D20 | A deflate entry with 0 bytes of data is refused (as `unzip` does); an empty file is a stored entry or the 2-byte stream `03 00` | decided (Rodrigo, 2026-10-08); implemented in round 16 |
-| D21 | Cedar is where the workflow was built by hand the second time (after Paper Golf) and where the idea of a distributable package came from; it will be the first project to use the package (C13.1). The projects stay separate: Cedar's own rounds and decisions are tracked in Cedar | decided (Rodrigo, 2026-10-08) |
+| D21 | Cedar is where the workflow was built by hand the second time (after Paper Golf) and where the idea of a distributable package came from; it was to be the first project to use the package (C13.1). The projects stay separate | decided (Rodrigo, 2026-10-08); **SUPERSEDED (Rodrigo, 2026-10-16, D117): Cedar has nothing to do with this project; C13.1 is cancelled and §8 is removed; this row stays only as history** |
 | D22 | The project and the command are called **Chicla**: packages `chicla-zip` and `chicla-kit`, status file `CHICLA_PROJECT_STATUS-N.md`, delivery zips `chicla-roundN-YYYY-MM-DD.zip`, env vars `CHICLA_*`, temp folders `.chicla-tmp-*`, recovery marker `chicla-recovery-v1`. Replaces D1. History (older CHANGELOG entries, `docs/audits/AUDIT-1.md`) keeps the old name verbatim | decided (Rodrigo, 2026-10-09); implemented in round 17 |
 | D23 | The npm names `chicla`, `chicla-zip` and `chicla-kit` are reserved with `0.0.0` placeholders (README only, `UNLICENSED`, no `bin`), published by Rodrigo from his own account. This amends D12 only on the name: distribution stays GitHub-first and no real release goes to npm until Rodrigo decides. Homebrew has no reservation; a personal tap `<user>/homebrew-chicla` is created at the first release (C5.5), homebrew-core is not a goal | decided (Rodrigo, 2026-10-09); npm placeholders published by Rodrigo on 2026-10-09 (registry shows `0.0.0-stage`, not `0.0.0`; harmless); G-C1 stays his to close |
 | D24 | The repository is `https://github.com/n4sc1m3nt0/chicla` (Rodrigo's own account, created 2026-10-09). Whether it is public was NOT verified from the session (GitHub is not reachable from here); G-C1 asks for public so recovery works in a clean chat. The Homebrew tap `n4sc1m3nt0/homebrew-chicla` is created at the first release, not before | stated by Rodrigo (2026-10-09) |
@@ -123,6 +123,13 @@ O Chicla dá a qualquer coding agent uma memória de projeto que sobrevive a ses
 | D113 | M14 (round 156): a new card C14.7, after D112: diagnose and fix the dump and recovery tests that fail on Windows (19 of the 34 `chicla-kit` failures: `cli-recovery` 10, `cli-dump` 7, `core-emergency-dump` 1 and one more; cause not known yet), BEFORE C14.5 slice (b), so the support statement can say what the kit does there. Suggestion: yes | CONFIRMED by Rodrigo (2026-10-15, round 156, «d113 sim»); card C14.7 added in round 156 |
 | D114 | M14 C14.5 slice (b) (round 159), calls made on delegation: (1) the support statement is for `chicla-zip` ONLY (D108): supported on Node 18, 20 and 22, proven by CI on `windows-latest`, not by hand on a real PC, and it says so; (2) `chicla-kit` also has 169 of 169 green on that job (round 158 log) but is NOT declared supported: the dump and recovery have never run on a real Windows machine and G-C4 and G-C11 are Rodrigo's; (3) C11.4 is closed as never built; (4) paths over 260 characters and FAT/exFAT are named as not covered. Suggestion: yes to all | CALLS MADE ON DELEGATION, CONFIRMED by Rodrigo (2026-10-16, round 160, «d114 sim») |
 | D115 | Flip the `windows` job in `ci.yml` to blocking (D99's own rule: green on 18, 20 and 22). `chicla-zip` has been at 0 red since round 153; `chicla-kit` was at 0 red once (round 158 log) and a `fuzz-read` `EPERM` flake showed once on Node 18 (round 157). Suggestion: yes, in a small round of its own (`ci.yml` and `test/ci.test.mjs` only), after the NEXT log is also green | CONFIRMED by Rodrigo (2026-10-16, round 160, «d115 sim») as suggested: built after the NEXT `windows` log is also green, in a round of its own; BUILT in round 161 (`ci.yml`: `continue-on-error` removed from the `windows` job, kit step renamed; `test/ci.test.mjs` 2 tests changed and 2 new, 7 hand mutants red); the condition was met by the logs of rounds 158 and 160 |
+| D116 | Release tags (round 163, `docs/release.md`): one tag per package, `chicla-zip-v0.1.0` and later `chicla-kit-v0.1.0`, because the packages are versioned apart (D4); G-C6 said `v0.1.0` | CONFIRMED by Rodrigo (2026-10-16, «d116 sim»); he also decided that nothing is published until both packages are ready |
+| D117 | Cedar is removed from the plan (round 163): §8 removed, C13.1 cancelled, the wording of C10.4, C12.3 and the origin notes changed; the rows of old decisions that name it as history (D21 marked superseded, D63 to D65, the C0.2 and C6.1 history) are kept, because history is never deleted | CONFIRMED by Rodrigo (2026-10-16, «remove isso do roadmap») |
+| D118 | Mutant `C5.3b-A15` (round 163): since round 151 (D103, `closedStream(sink)` in the catch) the mutant that removes the early `dataStart` check in the streamed extraction SURVIVES, so no test pins that line any more. Probably equivalent now (the catch closes the stream and removes the file), not proven. Four anchors of the list were stale since round 151 (A1, A15, A6, M3c); they were re-anchored in round 163 (text only, none removed). Suggestion: try a test that makes the difference observable (a bad local header, then check no file is left); if there is none, add `survives` with the reason. Until then `npm run mutants` exits 1 | CONFIRMED by Rodrigo (2026-10-16, «d118 sim»); round 164: no test can tell the difference (the catch closes the stream and removes the file), so `C5.3b-A15` got `survives` with the reason, and a static test now fails `npm test` if any anchor of the list goes stale |
+| D119 | C12.1 calls made on delegation (round 164): `chicla init` writes `CLAUDE.md` and `AGENTS.md` from `packages/chicla-kit/templates/`; it NEVER overwrites (any existing target, even a folder or a link, refuses the whole run with `EEXIST` and writes nothing; replacing is `chicla update`, C11.3); it does not create the status file or the fingerprint yet; the templates may only name commands that exist (a test ties them to the CLI). Rodrigo's call: nothing is published before both packages are ready; the mutant runs are his, on his machine (G-C14) | made on delegation, Rodrigo reviews |
+| D120 | C12.7 calls made on delegation (round 165): the generated `version.mjs` carries its own `APP_VERSION` (it does not read a `package.json`, which a new project may not have); the fingerprint hashes are NOT computed by `init`: it writes placeholders and runs the kit's own `bump-round --refresh`, so there is one definition of the fingerprint; any existing target or any status file refuses the whole run; the status template carries the 11 instructions because the paragraph `bump-round` writes points to «item 11» | made on delegation, Rodrigo reviews |
+| D121 | C13.5 calls made on delegation (round 166): the kit tries `import("chicla-zip")` first and uses the monorepo path only when that package is missing (a bare checkout, a dump tool folder); any other error is passed on; the dependency range is `^0.1.0`; the pinned `recovery-report` keeps its own relative path (it runs alone from a dump, the pin did not move); CI job `pack-kit` beside `pack`; the kit stays `0.0.0` (not released) | made on delegation (Rodrigo confirmed every decision of the session in advance, 2026-10-17) |
+| D122 | C12.5 and C12.6 calls made on delegation (round 167): the matrix holds claude, codex, gemini and copilot only; `--agent` ADDS the agent's file to the default set (CLAUDE.md, AGENTS.md and the state files stay), so every agent file can point to files that exist; the agent files carry the body of `AGENTS.md` (the rules are written once); `.github/` is created if missing and removed again on a failed run; an unknown name is exit 2 `EAGENT`; Cursor, Cline and Antigravity read `AGENTS.md` and need no entry, Windsurf and Continue are not confirmed and stay out | made on delegation (Rodrigo confirmed every decision of the session in advance, 2026-10-17) |
 | D48 | C7.1 slice b + C7.2 (round 71), PROPOSED by Claude; Rodrigo's four answers (2026-10-11, «1 sim, 2 sim, 3 sim, 4 sim»): (1) `check-manifest --write` writes **v2** now (path, crc32, size; no sha256, which lives in `FILES.baseline.json`, D43); (2) `verify-delivery-zip` compares crc32 and size of every listed file with the zip's **central directory**, without decompressing, and refuses any difference: `EMANIFEST_SIZE` (checked first) and `EMANIFEST_CRC32`; (3) a v1 manifest (an old zip, `--against`) is still accepted and only paths are compared; (4) the slice fits the rules (3 source files: `manifest.mjs` gets the shared `crc32`, `check-manifest`, `verify-delivery-zip`). CALLS MADE ON DELEGATION, all three CONFIRMED by Rodrigo the same day («a sim, b sim, c sim»): (a) `FILES.baseline.json` stays LISTED in the manifest but is EXEMPT from the crc32/size check, because the baseline hashes the manifest and the manifest cannot hold the crc of the baseline (circular); its own seal and `EBASELINE_*` cover it, and the crc32/size written for it is whatever was on disk at `--write` time; (b) two codes instead of one, so a test can tell a size lie from a content lie; (c) NOT built: a crc32 comparison between this zip and the previous one (`--against` stays names only: a changed file with the same path is normal). | CONFIRMED by Rodrigo (2026-10-11): the four answers and (a) to (c); PROPOSED by Claude |
 | D47 | macOS test policy (round 66): tests that need a file system or tool feature the machine lacks are SKIPPED with a reason, decided by a MEASURED probe (`test/fsprobe.mjs`), never by the platform name; the product is not changed to suit a test | CONFIRMED by Rodrigo (2026-10-11); PROPOSED by Claude |
 | D46 | Licence Apache-2.0 (G-C2, round 65): `LICENSE` in the root (terms only, no holder named), `"license": "Apache-2.0"` in the root and both packages; `CLAUDE.md` rule 5 follows. Nothing is published by the AI (rule 4) | stated by Rodrigo (2026-10-11, «license quero apache») |
@@ -133,7 +140,7 @@ O Chicla dá a qualquer coding agent uma memória de projeto que sobrevive a ses
 
 ## 3. Regras de ferro
 
-(Herdadas do Cedar, adaptadas.)
+(Herdadas, adaptadas.)
 
 1. **Testes primeiro.** Cada cartão começa por testes que falham; se passarem antes do código, o teste não protege nada.
 2. **Estragar de propósito.** No fim de cada marco, quebrar cada garantia e ver o teste respetivo ficar vermelho; depois automatizar a lista de mutantes.
@@ -195,7 +202,7 @@ Tamanhos: S (ronda curta), M (uma ronda). Cada cartão escreve os testes antes.
 | ID | Cartão | Tam. |
 | --- | --- | --- |
 | C0.1 | Repo, workspaces, CI com Node 18/20/22 em Linux e macOS | S |
-| C0.2 | Copiar para o repo os 8 scripts do Cedar (bump-round, check-manifest, check-build, make/verify-delivery, archive-changelog, emergency-dump, recovery-report) e os 5 testes de fumo. Ajustes: nomes, `package.json` como marcador de raiz, `version.mjs` como perna app do fingerprint (D13), `check-build` passa a `node --check` e sai a regra `target/` do Cargo. Ainda usam `unzip` e `zip` | S |
+| C0.2 | Copiar para o repo os 8 scripts de origem (bump-round, check-manifest, check-build, make/verify-delivery, archive-changelog, emergency-dump, recovery-report) e os 5 testes de fumo. Ajustes: nomes, `package.json` como marcador de raiz, `version.mjs` como perna app do fingerprint (D13), `check-build` passa a `node --check` e sai a regra `target/` do Cargo. Ainda usam `unzip` e `zip` | S |
 | C0.3 | `CLAUDE.md`, `CHICLA_PROJECT_STATUS-1.md`, `CHANGELOG.md` com fingerprint, este roadmap | S |
 | C0.4 | Messages and comments of the inherited scripts in `scripts/` from Portuguese to English (D18); their smoke tests must stay green. In slices (D36, rule 16 of 3 files): **a** `archive-changelog` + its smoke test (done, round 44); **b** `check-build` + smoke (done, round 45); **c** `bump-round` + smoke (done, round 46); **d** `make-delivery-zip`, `check-manifest`, `verify-delivery-zip` + `smoke-test-delivery-guards` (done, round 47); **e** `emergency-dump`, `recovery-report` + `smoke-test-emergency` (done, round 48; C0.4 closed) | S |
 
@@ -308,7 +315,7 @@ Tamanhos: S (ronda curta), M (uma ronda). Cada cartão escreve os testes antes.
 | C10.1 | `bump-round` configurável (nome do ficheiro de estado, caminhos) | M |
 | C10.2 | Perna «toolchain» no fingerprint (hash dos scripts) | S |
 | C10.3 | Documentar que fingerprints e CRC são integridade, não autenticidade | S |
-| C10.4 | Especificar as pernas do fingerprint em `docs/fingerprint.md`: o que cada perna cobre e como se calcula, extraído dos scripts do Cedar; teste que falha se a spec e o código divergirem | S |
+| C10.4 | Especificar as pernas do fingerprint em `docs/fingerprint.md`: o que cada perna cobre e como se calcula, extraído dos scripts do projeto; teste que falha se a spec e o código divergirem | S |
 | C10.5 | Formato do ficheiro de estado em `docs/state-file.md`: secções obrigatórias e o que a sessão seguinte lê primeiro; validação no `bump-round` (recusa um ficheiro de estado incompleto) | M |
 
 ### M11 — CLI do kit, atualização e Windows
@@ -327,19 +334,21 @@ Tamanhos: S (ronda curta), M (uma ronda). Cada cartão escreve os testes antes.
 | --- | --- | --- |
 | C12.1 | `chicla init` com templates de instruções: `CLAUDE.md` e `AGENTS.md` (confirmar quais agentes o leem à data) | M |
 | C12.2 | `/dump` como comando do Claude Code; para os outros, regra de texto | S |
-| C12.3 | Ciclo completo (dump → recovery → entrega) num projeto-modelo que não é o Cedar | M |
+| C12.3 | Ciclo completo (dump → recovery → entrega) num projeto de exemplo | M |
 | C12.4 | Caminhos configuráveis (`/home/claude`, outputs) em vez de fixos | S |
-| C12.5 | Matriz de agentes confirmada à data: que ficheiro de instruções lê cada um, como se invoca o `/dump` e onde ficam os caminhos; só entram na matriz os agentes confirmados | S |
-| C12.6 | `chicla init --agent <nome>` para cada agente da matriz, com teste de que o ficheiro gerado fica no sítio certo e contém as regras (estado, política, dump) | M |
+| C12.5 | Matriz de agentes confirmada à data: que ficheiro de instruções lê cada um, como se invoca o `/dump` e onde ficam os caminhos; só entram na matriz os agentes confirmados | S · feito (round 167, D122; `agents.mjs`, `init --agent`; matrix from a third-party survey, G-C15) |
+| C12.6 | `chicla init --agent <nome>` para cada agente da matriz, com teste de que o ficheiro gerado fica no sítio certo e contém as regras (estado, política, dump) | M · feito (round 167, D122; `agents.mjs`, `init --agent`; matrix from a third-party survey, G-C15) |
+| C12.7 | `chicla init` also generates the state files (`CHICLA_PROJECT_STATUS-1.md`, `CHANGELOG.md`, `version.mjs`, `FILES.manifest`), consistent from the start; test: a fresh project passes `bump-round --verify` and `check-manifest` and closes a round (found in round 164, built in round 165) | S |
 
 ### M13 — Migração e lançamento
 
 | ID | Cartão | Tam. |
 | --- | --- | --- |
-| C13.1 | Migrar o Cedar para o Chicla, um script de cada vez | M |
+| C13.1 | ~~Migrar o Cedar para o Chicla, um script de cada vez~~ cancelled by Rodrigo (2026-10-16, D117): Cedar has nothing to do with this project | — |
 | C13.2 | `SECURITY.md`, `CONTRIBUTING`, documentação de utilizador | M |
 | C13.3 | ~~Mensagens por chaves pt/en~~ cancelled by D18 | — |
 | C13.4 | Gates G-C6 e G-C7 → lançar `chicla-kit` 0.1.0 (tag e release no GitHub) | gate |
+| C13.5 | Kit packaging for npm: `LICENSE`, `files`, `repository` in its `package.json`, a `pack` job for it, and the kit reaching `chicla-zip` by package name (`dependencies`) instead of `../../chicla-zip/src/zipkit.mjs`, without breaking the pinned `recovery-report` that runs alone from a dump (found in round 164) | M · feito (round 166, D121; `zipkit-loader.mjs`, kit `package.json`, `pack-kit` job; the tarball is not seen on GitHub yet) |
 
 
 ### M14 — Windows (D19; decided 2026-10-08; built BEFORE 0.1, D50 reworded in round 92)
@@ -365,12 +374,9 @@ Tamanhos: S (ronda curta), M (uma ronda). Cada cartão escreve os testes antes.
 
 Daqui para a frente, a ordem decide-se com o que os testes mostrarem.
 
-## 8. Relationship with Cedar (rewritten 2026-10-08, D21)
+## 8. (Removed, Rodrigo, 2026-10-16, D117)
 
-- Cedar is the second project where Rodrigo built this workflow by hand (the first was Paper Golf). The idea of a distributable package came from there, and Cedar will use Chicla while it is developed (C13.1 migrates it, one script at a time).
-- The two are separate projects. Cedar's rounds (its PDF engine, its own zip work) are tracked in Cedar and are not blocked by Chicla.
-- The scripts of C0.2 come from `cedar-round1s-passo5-2026-10-07.zip`. Until M6 and M13 there are two copies evolving, Cedar's and Chicla's.
-- The previous wording of this section (advice on closing Cedar's round 1s) is in the delivery zips up to round 15; the original plan is `docs/zipkit-plan-ronda-1s.md`.
+This section described a relationship with another project that has nothing to do with Chicla. It was removed; the older wording is in the delivery zips up to round 162.
 
 ## 9. Gates (só tu)
 
@@ -380,14 +386,16 @@ Daqui para a frente, a ordem decide-se com o que os testes mostrarem.
 | G-C2 · Licença (FECHADO por Rodrigo, 2026-10-12) | Escolhida: Apache-2.0 (D46, 2026-10-11); `LICENSE` posto na ronda 65; fechas o gate (e podes dar o titular do copyright) |
 | G-C3 · macOS | Correr as suites no teu Mac (Node 18+); inclui, desde a ronda 43, a fusão com `overwrite` num disco exFAT/FAT (o recuo por cópia do C2.7 não foi corrido) |
 | G-C4 · Windows | Decidir: fora de âmbito declarado, ou um marco próprio mais tarde. Rodrigo's answer (2026-10-08): own milestone, M14 (D19); he marks the gate done. M14 started in round 140 (C14.1 done; Windows line added to §12, D62) |
-| G-C5 · Revisão de segurança | Rever o leitor e o extrator (e, se possível, outra pessoa ou ferramenta) antes de publicar |
-| G-C6 · Lançamento | Tag `v0.1.0` e release no GitHub com o `.tgz` de cada package (`npm pack`) e o sha256 nas notas; publicação também no npm (D41), feita pelo Rodrigo e só depois de G-C2 |
-| G-C7 · Ensaio | `/dump` e recovery num chat limpo e com pelo menos um agente que não seja o Claude; recovery SEM o zip da última entrega (C9.6, `FILES.baseline.json`) |
+| G-C5 · Revisão de segurança | Rever o leitor e o extrator (e, se possível, outra pessoa ou ferramenta) antes de publicar | given to ChatGPT by Rodrigo (2026-10-16); open until he marks it |
+| G-C6 · Lançamento | Tag `v0.1.0` e release no GitHub com o `.tgz` de cada package (`npm pack`) e o sha256 nas notas; publicação também no npm (D41), feita pelo Rodrigo e só depois de G-C2. Passo a passo para o `chicla-zip` 0.1.0 em `docs/release.md` (round 163); o `chicla-kit` ainda não é publicável |
+| G-C7 · Ensaio | `/dump` e recovery num chat limpo e com pelo menos um agente que não seja o Claude; recovery SEM o zip da última entrega (C9.6, `FILES.baseline.json`) | CLOSED by Rodrigo (2026-10-16): the rehearsal was done by ChatGPT; not verified by Claude |
 | G-C10 · Job `pack` | Fazer push da ronda 75 e ver o job `pack` verde no GitHub; descarregar o artefacto `chicla-zip-tarball` e correr `sha256sum -c` |
-| G-C11 · Recovery on the new layout | After slice 6b of C11.1 (D91): repeat `/dump` and «recovery mode» in a clean session, with the dump taken from the new `src/pinned/` layout; the start line of item 17 must pass the digest check and `recovery-report` must run (proposed in round 127; Rodrigo marks it) |
+| G-C11 · Recovery on the new layout | After slice 6b of C11.1 (D91): repeat `/dump` and «recovery mode» in a clean session, with the dump taken from the new `src/pinned/` layout; the start line of item 17 must pass the digest check and `recovery-report` must run (proposed in round 127; Rodrigo marks it) | CLOSED by Rodrigo (2026-10-16): done by ChatGPT; not verified by Claude |
 | G-C12 · The panel on a real terminal | Run `chicla` with no arguments in a real terminal (macOS and Linux) from the project folder: the four pages open, →/←/Tab/q work, the cursor and the terminal are back after `q` and after Ctrl-C; then `chicla check-manifest` shows the coloured marks and `chicla check-manifest | cat` shows none (proposed in round 139; Rodrigo marks it) | open |
 | G-C13 · The `windows` CI job on GitHub | Push round 142 and open the `windows` job of the CI run: does it start (7-Zip on PATH, `python3.exe`, readers found), and what does the chicla-zip suite say on Node 18, 20 and 22? Send the failing test names to Claude: they are the input of C14.3. Proposed in round 142; Rodrigo marks it | open |
 | G-C8 · Windows real | Run the M14 suites on a real Windows machine (Node 18+), and report |
+| G-C14 · Full mutant run | Rodrigo runs it on his machine (2026-10-16): run `npm run mutants` on the round 164 tree (30+ min, one CPU: start it in the background) and send the last lines of the output: the criterion «mutantes todos vermelhos» of §12 for `chicla-zip` 0.1. Round 163 judged only 76 of 250 (all as listed except `C5.3b-A15`, D118); the other 174 were NOT run (proposed in round 163; Rodrigo marks it) | open |
+| G-C15 · Agent matrix | Rodrigo checks the four entries of the matrix on the vendors' own pages (round 167 read a third-party survey) and decides on Cursor and Windsurf | open |
 
 ## 10. Riscos
 
@@ -435,7 +443,7 @@ Não testado: zip64, macOS, ficheiros acima de 4 GiB, cabeçalho local diferente
 
 ## 14. Open questions (updated 2026-10-08)
 
-1. ~~Cedar round 1s~~ Cedar's own decision, tracked in Cedar (D21).
+1. ~~(removed 2026-10-16, D117)~~
 2. Licence (G-C2): left open on purpose by Rodrigo.
 3. ~~Command and project name~~ **Chicla**, decided by Rodrigo on 2026-10-09 (D22); `chicla` was dropped because npm `chicla-cli` installs a `chicla` command and PyPI has `chicla`. Checked on 2026-10-08: no npm package `chicla`, `chicla-cli`, `chiclakit`, `@chicla/cli`; nothing on PyPI, crates.io, Homebrew core or cask. The GitHub user `chicla` exists, which does not matter: the repository lives in Rodrigo's own account. Not checked: domains, trademarks, other package managers. «Chicla» is also a place name (a district in Peru).
 4. ~~Messages pt/en~~ English only (D18).

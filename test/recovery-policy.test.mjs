@@ -1,5 +1,5 @@
 // C6.1 slice b (round 94): recovery-report compares a recovered tree with the baseline using the shared policy (src/pinned/policy.mjs):
-// junk and secrets are never listed as «New»; a corpus/ folder is a normal folder (D64, no Cedar rule).
+// junk and secrets are never listed as «New»; a corpus/ folder is a normal folder (D64).
 // The dump is written by Python (an independent writer). Tests assert the file lists, not wording.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

@@ -19,7 +19,7 @@ test('neverShipReason: what never leaves, and why', () => {
   assert.equal(r('x/__pycache__/m.cpython-312.pyc'), 'Python artefact');
   assert.equal(r('tool.pyc'), 'Python artefact');
   assert.equal(r('.venv/bin/python'), 'Python artefact');
-  // D64: the corpus folders inherited from Cedar are no rule of Chicla (Cedar returns, if at all, as a preset after Chicla is finished)
+  // D64: corpus folders are no rule of Chicla
   for (const p of ['corpus/real-world/a.pdf', 'corpus/huge/b/c.bin', 'corpus/huge/.gitkeep', 'docs/corpus/real-world/a.pdf']) assert.equal(r(p), null, p);
   assert.equal(r('packages/chicla-zip/src/zipkit.mjs'), null);
   assert.equal(r('.envrc'), null, '.envrc is not .env');
@@ -47,7 +47,7 @@ test('check-manifest and verify-delivery-zip keep no private copy of the rules',
   }
 });
 
-test('D64: no script names a Cedar corpus folder in code, and the rules stay in policy.mjs', () => {
+test('D64: no script names a corpus folder in code, and the rules stay in policy.mjs', () => {
   for (const f of [PINNED.policy, 'scripts/check-manifest.mjs', 'packages/chicla-kit/src/check-manifest.mjs', 'packages/chicla-kit/src/verify-delivery.mjs', PINNED['recovery-report'], 'scripts/emergency-dump.mjs', 'packages/chicla-kit/src/emergency-dump.mjs']) { // C11.1 5f: the dump code lives in the kit
     const s = read(f).split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
     assert.doesNotMatch(s, /real-world|corpus\/huge|\bcorpus\b|private corpus|PRIVATE_RE|isPrivate/i, `${f} has no corpus rule`);

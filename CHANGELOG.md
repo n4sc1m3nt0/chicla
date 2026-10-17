@@ -1,5 +1,46 @@
-<!-- CHANGELOG_FINGERPRINT: seq=166 file=CHICLA_PROJECT_STATUS-166.md app_sha256_12=065d37032ef1 changelog_sha256_12=5bcfdb2f6f57 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=172 file=CHICLA_PROJECT_STATUS-172.md app_sha256_12=065d37032ef1 changelog_sha256_12=012ff744ce1f (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 168 — docs only: what rounds 166 and 167 had not run, now run (v0.0.171)
+
+- Task (Rodrigo: «corre o smoke e depois atualiza os docs»). Seen on the round 167 tree, Node 22, Linux, one machine: the whole `npm test` 1150 tests, 1149 pass, 0 fail, 1 skipped (as before), ~6m27s; `npm run smoke` all green (67 checks, exit 0). This includes `packaging.test.mjs` and `init-agent.test.mjs`, which had never been seen green, and the old `init.test.mjs` against the new `init.mjs`. No source, no test and no template changed; the pin did not move.
+- The entries of rounds 166 and 167 below still say «never seen green» and «NOT run»: that was true when they were written and they are kept (history is never deleted); this entry corrects them.
+- Still NOT run: any mutant run and the hand mutants of C12.6 (Rodrigo runs the mutants, G-C14), CI (`pack-kit` never seen), Node 18 and 20, macOS, Windows, G-C5, G-C15.
+
+## Round 167 — C12.5 and C12.6: the agent matrix and `chicla init --agent` (v0.0.170)
+
+- Task (Rodrigo: «avança»; the «Next up» suggestion). New `src/agents.mjs` (matrix: `claude` CLAUDE.md, `codex` AGENTS.md, `gemini` GEMINI.md, `copilot` .github/copilot-instructions.md; `resolveAgents`); `init.mjs` takes `agents` and adds the files of `gemini` and `copilot` to the default set (never overwrites, all or nothing, `.github/` removed again if this run made it); `cli.mjs`: repeatable `--agent <name>`, unknown name exit 2 `EAGENT`. Templates `GEMINI.md` and `copilot-instructions.md` have the body of `AGENTS.md` (one body). Kit README: «Agents». The pin did not move.
+- Tests first: `init-agent.test.mjs` (12, 11 red first). Matrix confirmed only in a third-party survey of the tools' documentation (the vendors' pages were not fetched): gate G-C15; Cursor, Cline and Antigravity read `AGENTS.md` and Windsurf and Continue are NOT in the matrix. D122 made on delegation.
+- Rodrigo said «não corras testes»: after the red run of the new file, NO test, mutant or smoke run was done; the new tests were never seen green, and no hand mutants were made.
+- NOT run: `npm test` (all of it, including `init-agent.test.mjs` and the old `init.test.mjs`), mutants, `npm run smoke`, CI, Node 18 and 20, macOS, Windows, G-C5. Nothing is published.
+
+## Round 166 — C13.5: `chicla-kit` reaches `chicla-zip` by package name and is packable (v0.0.169)
+
+- Task (Rodrigo, 2026-10-17: «last stretch… confirmo todas as decisões, não peças mais confirmação», no task named, so "Next up" suggestion C13.5). New `src/zipkit-loader.mjs` (`loadZipkit`: `import("chicla-zip")` first, the monorepo path only when that package is not installed, any other error passed on); `make-delivery.mjs` and `emergency-dump.mjs` use it (3 source files, 1 new; the pinned `recovery-report` is untouched, the pin did not move). Kit `package.json`: `dependencies` `chicla-zip ^0.1.0`, `files`, `repository`; `LICENSE` copied; CI job `pack-kit`.
+- Tests first: `packaging.test.mjs` (11, all red first; one installs both tarballs into a clean folder offline and loads the writer by name) and a `pack-kit` test in `ci.test.mjs`. 7 hand mutants of the loader: 4 red at once, 3 survived (the test importer threw on every call), tightened, all red. Guard tests of the dump and make-delivery cores, `layout.test.mjs` (the kit's one dependency is ours) and the smoke copy list (`LOADER`) updated. D121 made on delegation.
+- NOT run: whole `npm test` (Rodrigo runs it), any mutant run, `npm run smoke`, CI (`pack-kit` never seen running), Node 18 and 20, macOS, Windows, G-C5. Nothing is published.
+
+## Round 165 — C12.7: `chicla init` generates the state files (v0.0.168)
+
+- Task (Rodrigo: «sim, por favor… atar estas pontas soltas»). `chicla init` now also writes `CHICLA_PROJECT_STATUS-1.md`, `CHANGELOG.md`, `version.mjs` and `FILES.manifest`, consistent from the first second: it writes placeholder hashes and runs the kit's own `bump-round --refresh`, so there is one definition of the fingerprint. Source: `init.mjs`, `cli.mjs` (help text only); the pin did not move.
+- Tests first: `init.test.mjs` rewritten (12, 9 red first). Acceptance: a fresh project passes `bump-round --verify` and `check-manifest`, through the core and through the CLI, and closes a round. 6 hand mutants: 5 red; the survivor (a redundant final verify) was removed as dead code.
+- New card C12.7 (done) and D120 (made on delegation). Still open for the kit: C13.5 packaging, C12.6, C11.3, C10.4, C10.5.
+- NOT run: any mutant run (Rodrigo's), `npm run smoke`, CI, Node 18 and 20, macOS, Windows, G-C5. Nothing is published.
+
+## Round 164 — C12.1 `chicla init`, D116 and D118 closed, round 163 findings fixed (v0.0.167)
+
+- Task (Rodrigo: «avança com c12.1»). `chicla init` writes `CLAUDE.md` and `AGENTS.md` from `packages/chicla-kit/templates/`; it never overwrites (EEXIST refuses the whole run, all or nothing). Source files: `init.mjs` (new), `cli.mjs`; the pin did not move.
+- Tests first: `init.test.mjs` (8, red first; it caught a template naming a command that does not exist) and `docs-accuracy.test.mjs` (4). 6 hand mutants: 5 red, 1 survived by design (the `init` pre-check is redundant with `O_EXCL` plus rollback).
+- Fixed what round 163 found outside its task: `docs/zip-handling.md` §7, the old project name in 4 tests. D116 and D118 confirmed; `C5.3b-A15` has `survives`; a static test fails if a mutant anchor goes stale. New card C13.5 (kit packaging); G-C14 is Rodrigo's.
+- NOT run: any mutant run, `npm run smoke`, CI, Node 18 and 20, macOS, Windows, G-C5. Nothing is published.
+
+## Round 163 — release prep: `chicla-zip` 0.1.0, SECURITY.md, CONTRIBUTING.md, kit README, G-C6 runbook, Cedar out (v0.0.166)
+
+- Task (Rodrigo: «podes correr a ronda 163 com tudo isto»). Eighteenth CI log read (round 162 code): green on every job, Windows 0 red on Node 18, 20, 22. No source file changed; the pin did not move.
+- `packages/chicla-zip/package.json` 0.0.0 to 0.1.0 (not published); `SECURITY.md`, `CONTRIBUTING.md`, `packages/chicla-kit/README.md`, `docs/release.md` (G-C6 steps, tags per D116); ROADMAP: Cedar removed (D117), G-C7 and G-C11 recorded as closed by Rodrigo (done by ChatGPT, not verified by Claude), G-C5 given to ChatGPT, G-C14 and D116, D118 proposed.
+- Tests first: `release-docs.test.mjs` (5) and 3 version assertions changed, all red first; 5 hand mutants of the new docs red.
+- Found: 4 mutants of `chicla-zip/mutants/list.mjs` had stale anchors since round 151; re-anchored (text only). `C5.3b-A15` now SURVIVES (D118); `npm run mutants` exits 1 until it is decided.
+- NOT run: the full mutant list (76 of 250 judged, 174 NOT run, gate G-C14), `npm test` on Node 18 and 20 here, `npm run smoke`, CI, macOS, Windows, G-C5, anything on npm (nothing is published).
 
 ## Round 162 — D102: the delivery check prints the `git rm` line (v0.0.165)
 

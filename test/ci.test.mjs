@@ -141,3 +141,16 @@ test('D115: the kit step is no longer named «informative» and still runs after
   assert.doesNotMatch(s, /name:[^\n]*informative/i);
   assert.match(s, /if:\s*(\$\{\{\s*)?always\(\)/);
 });
+
+// C13.5 (round 166): chicla-kit is packed as the release will, in a job of its own.
+const packKit = jobs.find((j) => /^pack-kit:/.test(j)) ?? '';
+test('C13.5: CI has a `pack-kit` job on Linux and Node 22 that packs chicla-kit, uploads the tarball and never publishes', () => {
+  assert.ok(packKit, 'no `pack-kit:` job in ci.yml');
+  assert.match(packKit, /runs-on:\s*ubuntu-latest/);
+  assert.doesNotMatch(packKit, /matrix/);
+  assert.match(packKit, /node-version:\s*22/);
+  assert.match(packKit, /node scripts\/pack-release\.mjs packages\/chicla-kit --out [^\n]+/);
+  assert.match(packKit, /name:\s*chicla-kit-tarball/);
+  assert.match(packKit, /actions\/upload-artifact@v4/);
+  assert.doesNotMatch(packKit, /secrets\.|npm publish|continue-on-error/);
+});

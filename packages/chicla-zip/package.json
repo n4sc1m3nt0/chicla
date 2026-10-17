@@ -1,6 +1,6 @@
 {
   "name": "chicla-zip",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Read, verify, safely extract, write and repair zips in plain Node, with correct UTF-8 names everywhere. Zero dependencies.",
   "type": "module",
   "main": "src/zipkit.mjs",

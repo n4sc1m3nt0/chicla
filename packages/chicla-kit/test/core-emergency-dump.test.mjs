@@ -11,12 +11,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readZipFile } from '../../chicla-zip/src/zipkit.mjs';
-import { TOOLCHAIN_SOURCES, ZIPKIT, pinnedSpec, specFrom } from '../../../test/toolchain-files.mjs';
+import { LOADER, TOOLCHAIN_SOURCES, ZIPKIT, pinnedSpec, specFrom } from '../../../test/toolchain-files.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const CORE = 'packages/chicla-kit/src/emergency-dump.mjs';
 const WRAPPER = 'scripts/emergency-dump.mjs';
-const TOOL = [WRAPPER, CORE, ...Object.values(TOOLCHAIN_SOURCES)];
+const TOOL = [WRAPPER, CORE, LOADER, ...Object.values(TOOLCHAIN_SOURCES)];
 const read = (f) => readFileSync(join(ROOT, f), 'utf8');
 const imp = (f) => import(pathToFileURL(join(ROOT, f)).href);
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111-5f-'));
@@ -43,13 +43,14 @@ test('the core is in the kit package: it exports emergencyDump and renderEmergen
 test('the core imports nothing outside the pinned files: `node:` modules and the manifest library statically, the policy library and the zip writer dynamically; no entry point', () => {
   const src = read(CORE);
   const specs = [...src.matchAll(/^import\s+(?:[^;]*?\bfrom\s+)?"([^"]+)"/gm)].map((m) => m[1]);
-  for (const s of specs) assert.ok(s.startsWith('node:') || s === pinnedSpec(CORE, 'manifest'), `import ${s}`);
+  for (const s of specs) assert.ok(s.startsWith('node:') || s === pinnedSpec(CORE, 'manifest') || s === './zipkit-loader.mjs', `import ${s}`); // C13.5: the loader is the one sibling
   assert.ok(specs.includes(pinnedSpec(CORE, 'manifest')));
   assert.equal([...src.matchAll(/^import\b/gm)].length, specs.length, 'every import statement was read');
   assert.doesNotMatch(src, /\brequire\s*\(/);
   const dyn = [...src.matchAll(/\bimport\s*\(\s*new URL\(\s*"([^"]+)"/g)].map((m) => m[1]).sort();
-  assert.deepEqual(dyn, [pinnedSpec(CORE, 'policy'), specFrom(CORE, ZIPKIT)].sort(), 'the only dynamic imports are the policy (guarded) and the zip writer');
-  assert.equal([...src.matchAll(/\bimport\s*\(/g)].length, 2);
+  assert.deepEqual(dyn, [pinnedSpec(CORE, 'policy')], 'the only dynamic import by path is the policy (guarded); the zip writer comes through the loader (C13.5)');
+  assert.equal([...src.matchAll(/\bimport\s*\(/g)].length, 1);
+  assert.match(src, /await loadZipkit\(\)/);
   assert.doesNotMatch(src, /process\.(exit|exitCode|stdout|stderr|argv)/);
   assert.doesNotMatch(src, /\.\/(check-manifest|check-build|verify-delivery|make-delivery|bump-round|cli)\.mjs/, 'it does not lean on its siblings: the dump must work when they are broken');
 });

@@ -30,10 +30,14 @@ export const TOOLCHAIN_SOURCES = {
   'zipkit.mjs': ZIPKIT,
 };
 
+/** C13.5: how the kit reaches chicla-zip (by name, then by the monorepo path); `emergency-dump` and `make-delivery` import it. */
+export const LOADER = 'packages/chicla-kit/src/zipkit-loader.mjs';
+
 /** What a fake project needs to run `emergency-dump` (the wrapper, its core, the pinned files and zipkit). */
 export const DUMP_COPY = [
   'scripts/emergency-dump.mjs',
   'packages/chicla-kit/src/emergency-dump.mjs',
+  LOADER,
   PINNED.manifest,
   PINNED.baseline,
   PINNED.policy,

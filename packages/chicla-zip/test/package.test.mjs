@@ -23,7 +23,7 @@ test("package.json: entry points and allowlist are declared", () => {
   assert.deepEqual(pkg.exports, { ".": "./src/zipkit.mjs", "./package.json": "./package.json" });
   assert.deepEqual(pkg.bin, { "chicla-zip": "src/zipkit.mjs" });
   assert.ok(Array.isArray(pkg.files) && pkg.files.length > 0);
-  assert.equal(pkg.version, "0.0.0", "the version changes only at the release (D13), by Rodrigo");
+  assert.equal(pkg.version, "0.1.0", "the release version of chicla-zip (round 163, G-C6 prepared; Rodrigo publishes)");
   assert.equal(pkg.private, undefined);
 });
 

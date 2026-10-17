@@ -10,12 +10,12 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync,
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CHECK_BUILD_COPY, CHECK_MANIFEST_COPY, VERIFY_DELIVERY_COPY, copyFiles, importPinned } from './toolchain-files.mjs';
+import { LOADER, CHECK_BUILD_COPY, CHECK_MANIFEST_COPY, VERIFY_DELIVERY_COPY, copyFiles, importPinned } from './toolchain-files.mjs';
 const { MANIFEST_V2_HEADER, parseManifest } = await importPinned('manifest');
 const { BASELINE_FILE, buildBaseline, serializeBaseline } = await importPinned('baseline');
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const COPY = [...CHECK_MANIFEST_COPY, ...CHECK_BUILD_COPY, ...VERIFY_DELIVERY_COPY, 'scripts/make-delivery-zip.mjs']; // wrappers, the cores in the kit they run, and the pinned files
+const COPY = [...CHECK_MANIFEST_COPY, ...CHECK_BUILD_COPY, ...VERIFY_DELIVERY_COPY, 'scripts/make-delivery-zip.mjs', LOADER]; // wrappers, the cores in the kit they run, and the pinned files
 const dirs = [];
 const tmp = (p) => { const d = mkdtempSync(join(tmpdir(), p)); dirs.push(d); return d; };
 test.after(() => { for (const d of dirs) rmSync(d, { recursive: true, force: true }); });

@@ -20,11 +20,11 @@ test('packs chicla-zip: tarball, .sha256 file, notes on stdout; sha256sum agrees
   try {
     const r = run(zipPkg, '--out', out);
     assert.equal(r.status, 0, r.stderr);
-    assert.deepEqual(readdirSync(out).sort(), ['chicla-zip-0.0.0.tgz', 'chicla-zip-0.0.0.tgz.sha256']);
-    execFileSync('sha256sum', ['-c', 'chicla-zip-0.0.0.tgz.sha256'], { cwd: out, stdio: 'pipe' }); // independent reader
-    const sha = readFileSync(join(out, 'chicla-zip-0.0.0.tgz.sha256'), 'utf8').split(/\s+/)[0];
+    assert.deepEqual(readdirSync(out).sort(), ['chicla-zip-0.1.0.tgz', 'chicla-zip-0.1.0.tgz.sha256']);
+    execFileSync('sha256sum', ['-c', 'chicla-zip-0.1.0.tgz.sha256'], { cwd: out, stdio: 'pipe' }); // independent reader
+    const sha = readFileSync(join(out, 'chicla-zip-0.1.0.tgz.sha256'), 'utf8').split(/\s+/)[0];
     assert.match(sha, /^[0-9a-f]{64}$/);
-    assert.ok(r.stdout.includes(sha) && r.stdout.includes('chicla-zip-0.0.0.tgz'));
+    assert.ok(r.stdout.includes(sha) && r.stdout.includes('chicla-zip-0.1.0.tgz'));
   } finally { rmSync(out, { recursive: true, force: true }); }
 });
 
@@ -32,7 +32,7 @@ test('the tarball holds the four shipped files and nothing else (listed by tar)'
   const out = tmp();
   try {
     assert.equal(run(zipPkg, '--out', out).status, 0);
-    const names = execFileSync('tar', ['-tzf', join(out, 'chicla-zip-0.0.0.tgz')], { encoding: 'utf8' }).trim().split('\n').sort();
+    const names = execFileSync('tar', ['-tzf', join(out, 'chicla-zip-0.1.0.tgz')], { encoding: 'utf8' }).trim().split('\n').sort();
     assert.deepEqual(names, ['package/LICENSE', 'package/README.md', 'package/package.json', 'package/src/zipkit.mjs']);
   } finally { rmSync(out, { recursive: true, force: true }); }
 });
@@ -41,7 +41,7 @@ test('the same tree packs to the same sha256 twice (the notes can be checked lat
   const a = tmp(), b = tmp();
   try {
     run(zipPkg, '--out', a); run(zipPkg, '--out', b);
-    assert.equal(readFileSync(join(a, 'chicla-zip-0.0.0.tgz.sha256'), 'utf8'), readFileSync(join(b, 'chicla-zip-0.0.0.tgz.sha256'), 'utf8'));
+    assert.equal(readFileSync(join(a, 'chicla-zip-0.1.0.tgz.sha256'), 'utf8'), readFileSync(join(b, 'chicla-zip-0.1.0.tgz.sha256'), 'utf8'));
   } finally { rmSync(a, { recursive: true, force: true }); rmSync(b, { recursive: true, force: true }); }
 });
 
@@ -53,8 +53,8 @@ test('--json: exactly one line, ok with name, version, file, sha256, size', () =
     const lines = r.stdout.trim().split('\n');
     assert.equal(lines.length, 1);
     const j = JSON.parse(lines[0]);
-    assert.equal(j.ok, true); assert.equal(j.name, 'chicla-zip'); assert.equal(j.version, '0.0.0');
-    assert.equal(j.file, 'chicla-zip-0.0.0.tgz'); assert.match(j.sha256, /^[0-9a-f]{64}$/); assert.ok(j.size > 0);
+    assert.equal(j.ok, true); assert.equal(j.name, 'chicla-zip'); assert.equal(j.version, '0.1.0');
+    assert.equal(j.file, 'chicla-zip-0.1.0.tgz'); assert.match(j.sha256, /^[0-9a-f]{64}$/); assert.ok(j.size > 0);
   } finally { rmSync(out, { recursive: true, force: true }); }
 });
 

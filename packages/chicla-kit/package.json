@@ -6,8 +6,11 @@
   "bin": {
     "chicla": "src/cli.mjs"
   },
+  "files": ["src", "templates", "README.md", "LICENSE"],
+  "dependencies": { "chicla-zip": "^0.1.0" },
   "engines": {
     "node": ">=18"
   },
+  "repository": { "type": "git", "url": "git+https://github.com/n4sc1m3nt0/chicla.git", "directory": "packages/chicla-kit" },
   "license": "Apache-2.0"
 }

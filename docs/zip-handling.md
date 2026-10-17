@@ -66,10 +66,10 @@ On Linux, `é` as one character (NFC) and as `e` plus a combining accent (NFD), 
 ## 7. Known limits and what was not checked
 
 - **A backslash in a name.** A file called `a\b` is valid on Linux. The writer and extractor refuse it (`EUNSAFE`) because the name would split into folders on Windows; `createZip` refuses the whole tree, so use `exclude` to leave such files out (AUDIT-2, B-2).
-- **Windows-reserved names** (`CON`, trailing dot or space) are written. Windows is its own milestone (M14, D19), not the 0.1 line (AUDIT-2, B-3).
+- **Windows names.** By default the reserved and forbidden names (`CON`, trailing dot or space, a colon) are refused only on win32; `windowsNames: true` (`--windows-names`) refuses them on every system (C14.5 a, below). Paths over 260 characters get no special handling (C14.3 slice c, open).
 - **No encryption, no other compression methods, no multi-part zips**, for reading or writing.
 - **Streamed zips** (every file zip64 with a data descriptor): verified with `unzip` 6.00, Python `zipfile` and the Chicla reader, including 4.1 GiB; **not verified** on macOS (Finder, Archive Utility, `ditto`) or with 7z.
-- **Where it was run.** Linux with Node 22 for every round. Node 18, 20 and macOS (Node 26) were last run by the project owner at round 7 (gate G-C3), so the later code (writers, streaming, `collisions`) has not been on a Mac; Windows has not been run at all. Those runs are gates for the project owner.
+- **Where it was run.** CI runs the `chicla-zip` suite on Ubuntu, macOS and Windows with Node 18, 20 and 22; the Windows job is blocking (D115) and the last log read (round 162 code) was green on all nine. **Not run:** a real Windows machine, a FAT or exFAT drive, macOS Finder or Archive Utility, and 7-Zip on streamed zips. A green CI runner is not a person using those tools.
 - **Messages** are English plain strings (D18). Tests assert error codes: `EARG`, `EUNSAFE`, `EDUP`, `EZIP64`, `ECHANGED`, `ERECURSE`, `ESYMLINK`, `ESOURCE`, `EEXIST`, `ECOLLISION`, `ENOENT`, `EZIP`.
 - **Performance budget:** large files at most 1.5 times `unzip`; 20 000 small files at most 3 times `unzip` on tmpfs (D15).
 

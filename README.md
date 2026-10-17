@@ -4,7 +4,7 @@ Project memory for coding agents that survives sessions, accounts and usage limi
 
 An agent forgets everything between sessions. Chicla makes the repository itself the memory: a status file, fingerprints that prove the files belong together, a verified delivery zip, and an emergency dump that can restore the work when a session is cut off.
 
-> **Status: pre-release.** Nothing is published as 0.1 yet. The root package is private; `chicla-zip` and `chicla-kit` are at `0.0.0` (placeholders on npm, reserved only). Use everything from this repository. Only the owner publishes; the licence is decided (Apache-2.0).
+> **Status: pre-release.** `chicla-zip` is at `0.1.0` in this repository and ready to release, but it is **not published yet**: npm only holds the `0.0.0` placeholders, and publishing is the owner's step ([`docs/release.md`](docs/release.md)). `chicla-kit` is at `0.0.0` and not releasable yet. The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). Only the owner publishes; the licence is decided (Apache-2.0).
 
 ## What is in here
 
@@ -12,7 +12,7 @@ Chicla has two pieces, in `packages/`:
 
 | Package | What it is | State |
 | --- | --- | --- |
-| [`chicla-zip`](packages/chicla-zip/README.md) | Read, verify, safely extract, **write** and repair zips, with correct UTF-8 names in every reader. | Library and CLI built and tested; not released |
+| [`chicla-zip`](packages/chicla-zip/README.md) | Read, verify, safely extract, **write** and repair zips, with correct UTF-8 names in every reader. | Library and CLI built and tested; `0.1.0` ready, not yet published (waits for G-C5 and G-C6) |
 | `chicla-kit` | The workflow: state file, fingerprints, "never leaves" policy, manifest, verified delivery, `/dump` and recovery. Ships the `chicla` command. | Six subcommands built; the cores are being moved from `scripts/` into the package, one slice at a time (`check-build` and `check-manifest` are done) |
 
 The kit depends on `chicla-zip` only through its public API.
@@ -44,6 +44,7 @@ Full details, options and known limits: [`packages/chicla-zip/README.md`](packag
 ## chicla-kit: the `chicla` command
 
 ```
+chicla init [--json] [--root <dir>]
 chicla check-manifest [--write] [--json] [--root <dir>]
 chicla bump-round [--verify | [--refresh] [--dry-run] [--note <text>]] [--json] [--root <dir>]
 chicla verify-delivery <zip> [--against <zip>]... [--allow-removed <path>]... [--json] [--root <dir>]
@@ -54,6 +55,7 @@ chicla recovery <dump.zip> [--baseline <zip>] [--out <dir>] [--toolchain-digest 
 
 | Command | What it does |
 | --- | --- |
+| `init` | Starts a project: writes `CLAUDE.md` and `AGENTS.md` (the rules for state, policy, dump and delivery) and the state files `CHICLA_PROJECT_STATUS-1.md`, `CHANGELOG.md`, `version.mjs` and `FILES.manifest`, with the fingerprint already consistent (`bump-round --verify` passes at once). It never overwrites: if any of them, or any status file, exists, nothing is written and it exits 1. |
 | `check-manifest` | Checks `FILES.manifest` (every project file, with crc32 and size) against the disk; `--write` regenerates it. A listed file that vanished is a lost file and fails. |
 | `bump-round` | Closes a round: renames `CHICLA_PROJECT_STATUS-N.md` to `N+1`, rewrites the three-way fingerprint, regenerates the manifest and verifies. `--verify` only checks; `--refresh` keeps the number; `--dry-run` writes nothing. |
 | `make-delivery` | Builds the delivery zip of the **whole** tree: manifest check against the previous zips, build check, manifest, baseline, zip, verification. A rejected zip is deleted. |

@@ -41,7 +41,7 @@
 // streams it into the zip, and the marker and the report are written LAST (they need the hashes). Past the hash limit (default 300 MB)
 // files still go in, unhashed, and the marker says so. If the writer fails for any reason, the old `zip` / `tar` path below runs (D7).
 // C11.1 slice 5f (D84, D89): this is the CORE, in the kit package. It imports only `node:` modules and the PINNED files, by relative path (src/pinned/manifest.mjs statically,
-// src/pinned/policy.mjs through the guarded import, packages/chicla-zip/src/zipkit.mjs for the writer), never its siblings in src/, and has no entry point: the dump must keep
+// src/pinned/policy.mjs through the guarded import, the writer through src/zipkit-loader.mjs, 12 lines that fall back to packages/chicla-zip/src/zipkit.mjs; a writer that fails leaves the zip/tar path), never its other siblings in src/, and has no entry point: the dump must keep
 // working when anything else is broken. `scripts/emergency-dump.mjs` is a thin wrapper (flags, print, exit) and `chicla dump` imports the same code. The project root, where the
 // five pinned RECOVER files are read from, is three folders up from this file.
 import { fileURLToPath } from "node:url";
@@ -53,6 +53,7 @@ import { join, relative, resolve, sep } from "node:path";
 export const relPosix = (root, p, pm = { relative, sep }) => pm.relative(root, p).split(pm.sep).join("/");
 import { tmpdir } from "node:os";
 import { parseManifest } from "./pinned/manifest.mjs";
+import { loadZipkit } from "./zipkit-loader.mjs";
 
 const SCRIPT_ROOT = resolve(fileURLToPath(new URL("../../..", import.meta.url))); // never URL.pathname (round 198)
 
@@ -305,7 +306,7 @@ ${errors.length ? `\n## Errors while generating this report (the zip was created
   const EX = ["*/node_modules/*", "*/.next/*", "*/.git/*", "*/__MACOSX/*", "*/.npm-global/*", "*/.cache/*", "*/.npm/*", "*/.venv/*", "*/__pycache__/*", "*.DS_Store", "*.tsbuildinfo", "*.zip", "*.pyc", "*/.env", "*/.env.*", ...SECRET_EX, ...POLICY_EX, ...HELD_EX];
   let finalName = zipName;
   const viaWriter = async () => {
-    const { writeZipStream } = await import(new URL("../../chicla-zip/src/zipkit.mjs", import.meta.url).href);
+    const { writeZipStream } = await loadZipkit();
     const fileSource = (base, root, f) => ({
       name: `${base}/${f.rel}`, mtime: new Date(f.mtime), mode: f.mode,
       stream: async function* () { // a file that fails mid-read ends here, is recorded, and the dump goes on

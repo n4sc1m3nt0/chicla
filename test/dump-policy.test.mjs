@@ -26,7 +26,7 @@ for (const base of stems) {
   for (const n of ENV_NAMES) (policy.isSecretEnv(n) ? never : keep).push(`${base}${n}`);
   never.push(`${base}t.pyc`, `${base}.DS_Store`, `${base}tsconfig.tsbuildinfo`);
 }
-keep.push('a.txt', 'docs/note.md', 'corpus/real-world/x.pdf', 'corpus/huge/y.bin'); // D64: the Cedar folders are ordinary folders
+keep.push('a.txt', 'docs/note.md', 'corpus/real-world/x.pdf', 'corpus/huge/y.bin'); // D64: corpus folders are ordinary folders
 
 test('the candidate lists agree with the policy (the control of this test)', () => {
   for (const p of never) assert.ok(policy.neverShipReason(p) || policy.SKIP_NAMES.has(p.split('/')[0]) || policy.isJunkName(p.split('/').pop()), `${p} must be refused by the policy`);

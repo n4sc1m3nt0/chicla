@@ -25,6 +25,7 @@ import { parseManifest } from "./pinned/manifest.mjs";
 import { checkManifest, renderCheckManifest } from "./check-manifest.mjs";
 import { checkBuild, renderCheckBuild } from "./check-build.mjs";
 import { verifyDelivery, renderVerifyDelivery } from "./verify-delivery.mjs";
+import { loadZipkit } from "./zipkit-loader.mjs";
 
 const USAGE = "usage: make-delivery-zip.mjs <out.zip> [--against <zip>] [--allow-removed <path>]";
 
@@ -70,7 +71,7 @@ export async function makeDelivery({ out, against = [], allowRemoved = [], root 
     // C8.1: the zip is written by chicla-zip (writeZip), not by the external `zip`. Whole tree in memory: a delivery is small. Modes and mtimes are kept;
     // a name that is not a regular file (a link, a folder) is refused, as the manifest only lists files.
     try {
-      const { writeZip } = await import(new URL("../../chicla-zip/src/zipkit.mjs", import.meta.url).href);
+      const { writeZip } = await loadZipkit();
       const sources = names.map((name) => {
         const abs = resolve(ROOT, name), st = lstatSync(abs);
         if (!st.isFile()) throw new Error(`${name} is not a regular file`);

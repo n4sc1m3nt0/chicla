@@ -32,14 +32,14 @@ test('raiz: monorepo privado, ESM, Node 18+, versão da app (D13)', () => {
 });
 
 for (const name of ['chicla-zip', 'chicla-kit']) {
-  test(`${name}: package válido, versionado à parte, sem dependências (D3, D4)`, () => {
+  test(`${name}: package válido, versionado à parte, sem dependências de terceiros (D3, D4)`, () => {
     const dir = `packages/${name}`;
     const pkg = json(`${dir}/package.json`);
     assert.equal(pkg.name, name);
-    assert.equal(pkg.version, '0.0.0');
+    assert.equal(pkg.version, name === 'chicla-zip' ? '0.1.0' : '0.0.0'); // chicla-zip is at its release version since round 163; the kit is not released
     assert.equal(pkg.type, 'module');
     assert.equal(pkg.engines.node, '>=18');
-    assert.equal(pkg.dependencies, undefined);
+    assert.deepEqual(pkg.dependencies, name === 'chicla-kit' ? { 'chicla-zip': '^0.1.0' } : undefined); // C13.5: the kit reaches chicla-zip by name, the only dependency, and it is ours (D3)
     assert.equal(pkg.devDependencies, undefined);
     assert.ok(isDir(`${dir}/src`), 'falta src/');
     assert.ok(isDir(`${dir}/test`), 'falta test/');
@@ -63,10 +63,10 @@ test('C0.2: os scripts do workflow estão no repositório', () => {
   for (const s of SCRIPTS) assert.ok(has(`scripts/${s}.mjs`), `falta scripts/${s}.mjs`);
 });
 
-test('C0.2: nenhum script refere o Cedar nem exige Cargo.toml na raiz', () => {
+test('C0.2: nenhum script refere o projeto de origem nem exige Cargo.toml na raiz', () => {
   for (const s of SCRIPTS) {
     const src = read(`scripts/${s}.mjs`);
-    assert.doesNotMatch(src, /CEDAR|cedar/i, `${s} ainda refere o Cedar`);
+    assert.doesNotMatch(src, /CEDAR|cedar/i, `${s} ainda refere o projeto de origem`);
     assert.doesNotMatch(src, /set\.has\("Cargo\.toml"\)|cargoToml/, `${s} ainda exige Cargo.toml`);
   }
 });

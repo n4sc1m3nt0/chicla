@@ -4,7 +4,7 @@ Read, verify, safely extract, write and repair zip files in plain Node. **Zero d
 
 A zip is hostile input, so everything here is built around that: the extractor validates the whole archive before it writes anything, extracts into a temporary folder and renames at the end (a failure leaves the destination untouched), never follows or creates symlinks, and never trusts names, sizes or counts from the archive. What the writer produces is accepted by `unzip -t` and by Python's `zipfile`, with UTF-8 names marked correctly (bit 11).
 
-> Status: pre-release (`0.0.0`). The API below is what the test suite pins; it is not published as 0.1 yet.
+> Status: `0.1.0`, **not published to npm yet** (the release steps are in [`docs/release.md`](../../docs/release.md)). The API below is what the test suite pins. Security limits and how to report a problem: [`SECURITY.md`](../../SECURITY.md).
 
 ## Library
 
