@@ -101,8 +101,8 @@ if (process.env.CHICLA_FUZZ_READ_CHILD) {
   const TWO = () => buildZip([{ name: 'a.txt', data: 'alpha' }, { name: 'b.txt', data: 'beta' }]);
   const REFUSE = {
     'local signature of the first entry is wrong': { patch: (b) => b.writeUInt32LE(0x12345678, 0), at: 'read' },
-    'local header offset of the last entry is past the end of the file': { patch: (b) => b.writeUInt32LE(b.length + 10, lastCentral(b) + 42), at: 'read' },
-    'compressed size of the last entry runs past the end of the file': { patch: (b) => { const c = lastCentral(b); b.writeUInt32LE(0x7ffffff0, c + 20); b.writeUInt32LE(0x7ffffff0, c + 24); }, at: 'read' },
+    'local header offset of the last entry is past the end of the file': { patch: (b) => b.writeUInt32LE(b.length + 10, lastCentral(b) + 42), at: 'open' },
+    'compressed size of the last entry runs past the end of the file': { patch: (b) => { const c = lastCentral(b); b.writeUInt32LE(0x7ffffff0, c + 20); b.writeUInt32LE(0x7ffffff0, c + 24); }, at: 'open' },
     'name length of the last central entry runs past the directory': { patch: (b) => b.writeUInt16LE(0xffff, lastCentral(b) + 28), at: 'open' },
     'extra length of the last central entry runs past the directory': { patch: (b) => b.writeUInt16LE(0xffff, lastCentral(b) + 30), at: 'open' },
     'comment length of the last central entry runs past the directory': { patch: (b) => b.writeUInt16LE(0xffff, lastCentral(b) + 32), at: 'open' },

@@ -45,9 +45,10 @@ function dump(T, mode, { policy = POLICY, noPolicyModule = false, extra = [], ke
   assert.ok(f, `a dump in ${readdirSync(outdir)}`);
   const path = join(outdir, f);
   const code = mode === 'tar'
-    ? 'import tarfile,sys,json;t=tarfile.open(sys.argv[1]);m=[x for x in t.getmembers()];mk=[x for x in m if x.name.endswith("RECOVERY_MARKER.json")];print(json.dumps({"names":[x.name for x in m],"marker":json.loads(t.extractfile(mk[0]).read()) if mk else None,"secret":any(x.isfile() and sys.argv[2].encode() in t.extractfile(x).read() and not x.name.endswith(("RECOVERY_REPORT.md","RECOVERY_MARKER.json")) and "node_modules" not in x.name and not x.name.endswith(".env") for x in m)}))'
+    ? 'import tarfile,sys,json;t=tarfile.open(sys.argv[1]);m=[x for x in t.getmembers()];mk=[x for x in m if x.name.split("/")[-1]=="RECOVERY_MARKER.json"];print(json.dumps({"names":[x.name for x in m],"marker":json.loads(t.extractfile(mk[0]).read()) if mk else None,"secret":any(x.isfile() and sys.argv[2].encode() in t.extractfile(x).read() and not x.name.endswith(("RECOVERY_REPORT.md","RECOVERY_MARKER.json")) and "node_modules" not in x.name and not x.name.endswith(".env") for x in m)}))'
     : 'import zipfile,sys,json;z=zipfile.ZipFile(sys.argv[1]);n=z.namelist();print(json.dumps({"names":n,"marker":json.loads(z.read("RECOVERY_MARKER.json")),"secret":any(sys.argv[2].encode() in z.read(i) for i in n if not i.endswith(("RECOVERY_REPORT.md","RECOVERY_MARKER.json")))}))';
-  const o = JSON.parse(spawnSync(PY, ['-c', code, path, SECRET], { encoding: 'utf8', maxBuffer: 1 << 26 }).stdout);
+  const pr = spawnSync(PY, ['-c', code, path, SECRET], { encoding: 'utf8', maxBuffer: 1 << 26 }); assert.equal(pr.status, 0, `python ${pr.status}: ${pr.stderr}`); // the reader's own stderr, seen only on a Mac (Python 3.14, round 175)
+  const o = JSON.parse(pr.stdout);
   return { names: new Set(o.names.map((n) => n.replace(/^\.\//, ''))), marker: o.marker, secret: o.secret, run: r, path };
 }
 

@@ -44,7 +44,7 @@ function makeProject({ seq = 5, appSeq = seq, extraStatus = false } = {}) {
   writeFileSync(join(root, "package.json"), JSON.stringify({ name: "fake", private: true, version: "0.0.1" }) + "\n");
   writeFileSync(join(root, appName), `//! Chicla app version (fake)\n//! (line 3 = fingerprint)\n// STATUS_FILE_FINGERPRINT: ${core(appSeq)} (old note)\n` + appBody);
   writeFileSync(join(root, "CHANGELOG.md"), `<!-- CHANGELOG_FINGERPRINT: ${core(seq)} (old note) -->\n` + clBody);
-  const stBody = `# Status\n\nsee the "Fingerprint:" line below, mentioned before the real one.\n\n${PARA(seq, appName, hApp, hCl)}\n\n**Last updated (round 1):** 2026-10-02 (text with $& and $1 specials).\n`;
+  const stBody = `# Status\n\n## Instructions\n\n**Current version:** v0.0.1\n\nsee the "Fingerprint:" line below, mentioned before the real one.\n\n${PARA(seq, appName, hApp, hCl)}\n\n**Last updated (round 1):** 2026-10-02 (text with $& and $1 specials).\n\n## Snapshot\n\n## Next up\n\n## Gates\n`; // C10.5: the parts a status file must have
   writeFileSync(join(root, `CHICLA_PROJECT_STATUS-${seq}.md`), stBody);
   if (extraStatus) writeFileSync(join(root, `CHICLA_PROJECT_STATUS-${seq + 1}.md`), stBody);
   writeFileSync(join(root, "README.md"), "readme\n");

@@ -3,7 +3,7 @@
 // hashes are not computed here: the files are written with placeholder hashes and `bump-round --refresh` (the kit's own code) computes them and the
 // manifest, so there is one definition of the fingerprint, not two; then `--verify` must pass or everything is removed again.
 // It never overwrites: if any target exists (a file, a folder, a link), or any CHICLA_PROJECT_STATUS-N.md exists, nothing is written and the run is
-// refused with EEXIST; replacing files is `chicla update` (C11.3, not built). It never prints, never exits and never throws; the CLI renders the result.
+// refused with EEXIST; replacing files is `chicla update` (C11.3, update.mjs). It never prints, never exits and never throws; the CLI renders the result.
 import { closeSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, rmdirSync, statSync, writeSync, constants } from "node:fs";
 import { dirname, join } from "node:path";
 import { AGENTS, resolveAgents } from "./agents.mjs";

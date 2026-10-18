@@ -41,6 +41,19 @@ const PARA = /\*\*Fingerprint:\*\* seq=(\d+) · app=(\S+) ·\s*app_sha256_12=([0
 class Stop extends Error { constructor(code, message) { super(message); this.code = code; } }
 const stop = (code, m) => { throw new Stop(code, m); };
 
+// C10.5 (docs/state-file.md): the parts a status file must have before `bump` or `--refresh` writes anything; each counts only at the start of a line, outside a fenced block.
+// Instructions and Current version only have to exist (the template and this project order them differently); from the Fingerprint paragraph on, the order is fixed
+// because the cold-start command of the instructions cuts the file at those lines.
+const PARTS = [["## Instructions", /^## Instructions\b/m], ["**Current version:**", /^\*\*Current version:\*\*/m], ["**Last updated (round N):**", /^\*\*Last updated \(round [^)\n]+\):\*\*/m], ["## Snapshot", /^## Snapshot[ \t]*$/m], ["## Next up", /^## Next up[ \t]*$/m], ["## Gates", /^## Gates[ \t]*$/m]];
+function statusProblem(s) {
+  const t = s.stTxt.replace(/^(```|~~~)[^\n]*\n[\s\S]*?^\1[^\n]*$/gm, (m) => m.replace(/[^\n]/g, " ")); // fenced blocks blanked, offsets kept
+  const at = PARTS.map(([, re]) => t.search(re)), missing = PARTS.filter((_, i) => at[i] < 0).map(([name]) => name);
+  if (missing.length) return `${s.statusName} is incomplete, it lacks: ${missing.join(", ")} (see docs/state-file.md). I wrote nothing.`;
+  const chain = [s.stFp.index, at[2], at[3], at[4], at[5]];
+  if (chain.some((x, i) => i && x < chain[i - 1])) return `${s.statusName}: the parts are out of order; they must come as Fingerprint, Last updated, Snapshot, Next up, Gates (see docs/state-file.md). I wrote nothing.`;
+  return null;
+}
+
 function readState(ROOT, P) {
   const names = readdirSync(ROOT);
   const st = names.filter((f) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f));
@@ -81,7 +94,7 @@ function verify(s, P) { // instruction 11 a-c (and the toolchain pin)
  * The mechanical close of a round for the project at `root`. `mode`: "bump" (default), "refresh" or "verify"; `dry` shows without writing; `note` is added to
  * the fingerprint comments; `regenerateManifest(root)` -> { ok, out, err } is the manifest step of a bump (default: runs `<root>/scripts/check-manifest.mjs --write`
  * as a process; the kit CLI passes `checkManifest` in-process, so it works on a project without `scripts/`). Returns { ok, code, mode, dry, seq, statusFile, nextSeq, checks?, messages }: `code` is null when ok, else EBUMP_USAGE, EBUMP_STATE,
- * EBUMP_UNPAIRED (11a), EBUMP_VERIFY, EBUMP_MANIFEST, EBUMP_FINAL or EBUMP_ERROR (anything unexpected); `messages` is [{ stream: "out" | "err", text }] in the order
+ * EBUMP_UNPAIRED (11a), EBUMP_STATUS (C10.5, bump and refresh only), EBUMP_VERIFY, EBUMP_MANIFEST, EBUMP_FINAL or EBUMP_ERROR (anything unexpected); `messages` is [{ stream: "out" | "err", text }] in the order
  * the script prints them (see `renderBumpRound`). Never prints, exits or throws.
  */
 export function bumpRound({ root, mode = "bump", dry = false, note = "", regenerateManifest } = {}) {
@@ -106,6 +119,9 @@ export function bumpRound({ root, mode = "bump", dry = false, note = "", regener
     // bump / refresh: the links must be paired BEFORE (11a) — never pair blindly
     if (+s.appFp[1] !== s.seq || +s.clFp[1] !== s.seq || +s.stFp[1] !== s.seq)
       stop("EBUMP_UNPAIRED", `the app says seq=${s.appFp[1]}, the CHANGELOG seq=${s.clFp[1]}, the status file paragraph seq=${s.stFp[1]}, but the status file is -${s.seq} (instruction 11a). I wrote nothing; tell Rodrigo.`);
+
+    const bad = statusProblem(s); // C10.5: an incomplete status file is refused before anything is written (dry-run too)
+    if (bad) stop("EBUMP_STATUS", bad);
 
     const seq = mode === "bump" ? s.seq + 1 : s.seq;
     result.nextSeq = seq;

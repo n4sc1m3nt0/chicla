@@ -51,3 +51,25 @@ test('ROADMAP: Cedar is out of the plan (Rodrigo, 2026-10-16): no §8 about it, 
   assert.match(r, /G-C7[^\n]*CLOSED by Rodrigo \(2026-10-16/);
   assert.match(r, /G-C11[^\n]*CLOSED by Rodrigo \(2026-10-16/);
 });
+
+// Round 184 (C11.3 closing, D130): the runbook for `chicla-kit`. It is the second half of docs/release.md.
+const kitSection = () => { const s = read('docs/release.md'); const i = s.indexOf('## `chicla-kit`'); assert.ok(i > 0, 'no «## `chicla-kit`» section'); return s.slice(i); };
+
+test('docs/release.md: the chicla-kit runbook has its own tag, artifact, tarball, checks and the npm steps, and chicla-zip goes out first', () => {
+  const k = kitSection();
+  for (const part of ['chicla-kit-v0.1.0', 'chicla-kit-tarball', 'pack-kit', 'chicla-kit-0.1.0.tgz', 'sha256sum -c', 'tar -tzf', 'npm whoami', 'npm publish dist/chicla-kit-0.1.0.tgz', 'gh release create chicla-kit-v0.1.0', 'npm view chicla-kit version', 'pack-release.mjs packages/chicla-kit', 'two-factor', 'bump-round --verify', 'chicla update', '`0.0.0`']) assert.ok(k.includes(part), `missing in the kit section: ${part}`);
+  assert.match(k, /\*\*`chicla-zip` goes out first\*\*/);
+  assert.ok(k.indexOf('chicla-zip` 0.1.0 is published') > 0 && k.indexOf('chicla-zip` 0.1.0 is published') < k.indexOf('### Steps'), 'the zip comes before the kit steps');
+  assert.match(k, /AI never runs `npm publish`/);
+  assert.doesNotMatch(k, /not releasable yet/i, 'the old «not releasable» sentence is gone');
+  assert.doesNotMatch(read('docs/release.md').slice(0, read('docs/release.md').indexOf('## `chicla-kit`')), /not releasable yet/i);
+});
+
+test('docs/release.md: every `chicla` command and script the kit runbook names exists, and the warning about the `chicla` placeholder is there', async () => {
+  const k = kitSection();
+  const { main } = await import(new URL('../packages/chicla-kit/src/cli.mjs', import.meta.url).href);
+  let help = ''; await main(['--help'], { stdout: { write: (x) => { help += x; } }, stderr: { write() {} } });
+  for (const c of new Set([...k.matchAll(/npx --no-install chicla (\S+)/g)].map((m) => m[1]))) assert.ok(c === '--help' || help.includes(`  ${c} `), `the runbook runs «chicla ${c}», which the help does not list`);
+  assert.ok(existsSync(join(root, 'scripts/pack-release.mjs')));
+  assert.match(k, /unrelated `chicla` placeholder/);
+});

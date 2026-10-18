@@ -86,7 +86,9 @@ const readAt = (fd, pos, len) => {
   while (got < len) { const n = readSync(fd, b, got, len - got, pos + got); if (n === 0) throw new ZipError("truncated zip (end of file before expected)"); got += n; }
   return b;
 };
-const MAX_CENTRAL = 1 << 30;
+// G-C5 §5.4 (D128): the central directory is read whole, at ~450 to 500 bytes of memory per entry (bench/central-memory.mjs), so the bound is 64 MiB
+// (about 1.2 million entries, about 0.6 GiB), not the 1 GiB that was never reached before the process ran out of memory.
+const MAX_CENTRAL = 64 << 20;
 
 // ---------- central directory ----------
 // G-C5 ZIP-001 (D123): more than one record can look like the EOCD (every candidate whose comment fits the end of the file, so a
@@ -124,7 +126,7 @@ const readCentral = (fd, size, label) => {
     f = fit[0];
   }
   const { total, cdSize, cdOff } = f;
-  if (cdSize > MAX_CENTRAL) throw new ZipError(`${label}: central directory too large`);
+  if (cdSize > MAX_CENTRAL) throw new ZipError(`${label}: central directory too large (${cdSize} bytes; the limit is ${MAX_CENTRAL})`, "ECENTRAL");
   if (total * 46 > cdSize) throw new ZipError(`${label}: impossible entry count (${total} entries do not fit in ${cdSize} bytes)`);
   if (cdOff + cdSize > size) throw new ZipError(`${label}: central directory outside the file (truncated zip?)`);
   return { cd: readAt(fd, cdOff, cdSize), total, cdOff };
@@ -164,6 +166,19 @@ const parseEntries = (cd, total, label, legacy = CP437) => {
     pos += 46 + nl + xl + cl;
   }
   return entries;
+};
+
+// D125 (G-C5 §5.2): no two entries may share a byte of the file, and none may reach the central directory. Each entry's span starts at its local header and is AT LEAST
+// 30 + name + compressed size long (the local extra field and a data descriptor only add to it; they are not known without another read), so a hit here is a real overlap
+// and an ordinary zip never hits. Central directory data only, no I/O. A span that touches the next one (end == start) is fine.
+const checkLayout = (entries, cdOff, label) => {
+  const spans = entries.map((e) => ({ e, start: e.localOffset, end: e.localOffset + 30 + e.rawName.length + e.csize })).sort((a, b) => a.start - b.start);
+  let prev = null;
+  for (const s of spans) {
+    if (prev && s.start < prev.end) throw new ZipError(`${label}: the entries «${prev.e.name}» and «${s.e.name}» overlap (corrupted or hostile zip)`, "EOVERLAP");
+    prev = s; // no overlap so far, so this span ends after the previous one (every span is at least 30 bytes)
+  }
+  if (prev && prev.end > cdOff) throw new ZipError(`${label}: the entry «${prev.e.name}» overlaps the central directory (corrupted or hostile zip)`, "EOVERLAP");
 };
 
 // Lists the entries. Each one: { name, rawName, nameSource, flags, method, crc, csize, usize, localOffset, mode, mtime,
@@ -219,8 +234,13 @@ const winWhy = (name) => { const c = windowsNameProblems(name); return c.length 
 const unsupportedReason = (e) => (e.encrypted ? "is encrypted (not supported)" : e.method === 8 && e.csize === 0 ? "is a deflate entry with no data (a deflate stream is never empty; unzip refuses it too)" : e.method !== 0 && e.method !== 8 ? `compression method ${e.method} not supported (only stored and deflate)` : null);
 const dataStart = (fd, size, e, label) => {
   if (e.localOffset + 30 > size) throw new ZipError(`${label}: local header of «${e.name}» outside the file`);
-  const h = readAt(fd, e.localOffset, 30);
+  // ZIP-002 (D124): ONE read of the fixed header plus as many name bytes as the central directory gives (no extra system call). The local header has to agree with
+  // the central one on the name BYTES, the method and the encryption bits (0x01, 0x40). Flags are not compared as a whole: the data descriptor bit differs legitimately.
+  const nl = e.rawName.length, h = readAt(fd, e.localOffset, 30 + Math.min(nl, size - e.localOffset - 30));
   if (h.readUInt32LE(0) !== 0x04034b50) throw new ZipError(`${label}: invalid local header for «${e.name}»`);
+  if (h.readUInt16LE(26) !== nl || h.length < 30 + nl || !h.subarray(30, 30 + nl).equals(e.rawName)) throw new ZipError(`${label}: the local header of «${e.name}» names another file than the central directory`);
+  if (h.readUInt16LE(8) !== e.method) throw new ZipError(`${label}: the local header of «${e.name}» has compression method ${h.readUInt16LE(8)}, the central directory ${e.method}`);
+  if ((h.readUInt16LE(6) & 0x41) !== (e.flags & 0x41)) throw new ZipError(`${label}: the local header of «${e.name}» disagrees with the central directory on encryption`);
   const start = e.localOffset + 30 + h.readUInt16LE(26) + h.readUInt16LE(28);
   if (start + e.csize > size) throw new ZipError(`${label}: the data of «${e.name}» runs past the end of the file (truncated zip?)`);
   return start;
@@ -235,7 +255,7 @@ export const openZip = (zipPath, { legacyEncoding } = {}) => {
   // A system error on the zip itself (ENOENT, EACCES, EISDIR...) is a ZipError with the same code; the original stays in `cause`.
   const sys = (err) => err instanceof ZipError || typeof err?.syscall !== "string" || typeof err.code !== "string" ? err : new ZipError(`${path}: ${err.message}`, err.code, { cause: err });
   try { fd = openSync(path, "r"); } catch (err) { throw sys(err); }
-  try { const st = fstatSync(fd); if (st.isDirectory()) throw Object.assign(new Error("illegal operation on a directory"), { code: "EISDIR", syscall: "read" }); size = st.size; const c = readCentral(fd, size, path); cdOff = c.cdOff; entries = parseEntries(c.cd, c.total, path, legacy); }
+  try { const st = fstatSync(fd); if (st.isDirectory()) throw Object.assign(new Error("illegal operation on a directory"), { code: "EISDIR", syscall: "read" }); size = st.size; const c = readCentral(fd, size, path); cdOff = c.cdOff; entries = parseEntries(c.cd, c.total, path, legacy); checkLayout(entries, cdOff, path); }
   catch (err) { closeSync(fd); throw sys(err); }
   const live = () => { if (fd === null) throw new ZipError(`${path}: the zip handle is closed`, "ECLOSED"); return fd; };
   // Reads ONE file into memory (by name; NFC and NFD count as the same name). Checks CRC and size.
@@ -489,7 +509,7 @@ export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalByt
 export const markUtf8Names = (zipPath) => {
   const path = resolve(zipPath), fd = openSync(path, "r+");
   try {
-    const size = fstatSync(fd).size, { cd, total, cdOff } = readCentral(fd, size, path), entries = parseEntries(cd, total, path), todo = [];
+    const size = fstatSync(fd).size, { cd, total, cdOff } = readCentral(fd, size, path), entries = parseEntries(cd, total, path), todo = []; checkLayout(entries, cdOff, path);
     // C4.1 (ROADMAP B1): `cdPos` is relative to the central directory, so the file position adds `cdOff`. Everything is checked BEFORE the first byte is
     // written, so a bad entry leaves the file as it was.
     for (const e of entries) {

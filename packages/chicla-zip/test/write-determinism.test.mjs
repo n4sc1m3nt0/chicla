@@ -50,12 +50,13 @@ const inZone = (tz, sources, opts, env = {}) => {
   const code = `import { writeZip } from ${JSON.stringify(SRC)};
     const s = JSON.parse(process.argv[2]).map((x) => ({ name: x.name, ...(x.data === undefined ? {} : { data: Buffer.from(x.data) }), ...(x.mtime === undefined ? {} : { mtime: new Date(x.mtime) }), ...(x.mode === undefined ? {} : { mode: x.mode }) }));
     await writeZip(process.argv[1], s, JSON.parse(process.argv[3]));
-    console.log(new Date(Date.UTC(2020, 0, 1)).getTimezoneOffset());`;
+    console.log(String(new Date(Date.UTC(2020, 0, 1)).getTimezoneOffset()));`; // a string: a number is painted yellow when FORCE_COLOR reaches the child (npm test on a Mac, round 177)
   const wire = sources.map((x) => ({ name: x.name, data: x.data?.toString(), mtime: x.mtime?.getTime(), mode: x.mode }));
   const childEnv = { ...process.env, ...env, TZ: tz }; if (env.SOURCE_DATE_EPOCH === undefined) delete childEnv.SOURCE_DATE_EPOCH;
   const r = spawnSync(process.execPath, ['--input-type=module', '-e', code, p, JSON.stringify(wire), JSON.stringify(opts)], { encoding: 'utf8', env: childEnv });
   assert.equal(r.status, 0, r.stderr);
-  return { path: p, hash: sha(p), offset: Number(r.stdout.trim()) };
+  const offset = Number(r.stdout.trim()); assert.ok(Number.isFinite(offset), `the child printed ${JSON.stringify(r.stdout)}, stderr ${JSON.stringify(r.stderr)}`); // a Mac printed NaN here (round 175)
+  return { path: p, hash: sha(p), offset };
 };
 
 test('deterministic: a source with no date gets 1980-01-01 00:00:00, never "now"', async () => {

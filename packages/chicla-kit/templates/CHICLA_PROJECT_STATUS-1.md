@@ -2,11 +2,13 @@
 
 Created by `chicla init`. This file is the memory of the project between sessions: the state, the decisions, the gates and the next task. Keep it true; the agent reads it first, every session.
 
-**Current version:** v0.0.1 (round 1: the project was started with `chicla init`)
-
 ## Instructions
 
-1. **Cold start.** Read this file first, then `CLAUDE.md`. Open other files on demand: search for a term, do not re-read everything.
+1. **Cold start.** Read `CLAUDE.md`, then only the Instructions block, the Fingerprint paragraph and the newest «Last updated» entry of this file. One command prints exactly these:
+   ```
+   f=$(ls CHICLA_PROJECT_STATUS-*.md | sort -t- -k2 -n | tail -1); n=$(grep -n '^\*\*Current version:\*\*' $f | head -1 | cut -d: -f1); sed -n "1,$((n-1))p" $f; sed -n '/^\*\*Fingerprint:\*\*/,/^\*\*Last updated (round/p' $f
+   ```
+   Open everything else on demand: search for a term, do not re-read everything.
 2. **Short commands.** `next` means the task under «Next up».
 3. **Roadmap.** If the project has a `ROADMAP.md`, read only the part for the task at hand.
 4. **Map.** `CLAUDE.md` holds the rules; this file holds the process and the state; `CHANGELOG.md` holds what each round did.
@@ -17,6 +19,8 @@ Created by `chicla init`. This file is the memory of the project between session
 9. **App version.** Edit `APP_VERSION` in `version.mjs` in every output that changes the project.
 10. **Session-start check.** After item 1 run `chicla bump-round --verify`. If it fails, STOP and tell the owner; do not work on top of files that disagree.
 11. **Fingerprint.** The paragraph below, the third line of `version.mjs` and the first line of `CHANGELOG.md` carry the same numbers. `chicla bump-round` writes them; never edit them by hand. If they do not match, stop and tell the owner.
+
+**Current version:** v0.0.1 (round 1: the project was started with `chicla init`)
 
 **Fingerprint:** seq=1 · app=version.mjs ·
 app_sha256_12=000000000000 (of everything below the app file's own

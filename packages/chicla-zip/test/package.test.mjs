@@ -15,7 +15,7 @@ const pkg = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8"));
 
 const pack = () => {
   const out = execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: pkgDir, encoding: "utf8", ...NPM });
-  return JSON.parse(out)[0].files.map((f) => f.path).sort();
+  return Object.values(JSON.parse(out))[0].files.map((f) => f.path).sort();
 };
 
 test("package.json: entry points and allowlist are declared", () => {
@@ -45,7 +45,7 @@ test("a packed tarball installs in a clean folder: import works and the bin runs
   const tmp = mkdtempSync(join(tmpdir(), "chicla-pack-"));
   try {
     const name = execFileSync("npm", ["pack", "--ignore-scripts", "--pack-destination", tmp, "--json"], { cwd: pkgDir, encoding: "utf8", ...NPM });
-    const tgz = join(tmp, JSON.parse(name)[0].filename);
+    const tgz = join(tmp, Object.values(JSON.parse(name))[0].filename);
     assert.ok(existsSync(tgz));
     const proj = join(tmp, "proj");
     execFileSync("mkdir", [proj]);

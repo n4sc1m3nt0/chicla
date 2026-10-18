@@ -2,7 +2,7 @@
 
 The workflow of Chicla for coding agents, as the `chicla` command: a status file and fingerprints that prove the project files belong together, one rule set for what never leaves the machine, a manifest, a verified delivery zip, and an emergency dump with recovery. Plain Node, **zero dependencies**, Node 18+, ESM.
 
-> **Status: pre-release (`0.0.0`), not published.** Use it from the repository: `node packages/chicla-kit/src/cli.mjs <command>`. It is not declared supported on Windows: its suite passes in CI there, but the dump and recovery never ran on a real Windows machine. `chicla init` starts a new project (instruction files, status file, changelog, version file and manifest, consistent from the first second); `chicla update` does not exist yet. A new project still copies `ROADMAP.md`-style planning files by hand if it wants them. The kit also finds `chicla-zip` by a relative path inside this repository, so it cannot be installed alone yet (card C13.5).
+> **Status: pre-release (`0.0.0`), not published.** Use it from the repository: `node packages/chicla-kit/src/cli.mjs <command>`. It is not declared supported on Windows: its suite passes in CI there, but the dump and recovery never ran on a real Windows machine. `chicla init` starts a new project (instruction files, status file, changelog, version file and manifest, consistent from the first second); `chicla update` compares the instruction files with the templates of the installed kit and replaces a file only when you name it. A new project still copies `ROADMAP.md`-style planning files by hand if it wants them. The kit also finds `chicla-zip` by a relative path inside this repository, so it cannot be installed alone yet (card C13.5).
 
 The whole picture (the files, the rounds, the delivery and the emergency path) is in the [root README](../../README.md). Security limits: [`SECURITY.md`](../../SECURITY.md).
 
@@ -10,6 +10,7 @@ The whole picture (the files, the rounds, the delivery and the emergency path) i
 
 ```
 chicla init [--agent <name>]... [--json] [--root <dir>]
+chicla update [--agent <name>]... [--apply <file>]... [--json] [--root <dir>]
 chicla check-manifest [--write] [--json] [--root <dir>]
 chicla bump-round [--verify | [--refresh] [--dry-run] [--note <text>]] [--json] [--root <dir>]
 chicla verify-delivery <zip> [--against <zip>]... [--allow-removed <path>]... [--json] [--root <dir>]
@@ -21,6 +22,7 @@ chicla recovery <dump.zip> [--baseline <zip>] [--out <dir>] [--toolchain-digest 
 | Command | What it does |
 | --- | --- |
 | `chicla init` | Starts a project: writes `CLAUDE.md` and `AGENTS.md` (the rules for state, policy, dump and delivery) and the state files `CHICLA_PROJECT_STATUS-1.md`, `CHANGELOG.md`, `version.mjs` and `FILES.manifest`, with the fingerprint already consistent (`bump-round --verify` passes at once). It never overwrites: if any of them, or any status file, exists, nothing is written and it exits 1. `--agent <name>` (repeatable) adds the instruction file of one more agent, see «Agents» below; an unknown name exits 2. |
+| `chicla update` | Compares `CLAUDE.md`, `AGENTS.md` and the file of every other agent the project has (or `--agent` names) with the templates of the installed kit, and shows a diff (`-` yours, `+` the template). It writes nothing by itself. `--apply <file>` (repeatable) replaces exactly that file with the template, or creates it if it is missing; that is the confirmation, and it replaces the whole file, so local edits in it are lost. The state files (status file, `CHANGELOG.md`, `version.mjs`, `FILES.manifest`) are never compared or named. After an apply the manifest and the fingerprint are refreshed (`bump-round --refresh`); if that fails the files go back as they were. Line endings alone are not a difference. A bad name exits 1 and writes nothing. |
 | `chicla check-manifest` | Checks `FILES.manifest` (every project file, with crc32 and size) against the disk; `--write` regenerates it. A listed file that vanished is a lost file and fails. |
 | `chicla bump-round` | Closes a round: renames `CHICLA_PROJECT_STATUS-N.md` to `N+1`, rewrites the three-way fingerprint, regenerates the manifest and verifies. `--verify` only checks; `--refresh` keeps the number; `--dry-run` writes nothing. |
 | `chicla make-delivery` | Builds the delivery zip of the whole tree: manifest check against the previous zips, build check, manifest, baseline, zip, verification. A rejected zip is deleted. |
@@ -34,7 +36,7 @@ Exit codes: `0` ok · `1` the check failed (for `dump`: no dump was made; for `r
 
 ## What it does not do
 
-It does not publish anything, does not provide `update`, and does not support Windows. Fingerprints, CRC32 and the toolchain digest are integrity checks, not authenticity.
+It does not publish anything, does not merge your local edits into a template (`update` shows the diff and replaces whole files only), and does not support Windows. Fingerprints, CRC32 and the toolchain digest are integrity checks, not authenticity.
 
 Licence: Apache-2.0.
 

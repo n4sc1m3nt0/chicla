@@ -3,6 +3,7 @@
 // code as its script in scripts/ (the script imports nothing from here; this file imports the script's core). Zero dependencies (D3).
 //
 //   chicla init [--agent <name>]... [--json] [--root <dir>]   (C12.1, C12.6, C12.7: starts a project: CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs, FILES.manifest; never overwrites)
+//   chicla update [--agent <name>]... [--apply <file>]... [--json] [--root <dir>]   (C11.3: compares the instruction files with the kit's templates and shows the diff; writes only the files named with --apply)
 //   chicla check-manifest [--write] [--json] [--root <dir>]
 //   chicla bump-round [--verify | [--refresh] [--dry-run] [--note <text>]] [--json] [--root <dir>]
 //        no flag = the bump (N -> N+1, WRITES); --verify only checks; --refresh keeps the number; --dry-run shows and writes nothing;
@@ -35,7 +36,7 @@ import { resolve } from "node:path";
 import { shouldStyle, styleSummary } from "./ui.mjs";
 
 const SRC = new URL("./", import.meta.url); // C11.1 slice 7 (D92): every core is imported from the kit itself, never through scripts/
-const CORES = { "check-manifest": "check-manifest.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs" };
+const CORES = { "check-manifest": "check-manifest.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs", update: "update.mjs" };
 const HELP = `chicla: the kit CLI
 
 Usage: chicla <command> [options]
@@ -46,6 +47,7 @@ Commands:
   verify-delivery  check a delivery .zip: the whole tree, the manifest, no junk or secrets (--against, --allow-removed)
   dump             emergency zip of the whole working directory, no guards (note words, --note, --project-only, --outdir <dir>)
   recovery         recover an emergency dump: extract, verify, compare, write RECOVERY_DIFF.md (<dump.zip>, --baseline <zip>, --out <dir>)
+  update           compare the instruction files of a project with this kit's templates and show the diff; writes nothing unless --apply <file> names a file (--agent <name>, --apply <file>)
   init             start a project: CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs and FILES.manifest, consistent; refuses if any exists, never overwrites
   bump-round       close a round: bump N -> N+1 (default), --refresh (keep N), --dry-run (write nothing), --verify (only check), --note <text>
 
@@ -56,7 +58,8 @@ Options:
   --out <dir>, --baseline <zip>, --toolchain-digest <hex>, --trust-toolchain   (recovery) where to extract; the last delivery zip; the pinned digest and the override for a RECOVER/ copy
   --verify         (bump-round) only check, write nothing; not combinable with --refresh, --dry-run, --note
   --refresh, --dry-run, --note <text>   (bump-round) see above; --note also gives the note of a dump
-  --agent <name>   (init) also write the instruction file of an agent of the matrix: gemini (GEMINI.md), copilot (.github/copilot-instructions.md); claude and codex are in the default set; repeatable
+  --agent <name>   (init, update) also write (update: also compare) the instruction file of an agent of the matrix: gemini (GEMINI.md), copilot (.github/copilot-instructions.md); claude and codex are in the default set; repeatable
+  --apply <file>   (update) replace that instruction file with the template (the confirmation; a missing one is created); repeatable; state files cannot be named
   --against <zip>, --allow-removed <path>   (verify-delivery, make-delivery) a previous zip that must lose nothing (repeatable); a removal that is approved
   --help           this text
 
@@ -87,7 +90,7 @@ export async function main(argv, io = {}) {
   // the options: --json and the command word are common; each command knows its own
   const opts = { root: cwd, write: false, verify: false, refresh: false, dry: false, note: "", zip: undefined, against: [], allowRemoved: [], projectOnly: false, outdir: undefined, words: [], out: undefined, baseline: undefined, digest: undefined, trust: false };
   const at = args.indexOf(command), takesZip = command === "verify-delivery" || command === "make-delivery" || command === "recovery";
-  opts.agents = [];
+  opts.agents = []; opts.apply = [];
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (i === at || a === "--json") continue;
@@ -100,7 +103,8 @@ export async function main(argv, io = {}) {
     if (command === "dump" && a === "--project-only") { opts.projectOnly = true; continue; }
     if (command === "dump" && a === "--outdir") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--outdir needs a folder"); opts.outdir = resolve(cwd, v); continue; }
     if (command === "dump" && !a.startsWith("--")) { opts.words.push(a); continue; }
-    if (command === "init" && a === "--agent") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--agent needs a name"); opts.agents.push(v); continue; }
+    if ((command === "init" || command === "update") && a === "--agent") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--agent needs a name"); opts.agents.push(v); continue; }
+    if (command === "update" && a === "--apply") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--apply needs a file name"); opts.apply.push(v); continue; }
     if (command === "check-manifest" && a === "--write") { opts.write = true; continue; }
     if (command === "bump-round" && a === "--verify") { opts.verify = true; continue; }
     if (command === "bump-round" && a === "--refresh") { opts.refresh = true; continue; }
@@ -119,6 +123,7 @@ export async function main(argv, io = {}) {
   let r;
   if (command === "check-manifest") r = mod.checkManifest({ root: opts.root, write: opts.write });
   else if (command === "init") r = mod.initProject({ root: opts.root, agents: opts.agents });
+  else if (command === "update") r = mod.updateProject({ root: opts.root, agents: opts.agents, apply: opts.apply });
   else if (command === "recovery") r = await mod.recoveryReport({ dump: resolve(cwd, opts.zip), baseline: opts.baseline, out: opts.out, toolchainDigest: opts.digest, trustToolchain: opts.trust });
   else if (command === "dump") r = await mod.emergencyDump({ work: opts.root, outdir: opts.outdir, note: opts.note || opts.words.join(" "), projectOnly: opts.projectOnly });
   else if (command === "make-delivery") r = await mod.makeDelivery({ out: resolve(cwd, opts.zip), against: opts.against.map((a) => resolve(cwd, a)), allowRemoved: opts.allowRemoved, root: opts.root });
@@ -129,7 +134,7 @@ export async function main(argv, io = {}) {
     const regenerateManifest = (root) => { const m = cm.checkManifest({ root, write: true }); return { ok: m.ok, ...cm.renderCheckManifest(m) }; };
     r = mod.bumpRound({ root: opts.root, mode: opts.verify ? "verify" : opts.refresh ? "refresh" : "bump", dry: opts.dry, note: opts.note, regenerateManifest });
   }
-  const { out, err } = command === "check-manifest" ? mod.renderCheckManifest(r) : command === "verify-delivery" ? mod.renderVerifyDelivery(r) : command === "make-delivery" ? mod.renderMakeDelivery(r) : command === "dump" ? mod.renderEmergencyDump(r) : command === "recovery" ? mod.renderRecoveryReport(r) : command === "init" ? mod.renderInit(r) : mod.renderBumpRound(r);
+  const { out, err } = command === "check-manifest" ? mod.renderCheckManifest(r) : command === "verify-delivery" ? mod.renderVerifyDelivery(r) : command === "make-delivery" ? mod.renderMakeDelivery(r) : command === "dump" ? mod.renderEmergencyDump(r) : command === "recovery" ? mod.renderRecoveryReport(r) : command === "init" ? mod.renderInit(r) : command === "update" ? mod.renderUpdate(r) : mod.renderBumpRound(r);
   if (json) {
     const { messages, ...data } = r;
     stdout.write(`${JSON.stringify({ command, ...data })}\n`);

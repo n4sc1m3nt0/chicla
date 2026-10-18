@@ -664,4 +664,71 @@ const eocd170 = (() => {
   ];
 })();
 
-export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14, ...win145, ...eocd170];
+// Round 171 / G-C5 ZIP-002 (D124): the local header against the central directory in `dataStart`.
+const local171 = (() => {
+  const F = "src/zipkit.mjs", L = ["test/local-header-agreement.test.mjs"];
+  return [
+    { id: "R171-local-name-bytes", file: F, tests: L, why: "the local name bytes are compared with the central ones",
+      find: " || !h.subarray(30, 30 + nl).equals(e.rawName)) throw", replace: ") throw" },
+    { id: "R171-local-name-last-byte", file: F, tests: L, why: "the WHOLE name is compared, not all but the last byte",
+      find: "!h.subarray(30, 30 + nl).equals(e.rawName)", replace: "!h.subarray(30, 29 + nl).equals(e.rawName.subarray(0, nl - 1))" },
+    { id: "R171-local-name-length", file: F, tests: L, why: "a local name of another length is refused by its length field",
+      find: "if (h.readUInt16LE(26) !== nl || ", replace: "if (" },
+    { id: "R171-local-method", file: F, tests: L, why: "the local compression method has to equal the central one",
+      find: "if (h.readUInt16LE(8) !== e.method) throw", replace: "if (false) throw" },
+    { id: "R171-local-encryption", file: F, tests: L, why: "an encryption bit that only the local header has is refused",
+      find: "if ((h.readUInt16LE(6) & 0x41) !== (e.flags & 0x41)) throw", replace: "if (false) throw" },
+    { id: "R171-local-encryption-strong", file: F, tests: L, why: "both encryption bits are compared (0x01 and 0x40), not only the first",
+      find: "(h.readUInt16LE(6) & 0x41) !== (e.flags & 0x41)", replace: "(h.readUInt16LE(6) & 0x01) !== (e.flags & 0x01)" },
+    { id: "R171-local-flags-whole", file: F, tests: L, why: "flags are NOT compared as a whole: the data descriptor bit legitimately differs",
+      find: "(h.readUInt16LE(6) & 0x41) !== (e.flags & 0x41)", replace: "h.readUInt16LE(6) !== e.flags" },
+  ];
+})();
+
+// Round 172 / G-C5 §5.2 (D125): overlapping entries and entries that overlap the central directory (`checkLayout`).
+const overlap172 = (() => {
+  const F = "src/zipkit.mjs", O = ["test/overlap.test.mjs"];
+  return [
+    { id: "R172-overlap-off", file: F, tests: O, why: "two entries that share bytes are refused",
+      find: "if (prev && s.start < prev.end) throw", replace: "if (false) throw" },
+    { id: "R172-overlap-off-by-one", file: F, tests: O, why: "the boundary is exact: an entry starting one byte before the previous one ends is refused",
+      find: "if (prev && s.start < prev.end) throw", replace: "if (prev && s.start < prev.end - 1) throw" },
+    { id: "R172-overlap-touching", file: F, tests: O, why: "entries that touch are NOT an overlap",
+      find: "if (prev && s.start < prev.end) throw", replace: "if (prev && s.start <= prev.end) throw" },
+    { id: "R172-overlap-no-sort", file: F, tests: O, why: "the check does not depend on the order of the central directory",
+      find: ".sort((a, b) => a.start - b.start);", replace: ";" },
+    { id: "R172-overlap-csize", file: F, tests: O, why: "the span includes the compressed size",
+      find: "e.localOffset + 30 + e.rawName.length + e.csize }", replace: "e.localOffset + 30 + e.rawName.length }" },
+    { id: "R172-overlap-central", file: F, tests: O, why: "an entry that reaches the central directory is refused",
+      find: "if (prev && prev.end > cdOff) throw", replace: "if (false) throw" },
+    { id: "R172-overlap-central-exact", file: F, tests: O, why: "an entry that ends exactly at the central directory is fine",
+      find: "if (prev && prev.end > cdOff) throw", replace: "if (prev && prev.end >= cdOff) throw" },
+    { id: "R172-overlap-code", file: F, tests: O, why: "the refusal carries the code EOVERLAP",
+      find: "the entries «${prev.e.name}» and «${s.e.name}» overlap (corrupted or hostile zip)`, \"EOVERLAP\")", replace: "the entries «${prev.e.name}» and «${s.e.name}» overlap (corrupted or hostile zip)`, \"EZIP\")" },
+    { id: "R172-overlap-open", file: F, tests: O, why: "openZip runs the check",
+      find: "checkLayout(entries, cdOff, path); }\n  catch", replace: "}\n  catch" },
+    { id: "R172-overlap-mark", file: F, tests: O, why: "markUtf8Names runs the check before it writes",
+      find: "todo = []; checkLayout(entries, cdOff, path);", replace: "todo = [];" },
+  ];
+})();
+
+// Round 174 / G-C5 §5.4 (D128): `MAX_CENTRAL` is 64 MiB, exclusive, and the refusal has its own code.
+const central174 = (() => {
+  const F = "src/zipkit.mjs", C = ["test/central-limit.test.mjs"];
+  return [
+    { id: "R174-central-old-limit", file: F, tests: C, why: "the bound is 64 MiB, not the old 1 GiB",
+      find: "const MAX_CENTRAL = 64 << 20;", replace: "const MAX_CENTRAL = 1 << 30;" },
+    { id: "R174-central-limit-minus-one", file: F, tests: C, why: "the bound is exact: one byte above 64 MiB is refused",
+      find: "const MAX_CENTRAL = 64 << 20;", replace: "const MAX_CENTRAL = (64 << 20) + 1;" },
+    { id: "R174-central-limit-plus-one", file: F, tests: C, why: "the bound is exact: 64 MiB itself is not refused as too large",
+      find: "const MAX_CENTRAL = 64 << 20;", replace: "const MAX_CENTRAL = (64 << 20) - 1;" },
+    { id: "R174-central-inclusive", file: F, tests: C, why: "exactly 64 MiB is allowed (the comparison is `>`, not `>=`)",
+      find: "if (cdSize > MAX_CENTRAL) throw", replace: "if (cdSize >= MAX_CENTRAL) throw" },
+    { id: "R174-central-check-off", file: F, tests: C, why: "the size of the central directory is checked",
+      find: "if (cdSize > MAX_CENTRAL) throw", replace: "if (false) throw" },
+    { id: "R174-central-code", file: F, tests: C, why: "the refusal carries the code ECENTRAL",
+      find: 'the limit is ${MAX_CENTRAL})`, "ECENTRAL")', replace: 'the limit is ${MAX_CENTRAL})`)' },
+  ];
+})();
+
+export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14, ...win145, ...eocd170, ...local171, ...overlap172, ...central174];

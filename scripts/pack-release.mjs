@@ -35,7 +35,7 @@ const scratch = mkdtempSync(join(tmpdir(), 'chicla-pack-'));
 process.on('exit', () => rmSync(scratch, { recursive: true, force: true })); // done() and refuse() end the process
 {
   let packed;
-  try { packed = JSON.parse(execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', scratch], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }))[0]; }
+  try { packed = Object.values(JSON.parse(execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', scratch], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })))[0]; } // npm up to 11 prints a list, npm 12 an object keyed by package name: the first value is the package either way
   catch (e) { refuse('EPACK', String(e.stderr || e.message).split('\n')[0]); }
   if (!packed.files.some((f) => f.path === 'LICENSE')) refuse('ELICENSE', 'the tarball carries no LICENSE');
   const tgz = join(scratch, packed.filename);

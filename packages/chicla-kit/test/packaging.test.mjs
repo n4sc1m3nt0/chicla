@@ -36,9 +36,16 @@ test("the LICENSE inside the kit is the root LICENSE", () => {
 
 test("npm pack lists the shipped files and nothing of test/", () => {
   const out = execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: kitDir, encoding: "utf8", ...NPM });
-  const files = JSON.parse(out)[0].files.map((f) => f.path);
+  const files = Object.values(JSON.parse(out))[0].files.map((f) => f.path);
   for (const f of ["LICENSE", "README.md", "package.json", "src/cli.mjs", "src/zipkit-loader.mjs", "src/pinned/recovery-report.mjs", "templates/CLAUDE.md", "templates/AGENTS.md"]) assert.ok(files.includes(f), `missing ${f}`);
   assert.ok(!files.some((f) => f.startsWith("test/")), "tests are in the tarball");
+});
+
+test("the tarball carries no placeholder file: no .gitkeep, nothing outside src/, templates/ and the three root files", () => {
+  const out = execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: kitDir, encoding: "utf8", ...NPM });
+  const files = Object.values(JSON.parse(out))[0].files.map((f) => f.path);
+  assert.deepEqual(files.filter((f) => /(^|\/)\.gitkeep$/.test(f)), []);
+  assert.deepEqual(files.filter((f) => !/^(src|templates)\//.test(f) && !["LICENSE", "README.md", "package.json"].includes(f)), []);
 });
 
 test("no source of the kit reaches chicla-zip by a relative path, except the loader (fallback) and the pinned recovery-report", () => {
@@ -91,7 +98,7 @@ test("loader: when the fallback also fails, that error is the one reported", asy
 test("installed from the two tarballs into a clean folder, the kit finds chicla-zip by name", { timeout: 120000 }, async () => {
   const tmp = mkdtempSync(join(tmpdir(), "chicla-kit-install-"));
   try {
-    const packTo = (cwd) => join(tmp, JSON.parse(execFileSync("npm", ["pack", "--ignore-scripts", "--json", "--pack-destination", tmp], { cwd, encoding: "utf8", ...NPM }))[0].filename);
+    const packTo = (cwd) => join(tmp, Object.values(JSON.parse(execFileSync("npm", ["pack", "--ignore-scripts", "--json", "--pack-destination", tmp], { cwd, encoding: "utf8", ...NPM })))[0].filename);
     const zipTgz = packTo(zipDir), kitTgz = packTo(kitDir);
     const proj = join(tmp, "proj");
     execFileSync("node", ["-e", `require("fs").mkdirSync(${JSON.stringify(proj)})`]);

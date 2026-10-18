@@ -33,7 +33,7 @@ const project = ({ seq = 5, appSeq = seq, extraStatus = false, scripts = true } 
   writeFileSync(join(root, 'package.json'), '{"name":"fake","private":true,"version":"0.0.1"}\n');
   writeFileSync(join(root, 'version.mjs'), `//! fake\n//! (line 3 = fingerprint)\n// STATUS_FILE_FINGERPRINT: ${core(appSeq)} (old note)\n` + appBody);
   writeFileSync(join(root, 'CHANGELOG.md'), `<!-- CHANGELOG_FINGERPRINT: ${core(seq)} (old note) -->\n` + clBody);
-  const st = `# Status\n\n${PARA(seq, 'version.mjs', hApp, hCl)}\n\n**Last updated (round 1):** 2026-10-02.\n`;
+  const st = `# Status\n\n## Instructions\n\n**Current version:** v0.0.1\n\n${PARA(seq, 'version.mjs', hApp, hCl)}\n\n**Last updated (round 1):** 2026-10-02.\n\n## Snapshot\n\n## Next up\n\n## Gates\n`; // C10.5: the parts a status file must have
   writeFileSync(join(root, `CHICLA_PROJECT_STATUS-${seq}.md`), st);
   if (extraStatus) writeFileSync(join(root, `CHICLA_PROJECT_STATUS-${seq + 1}.md`), st);
   checkManifest({ root, write: true });

@@ -345,7 +345,7 @@ ${errors.length ? `\n## Errors while generating this report (the zip was created
     if (r.status !== 0 && r.status !== 18) { // 18 = some unreadable files; the zip exists anyway
       finalName = zipName.replace(/\.zip$/, ".tar.gz"); // fallback: tar.gz (follows symlinks), in case `zip` does not exist
       const tmpTar = join(tmpdir(), finalName);
-      r = spawnSync("tar", ["-czhf", tmpTar, ...EX.filter((x) => !x.startsWith("*.")).map((x) => `--exclude=${x.replace(/^\*\//, "").replace(/\/\*$/, "")}`), "--exclude=*.zip", "--exclude=*.pyc", `--exclude=*.${ci("pem")}`, "--exclude=*.tsbuildinfo", "--exclude=.DS_Store", "--exclude=.env", "--exclude=.env.*", ...(skipHome ? HOME_NOISE.map((n) => `--exclude=work/${n}`) : []), "-C", stage, ...members], { stdio: ["ignore", "ignore", "pipe"], encoding: "utf8" }); relay(r);
+      r = spawnSync("tar", ["-czhf", tmpTar, ...EX.filter((x) => !x.startsWith("*.")).map((x) => `--exclude=${x.replace(/^\*\//, "").replace(/\/\*$/, "")}`), "--exclude=*.zip", "--exclude=*.pyc", `--exclude=*.${ci("pem")}`, "--exclude=*.tsbuildinfo", "--exclude=.DS_Store", "--exclude=.env", "--exclude=.env.*", ...(skipHome ? HOME_NOISE.map((n) => `--exclude=work/${n}`) : []), "-C", stage, ...members], { stdio: ["ignore", "ignore", "pipe"], encoding: "utf8", env: { ...process.env, COPYFILE_DISABLE: "1" } }); relay(r); // COPYFILE_DISABLE: macOS bsdtar would add an AppleDouble «._name» member for every file or folder with extended attributes
       if (r.status !== 0) { rmSync(stage, { recursive: true, force: true }); return fail("EDUMP_FAILED", "✗ neither the chicla-zip writer, zip nor tar worked — dump NOT created."); }
       copyFileSync(tmpTar, join(OUTDIR, finalName)); rmSync(tmpTar, { force: true });
     } else {

@@ -39,10 +39,12 @@ function dump(T, mode, { dir = 'chicla', projectOnly = true, project = true } = 
   const f = existsSync(outdir) ? readdirSync(outdir).find((n) => n.endsWith(mode === 'tar' ? '.tar.gz' : '.zip')) : undefined;
   if (!f) return { r, names: null };
   const code = mode === 'tar'
-    ? 'import tarfile,sys,json;t=tarfile.open(sys.argv[1]);m=t.getmembers();mk=[x for x in m if x.name.endswith("RECOVERY_MARKER.json")];print(json.dumps({"names":[x.name for x in m],"marker":json.loads(t.extractfile(mk[0]).read()),"secret":any(x.isfile() and sys.argv[2].encode() in t.extractfile(x).read() for x in m if not x.name.endswith(("RECOVERY_REPORT.md","RECOVERY_MARKER.json")))}))'
+    ? 'import tarfile,sys,json;t=tarfile.open(sys.argv[1]);m=t.getmembers();mk=[x for x in m if x.name.split("/")[-1]=="RECOVERY_MARKER.json"];print(json.dumps({"names":[x.name for x in m],"marker":json.loads(t.extractfile(mk[0]).read()),"secret":any(x.isfile() and sys.argv[2].encode() in t.extractfile(x).read() for x in m if not x.name.endswith(("RECOVERY_REPORT.md","RECOVERY_MARKER.json")))}))'
     : 'import zipfile,sys,json;z=zipfile.ZipFile(sys.argv[1]);n=z.namelist();print(json.dumps({"names":n,"marker":json.loads(z.read("RECOVERY_MARKER.json")),"secret":any(sys.argv[2].encode() in z.read(i) for i in n if not i.endswith(("RECOVERY_REPORT.md","RECOVERY_MARKER.json")))}))';
-  const o = JSON.parse(spawnSync(PY, ['-c', code, join(outdir, f), SECRET], { encoding: 'utf8', maxBuffer: 1 << 26 }).stdout);
-  return { r, names: new Set(o.names.map((n) => n.replace(/^\.\//, ''))), marker: o.marker, secret: o.secret, path: join(outdir, f), work };
+  const pr = spawnSync(PY, ['-c', code, join(outdir, f), SECRET], { encoding: 'utf8', maxBuffer: 1 << 26 }); assert.equal(pr.status, 0, `python ${pr.status}: ${pr.stderr}`);
+  const o = JSON.parse(pr.stdout);
+  // macOS bsdtar adds AppleDouble members («._name», extended attributes) beside real ones: metadata, not files of work/ (round 178)
+  return { r, names: new Set(o.names.map((n) => n.replace(/^\.\//, '')).filter((n) => !/(^|\/)\._[^/]*$/.test(n))), marker: o.marker, secret: o.secret, path: join(outdir, f), work };
 }
 
 for (const [mode, ok] of [['stream', true], ['zip', !!ZIP], ['tar', !!TAR && !!GZIP]]) {
