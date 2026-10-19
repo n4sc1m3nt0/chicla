@@ -1,5 +1,13 @@
-<!-- CHANGELOG_FINGERPRINT: seq=201 file=CHICLA_PROJECT_STATUS-201.md app_sha256_12=065d37032ef1 changelog_sha256_12=aea8b06077e4 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=202 file=CHICLA_PROJECT_STATUS-202.md app_sha256_12=065d37032ef1 changelog_sha256_12=ac627a783c8a (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 198 — CI of round 197: 5 red tests were test bugs, fixed (v0.0.201)
+
+- Task (Rodrigo: «confirmo. avança» to the plan after reading the CI logs `logs_106398148340.zip`, round 197 tree). TEST FILES ONLY, no source file: macOS had 4 red (`merge-recheck.test.mjs` x3 and `concurrent-writer.test.mjs` zip004 A) and Windows 1 red (`layout-report2.test.mjs` ZIP-008 differential) on Node 18, 20 and 22; Ubuntu 0 red.
+- macOS: `tmpdir()` is `/var/...`, a symlink to `/private/var/...`, and the code hands the `_rename` hook the REAL path, so the hooks compared paths that never matched. `base` is now `realpathSync(mkdtempSync(...))` in both files. Windows: Python wrote `good.txt` in text mode (`\n` became `\r\n`); `pyRead` now writes the bytes through `sys.stdout.buffer`.
+- Red first, on Linux: the 4 macOS failures reproduced with `TMPDIR` set to a symlink; green after, with a symlinked and a plain `TMPDIR`. `layout-report2` 13 pass, `merge-recheck` 5, `concurrent-writer` 8. The Windows fix could not be reproduced on Linux.
+- The pin did not move; G-C11 is still due since round 195.
+- NOT run: macOS and Windows (the fixes are unseen there: gates for the next CI push), Node 18 and 20, mutants (none touched), `npm run smoke` (no script changed), CI; `npm test` and `check-build` are below.
 
 ## Round 197 — C15.14 slice c: the docs say the re-check narrows the window (v0.0.200)
 

@@ -2,11 +2,11 @@
 .gitattributes	44424052	367
 .github/workflows/ci.yml	72813154	4036
 .gitignore	1b52e6b9	47
-CHANGELOG.md	5e500ca7	272465
-CHICLA_PROJECT_STATUS-201.md	1d046938	134624
+CHANGELOG.md	004b7c98	273773
+CHICLA_PROJECT_STATUS-202.md	f0128e2c	135692
 CLAUDE.md	48b590af	8485
 CONTRIBUTING.md	816ec6e1	1896
-FILES.baseline.json	7f44d6a2	34146
+FILES.baseline.json	03c893c0	34146
 LICENSE	1ea3b7b0	10174
 README.md	794913ae	10780
 ROADMAP.md	af46b938	136244
@@ -24,7 +24,7 @@ docs/state-file.md	94ef876f	5916
 docs/zip-handling.md	ad8dd60e	22613
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	3b66b9fd	541
+package.json	f9ba7d9a	541
 packages/chicla-kit/LICENSE	1ea3b7b0	10174
 packages/chicla-kit/README.md	523f8af0	6106
 packages/chicla-kit/package.json	e4592d26	547
@@ -100,7 +100,7 @@ packages/chicla-zip/test/cli-m4-gaps.test.mjs	e488913a	5891
 packages/chicla-zip/test/cli-windows-names.test.mjs	70e43c19	9310
 packages/chicla-zip/test/cli.test.mjs	0f05c471	13234
 packages/chicla-zip/test/collisions.test.mjs	0637177a	4124
-packages/chicla-zip/test/concurrent-writer.test.mjs	ce671d4a	7548
+packages/chicla-zip/test/concurrent-writer.test.mjs	06dd779e	7736
 packages/chicla-zip/test/crc.test.mjs	6df94309	4171
 packages/chicla-zip/test/create-stream.test.mjs	915af0f3	16891
 packages/chicla-zip/test/create.test.mjs	c4142c83	14196
@@ -124,11 +124,11 @@ packages/chicla-zip/test/fsync-writable.test.mjs	30889f60	2612
 packages/chicla-zip/test/fuzz-read.test.mjs	d3f758f8	12458
 packages/chicla-zip/test/interop.mjs	80f4d990	5307
 packages/chicla-zip/test/interop.test.mjs	13d8a89f	6322
-packages/chicla-zip/test/layout-report2.test.mjs	acf4afbd	8749
+packages/chicla-zip/test/layout-report2.test.mjs	40031050	8747
 packages/chicla-zip/test/legacy-encoding.test.mjs	d36bc7fa	6093
 packages/chicla-zip/test/local-header-agreement.test.mjs	c7bf3904	7419
 packages/chicla-zip/test/mark-utf8.test.mjs	3483f5e6	9831
-packages/chicla-zip/test/merge-recheck.test.mjs	70b5142e	4935
+packages/chicla-zip/test/merge-recheck.test.mjs	62d33f4b	5123
 packages/chicla-zip/test/open-directory.test.mjs	cd2e9e62	2083
 packages/chicla-zip/test/open.test.mjs	66356831	7502
 packages/chicla-zip/test/overlap-local-extra.test.mjs	8dad6b91	6143
@@ -215,4 +215,4 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	efd70b5f	531
+version.mjs	6beae9b4	531

@@ -8,14 +8,15 @@
 import { createZip, extractZip, listZip, readZipFile, ZipError } from '../src/zipkit.mjs';
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync, rmSync, renameSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync, rmSync, renameSync, realpathSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildZip } from './zipfab.mjs';
 const skip = process.platform === 'win32' ? 'symlinks need rights on Windows' : false;
 
 let base, n = 0;
-before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-c1513-')); });
+before(() => { base = realpathSync(mkdtempSync(join(tmpdir(), 'chicla-zip-c1513-'))); });
+// realpath: on macOS tmpdir() is /var/..., a symlink to /private/var/...; the code hands the hooks the REAL path, so the tests compare real paths (round 198).
 after(() => { rmSync(base, { recursive: true, force: true }); });
 const fresh = () => { const d = join(base, `t${n++}`); mkdirSync(d); return d; };
 

@@ -22,7 +22,7 @@ const refused = (err) => err instanceof ZipError && err.code === 'EZIP';
 const names = (p) => listZip(p).entries.map((e) => e.name);
 const havePython = spawnSync('python3', ['-c', '1'], { stdio: 'ignore' }).status === 0;
 const pyNames = (p) => JSON.parse(spawnSync('python3', ['-I', '-c', 'import sys,json,zipfile;print(json.dumps([i.filename for i in zipfile.ZipFile(sys.argv[1]).infolist()]))', p], { encoding: 'utf8' }).stdout || '[]');
-const pyRead = (p, name) => spawnSync('python3', ['-I', '-c', 'import sys,zipfile;sys.stdout.write(zipfile.ZipFile(sys.argv[1]).read(sys.argv[2]).decode())', p, name], { encoding: 'utf8' }).stdout;
+const pyRead = (p, name) => spawnSync('python3', ['-I', '-c', 'import sys,zipfile;sys.stdout.buffer.write(zipfile.ZipFile(sys.argv[1]).read(sys.argv[2]))', p, name], { encoding: 'utf8' }).stdout;
 
 const GOOD = 'benign content\n', EVIL = 'EVIL content\n';
 const l1 = local('good.txt', GOOD), l2 = local('evil.txt', EVIL);
