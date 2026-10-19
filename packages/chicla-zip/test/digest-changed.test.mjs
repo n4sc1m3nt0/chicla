@@ -138,3 +138,27 @@ test('rewritten with the same size and the old mtime put back by hand: the ctime
   let root = mk(); await changed(root, join(fresh(), 'a.zip'), { exclude: (rel) => { if (rel === 'a.txt') redo(join(root, 'a.txt')); return false; } });
   root = mk(); await changed(root, join(fresh(), 'b.zip'), { _afterRead: (p) => redo(p) });
 });
+
+// Round 190 / C15.12 (G-C5 second review, ZIP-013): the old «put the mtime back» test restored the time through a `Date` (millisecond precision), so it was the
+// MTIME that gave the rewrite away and the ctime check was never the only thing that fired (mutant M3c-same-ctime survived, wrongly marked as redundant).
+// Here the mtime is a whole second set before the run and set back to exactly that second (`touch -r`): size, mtime and inode are identical and ONLY the ctime differs.
+const T0 = 1700000000;
+const spin = (ms) => { const end = Date.now() + ms; while (Date.now() < end); }; // the kernel's ctime clock ticks in milliseconds: make sure it has moved
+const touchedBack = (p) => { // rewrite with the same size, put the exact mtime back, and prove that only the ctime moved
+  const was = statSync(p, { bigint: true });
+  spin(30); writeFileSync(p, 'ABCDEF'); utimesSync(p, T0, T0);
+  const now = statSync(p, { bigint: true });
+  assert.equal(now.size, was.size, 'precondition: same size'); assert.equal(now.mtimeNs, was.mtimeNs, 'precondition: exact same mtime');
+  assert.equal(now.ino, was.ino, 'precondition: same inode'); assert.equal(now.dev, was.dev, 'precondition: same device');
+  assert.ok(now.ctimeNs > was.ctimeNs, 'precondition: the ctime moved (if this fails the file system does not keep a ctime and the test proves nothing)');
+};
+const mkExact = () => { const root = fresh(), p = join(root, 'a.txt'); writeFileSync(p, 'abcdef'); utimesSync(p, T0, T0); return { root, p }; };
+
+for (const stream of [false, true]) {
+  test(`only the ctime differs (exact mtime put back, same size and inode) → ECHANGED, ${stream ? 'streamed' : 'whole-file'} read, at the listing gap and during the read`, async () => {
+    let t = mkExact();
+    await changed(t.root, join(fresh(), 'a.zip'), { stream, exclude: (rel) => { if (rel === 'a.txt') touchedBack(t.p); return false; } });
+    t = mkExact();
+    await changed(t.root, join(fresh(), 'b.zip'), { stream, _afterRead: (p) => { if (p.endsWith('a.txt')) touchedBack(p); } });
+  });
+}

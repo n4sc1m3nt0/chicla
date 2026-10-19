@@ -1,5 +1,81 @@
-<!-- CHANGELOG_FINGERPRINT: seq=189 file=CHICLA_PROJECT_STATUS-189.md app_sha256_12=065d37032ef1 changelog_sha256_12=4f0151bda6c3 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=201 file=CHICLA_PROJECT_STATUS-201.md app_sha256_12=065d37032ef1 changelog_sha256_12=aea8b06077e4 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 197 — C15.14 slice c: the docs say the re-check narrows the window (v0.0.200)
+
+- Task (Rodrigo: «avança» = the «Next up» slice c of C15.14; closes the card). Docs and tests only, no source file: `SECURITY.md` («what is not a vulnerability») and `docs/zip-handling.md` §7 now say, in the present tense, that the merge looks at the target again right before each move and refuses an item that appeared meanwhile (`EEXIST`, the moves done are undone, the other writer's item is left alone), that this narrows the window of ZIP-004 B and does not close it, and that ZIP-003 and the symlink swap are untouched; §3 point 8 gets one clause. The old «will narrow» is gone.
+- `test/concurrency-docs.test.mjs` +2 (6 in all), both red before the docs and green after.
+- The pin did not move (no `RECOVER/` file changed); G-C11 is still due since round 195.
+- NOT run: the mutant list (no mutant touched), `npm run smoke` (no script changed), CI, Node 18 and 20, Windows, macOS; `npm test` and `check-build` are below.
+
+## Round 196 — C15.14 slice b: mutants for the re-check in `mergeMove` (v0.0.199)
+
+- Task (Rodrigo: «avança» = the «Next up» slice b of C15.14). `packages/chicla-zip/mutants/list.mjs` ONLY, no source file, no test file: 6 mutants `R195-*` of the one line that looks at the target again before each move: check removed, check also with `overwrite: true`, condition inverted, files only (a folder that appeared passes), first move only, wrong code (`EUNSAFE` for `EEXIST`).
+- Each one was judged alone with `node scripts/mutants.mjs --only <id> --timeout 60` in the background: all 6 RED by `test/merge-recheck.test.mjs`, none survived, none needed a new test.
+- Slice left: (c) the one sentence in `SECURITY.md` and `docs/zip-handling.md` that says the window is narrower, with `concurrency-docs.test.mjs`. The pin did not move (the list is not one of the 5 files of `RECOVER/`); G-C11 is still due since round 195.
+- NOT run: the full mutant list (only the 6 new ones), `npm run smoke` (no script changed), CI, Node 18 and 20, Windows, macOS; the whole `npm test` is below.
+
+## Round 195 — C15.14 slice 1: the merge looks at the target again before each move (v0.0.198)
+
+- Task (Rodrigo: «avança», the «Next up» card C15.14, split by him into slices because earlier accounts hit their limits before finishing; this round is slice 1 ONLY). `zipkit.mjs`, the only source file: with `overwrite: false`, `mergeMove` does an `lstat` of the target right before each move and refuses an item that appeared meanwhile (`EEXIST`); the existing undo puts the moves already done back and the writer's item is untouched. With `overwrite: true` nothing changed.
+- `test/merge-recheck.test.mjs` (5; 3 red first, the 2 controls green before and after): a file, a folder and a whole new subtree created by a «writer» during the first move. `concurrent-writer.test.mjs` (8) still green: `zip004` B stays true because its hook runs after the check. It narrows the window and does not close it (C15.15, after 0.1).
+- Slices left: (b) mutants `R195-*` for this check, (c) the one sentence in `SECURITY.md` and `docs/zip-handling.md` that says the window is narrower, with `concurrency-docs.test.mjs`. THE PIN MOVED: G-C11 is due again.
+- Run: the new file, `concurrent-writer`, `extract-exdev`, `extract-rollback`, `extract-tmp-mode`. NOT run: mutants (slice b), `npm run smoke` (no script changed), CI, Node 18 and 20, Windows, macOS; the whole `npm test` is below.
+
+## Round 194 — C15.13: the limit against a concurrent writer is written down and pinned (v0.0.197)
+
+- Task (Rodrigo: «avança» = the «Next up» card, no open decision; C15.13 next in the D130 order, D134). Docs and tests only, NO source file: `SECURITY.md` («what counts» carved out, new «known limits» bullet) and `docs/zip-handling.md` (§3 item 8, §4 `createZip`, §7) now say that `createZip` (the walk) and the merge mode of `extractZip` are not safe against a concurrent writer of the tree or the destination: a folder swapped for a symlink (zip gets files from outside the tree; the merge writes outside the destination) and a file created during the merge that is replaced although `overwrite` is false, with no backup.
+- `packages/chicla-zip/test/concurrent-writer.test.mjs` (8): the hook PoCs `zip003` (through `exclude`, both `stream` modes) and `zip004` A and B (through `_rename`) pin the limit as KNOWN, each with a control without the race. `test/concurrency-docs.test.mjs` (4, RED first) guards the texts. The race tests pass from the start by design (they describe today's code); checked on a copy of the package: a symlink check in the walk turns `zip003` red (2), a re-check before the move leaves `zip004` B green (the hook runs after it, as the docs say).
+- The reviewer's PoC scripts are not in the tree: the hooks were rebuilt from the card and the code, and the real races with a second process were NOT run. Run: the two new files and the docs tests. The pin did not move. NOT run: the whole `npm test` before this entry (see the run below), `npm run smoke` (no script changed), mutants (no source changed), CI, Node 18 and 20, Windows (skipped), macOS.
+
+## Round 193 — C15.11: the temp folder stays 0700 until after the final rename (v0.0.196)
+
+- Task (Rodrigo: «avança» = the «Next up» card, no open decision; C15.11 next in the D130 order). `zipkit.mjs`, the only source file: `extractZip` no longer runs `chmod(tmp, 0777 & ~umask)` before the rename (under `umask 0` the folder and the files inside were 0777 for a moment); a NEW destination gets its umask mode after the rename, an existing one keeps its own.
+- `test/extract-tmp-mode.test.mjs` (5; 3 red first; the temp folder seen through the `_rename` hook under `umask 0`, new and merged destination, failed rename, modes of the files kept). Mutants `R193-*` (4, RED one at a time). `docs/zip-handling.md` §3, ROADMAP C15.11 done. Two old anchors went stale and were re-anchored (text only, each RED again): `M2-missing-parents`, `M2-umask-final`.
+- Run: the new test and the whole `chicla-zip` suite (753 green). THE PIN MOVED: G-C11 is due again. NOT run: `npm run smoke` (no script changed), the full mutant list, CI, Node 18 and 20, Windows (the test is skipped there), macOS.
+
+## Round 192 — C15.9: the layout check uses the real span, the local extra field included (v0.0.195)
+
+- Task (Rodrigo: «avança» = the «Next up» card, no open decision; C15.9 next in the D130 order). `zipkit.mjs`, the only source file: `localSpan` reads each entry's local name and extra lengths (one 30-byte read, never the data) and `checkLayout` uses `30 + name + extra + csize`, in `openZip` and before `markUtf8Names` writes; an entry hidden in another's local extra field, or an extra field that runs into the central directory, is `EOVERLAP`. A header that cannot be read (no signature, outside the file) keeps the central-only minimum; `dataStart` refuses it when used.
+- `test/overlap-local-extra.test.mjs` (9; 5 red first): hidden entry (two depths, either central order), extra into the directory, `markUtf8Names` leaves the bytes untouched, ordinary zips with long local extras still extract, garbage lengths without a signature are not a span. Mutants `R192-*` (6, RED one at a time; the first run had one survivor, `R192-signature-unchecked`, killed by the last test). `docs/zip-handling.md` §2 (the «not seen» and «no I/O» claims), ROADMAP C15.9 done. Four old anchors went stale and were re-anchored (text only, each RED again): `C5.2-reader-local-extra`, `R172-overlap-csize`, `-open`, `-mark`.
+- Run: the new test, `overlap`, then the whole `chicla-zip` suite (747 green, bench-small included). THE PIN MOVED: G-C11 is due again. NOT run: `npm run smoke` (no script changed), the full mutant list, the fixture `zip011` against `unzip` itself (not in the tree), CI, Node 18 and 20, Windows, macOS.
+
+## Round 191 — C15.10: the writers refuse a path that is a file and a folder (v0.0.194)
+
+- Task (Rodrigo: «avança» = the «Next up» card, no open decision; C15.10 first in the D130 order). `zipkit.mjs`, the only source file: `refuseFileFolderClash(items)`, called in `writeZip` and `writeZipStream` after the names are vetted and before anything is opened or written: a path that is a file and also an explicit folder («a» with «a/») or the parent of another path («a» with «a/b») is `EUNSAFE`; the extractor's rule, exact paths (case and NFC stay advisory in `collisions`).
+- `test/write-path-conflict.test.mjs` (20; 16 red first): 7 conflict shapes through both writers (nothing written: no file, zero bytes to the sink), non-conflicts (shared prefix, case) still written, the extractor refuses the same lists, Python `zipfile` and `extractZip` read an accepted list. Mutants `R191-*` (5), each RED one at a time. `docs/zip-handling.md` §4, ROADMAP C15.10 done. One old fixture fixed: `audit2.test.mjs` A-3 wrote the file `a/b` beside the folder `a/b/` (now `a/bb`), the very conflict this card refuses.
+- Run, one file at a time: the new test and `audit2`; `write*`, `create*`, `collisions`, `differential-python`, `fuzz-read` together (206 green). THE PIN MOVED (`zipkit.mjs`): G-C11 is due again. NOT run: the Python fuzz extension of the card (the writers do not produce such lists any more; the differential test covers accepted lists), `npm run smoke` (no script changed), the full mutant list, CI, Node 18 and 20, Windows, macOS.
+
+## Round 190 — C15.12: the ctime check proved, the mutant list honest (v0.0.193)
+
+- Task (Rodrigo: «avança» = the «Next up» card, no open decision). Tests and `mutants/list.mjs` only, NO source: `test/digest-changed.test.mjs` +2 (`touch -r` with an exact mtime, whole-file and streamed read; each asserts its precondition: same size, same mtime in ns, same inode, only the ctime moved). `M3c-same-ctime` is RED now (it survived before: the old test put the time back through a `Date`, so the mtime gave it away) and its wrong `survives` is dropped.
+- `M3c-same-ino`: kept `survives`, with the reason measured on ext4 (a `rename` moves the ctime). U11 (upper bound of `epoch`) traced: the later date check refuses the same values with the same `EARG`, only the message differs; U14 (symlink branch of `ensureDir`) read: only a concurrent writer in the private temp tree reaches it. Both added as `R190-*` with `survives` and the reason.
+- Run: the new tests (`digest-changed` 17 green), the four mutants one at a time. Whole `npm test`: run on the final tree after `bump-round` (Node 22): 1272 tests, 1271 pass, 0 fail, 1 skipped. NOT run: `npm run smoke`, the full mutant list, CI, Node 18 and 20, Windows, macOS (the ctime measurement is this sandbox's ext4 only). The pin did not move.
+
+## Round 189 — C15.17: a trailing end record found by size (v0.0.192)
+
+- Task (Rodrigo: «avança» = the «Next up» card, no open decision). `zipkit.mjs`, the only source file: in `readCentral`, a record AFTER the chosen one whose `recordPos - cdSize` starts with a central header signature is `EAMBIGUOUS` (Python and unzip find the directory by size and ignore the offset field); records before it (a stored zip inside an entry) and trailing records whose size leads nowhere stay ignored.
+- `test/trailing-size-fake.test.mjs` (6, 2 red first, Python differential); mutants `R189-*` (4, all RED, one at a time); `docs/zip-handling.md` §2; ROADMAP C15.17 done.
+- Run, one file at a time: the new test and `layout-report2`, `eocd-report2`, `eocd-ambiguity`, `zip64`, `open`, `local-header-agreement`, `overlap`, `central-limit`, `audit2`, `audit3`, `read`, `fuzz-read`, `differential-python`, `create`, `write` (all green). Whole `npm test`: run on the final tree after `bump-round` (Node 22): 1270 tests, 1269 pass, 0 fail, 1 skipped (the first run had 1 red, a stale mutant anchor of `R170-*` caused by my edit of the `fit.push` line, fixed by moving the change into `fields`; this is the second run). NOT run: `npm run smoke`, the full mutant list, CI, Node 18 and 20, Windows, macOS. THE PIN MOVED: G-C11 is due again.
+
+## Round 188 — C15.8: the central directory exactly where the end record says (v0.0.191)
+
+- Task (Rodrigo: «avança» = the «Next up» card, no open decision). `zipkit.mjs`, the only source file: `readCentral` refuses with `EZIP` when `cdOff + cdSize` is not the position of the end record, or of the zip64 record (ZIP-008: data before the archive, a gap, a directory over its own record); `parseEntries` refuses with `EZIP` when bytes are left in the directory after the counted entries (ZIP-007).
+- `test/layout-report2.test.mjs` (13, 8 red first; the zip008 fixture carries a decoy directory so the raw offsets land on a valid one) and `docs/zip-handling.md` §2; mutants `R188-*` (8, all RED, one at a time; `R188-fit-gap-only` survived first, the overlap fixture was tightened); ROADMAP C15.8 done.
+- Behaviour change: a zip with data in front of the archive (self-extracting) is now refused, not read with shifted offsets.
+- Run, one file at a time: the new test and `eocd-report2`, `eocd-ambiguity`, `zip64`, `open`, `local-header-agreement`, `overlap`, `central-limit`, `audit2`, `audit3`, `read`, `extract-legacy`, `legacy-encoding`, `fuzz-read`, `differential-python`, `create`, `write-ut`, `write` (all green). Whole `npm test`: run on the final tree after `bump-round` (Node 22): 1264 tests, 1263 pass, 0 fail, 1 skipped. NOT run: `npm run smoke`, the full mutant list, CI, Node 18 and 20, Windows, macOS. THE PIN MOVED: G-C11 is due again.
+
+## Round 187 — C15.7: the end record read the way Python and unzip read it (v0.0.190)
+
+- Task (Rodrigo: «confirmo tudo. avança»: D133 and D134 confirmed, first card of the plan). `readCentral` in `zipkit.mjs`, the only source file: every end-record signature in the tail is a candidate (ZIP-005); a zip64 locator makes the zip64 record the truth and the plain fields may differ only by being markers, else `EAMBIGUOUS` (ZIP-006); `0xffff` in the count without a locator is a real count (ZIP-009).
+- `test/eocd-report2.test.mjs` (11, 4 red first) and `test/zipraw.mjs`; mutants `R187-*` (9, all RED); `docs/zip-handling.md` §2; ROADMAP: D133 and D134 confirmed, C15.7 done, C15.17 added (a trailing fake found by size, found here, not in the report, NOT fixed).
+- Run, one file at a time: the new test, `eocd-ambiguity`, `zip64`, `open`, `local-header-agreement`, `overlap`, `central-limit`, `audit2`, `audit3`, `fuzz-read`, `differential-python` (all green). The whole `npm test` was run on the final tree (Node 22, after `bump-round`, second attempt: the first process died without an `EXIT` line and was not a test failure): 1251 tests, 1250 pass, 0 fail, 1 skipped. NOT run: `npm run smoke`, the full mutant list, CI, Node 18 and 20, Windows, macOS. THE PIN MOVED: G-C11 is due again.
+
+## Round 186 — second security review verified, M15 cards added to the roadmap (v0.0.189)
+
+- Task (Rodrigo: «verifica o relatório de segurança e adiciona as correções necessárias para fechar o projeto ao roadmap»). Docs only, no source file changed: `ROADMAP.md` gets D133 and D134 (proposed, waiting for Rodrigo), cards C15.7 to C15.16 in M15, C15.5 marked as review done, the G-C5 row and one acceptance line for `chicla-zip` 0.1.
+- Verified on this tree (`zipkit.mjs` sha256 starts `6bbfd4884b1f00d0`, same as the report): the PoCs of ZIP-005 to ZIP-012, the hook PoCs of ZIP-003 and ZIP-004 and ZIP-013 (comparison deleted gives `NO ERROR; zip has ABCDEF`) behave as reported; line numbers and the silence of `SECURITY.md` on concurrent writers match.
+- NOT verified: the real-race scripts (root and `setpriv`), the fix prototypes (not applied), hand mutants U1 to U16, fuzz seeds, the report's suite numbers. NOT run: `npm run smoke`, CI, Node 18 and 20, Windows, macOS, the full mutant list. The reviewer's own «round 186» zip (report §0) was not among the uploads and is not used. The pin did NOT move; it will when the fixes land (D133).
 
 ## Round 185 — the kit tarball loses its two `.gitkeep` (v0.0.188)
 

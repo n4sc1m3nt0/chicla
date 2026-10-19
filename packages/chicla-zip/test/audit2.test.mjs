@@ -83,9 +83,9 @@ for (const name of ['./x', 'a//b', 'a/./b', 'a//', 'a/./', './b/', 'x/.']) {
   });
 }
 
-test('A-3 ordinary names with dots and slashes are still accepted and every reader agrees: a/b, a/b/, .hidden, a/.hidden/c, ..x, x.., a.b/c', async () => {
+test('A-3 ordinary names with dots and slashes are still accepted and every reader agrees: a/bb, a/b/, .hidden, a/.hidden/c, ..x, x.., a.b/c', async () => {
   const d = fresh(), out = join(d, 'z.zip');
-  const names = ['a/', 'a/b', 'a/b/', 'a/b/c.txt', '.hidden', 'a/.hidden/c', '..x', 'x..', 'a.b/c'];
+  const names = ['a/', 'a/bb', 'a/b/', 'a/b/c.txt', '.hidden', 'a/.hidden/c', '..x', 'x..', 'a.b/c'];
   await writeZip(out, names.map((name) => (name.endsWith('/') ? { name } : { name, data: Buffer.from('1') })), { windowsNames: false }); // `x..` is a fine name for every reader here, and bad on Windows
   assert.equal((await testZip(out)).files, names.filter((x) => !x.endsWith('/')).length);
   const exp = Object.fromEntries(names.map((x) => [x, x.endsWith('/') ? '' : '1']));

@@ -91,31 +91,38 @@ const readAt = (fd, pos, len) => {
 const MAX_CENTRAL = 64 << 20;
 
 // ---------- central directory ----------
-// G-C5 ZIP-001 (D123): more than one record can look like the EOCD (every candidate whose comment fits the end of the file, so a
-// false one can sit inside the zip comment). With one candidate nothing changes. With several, the one whose central directory
+// G-C5 ZIP-001 (D123): more than one record can look like the EOCD (every signature in the tail, so a false one can sit inside the zip
+// comment; G-C5 ZIP-005, D133: also one at the very end whose comment does not fit, which Python and unzip take as THE record). With one candidate nothing changes. With several, the one whose central directory
 // ends exactly where the record starts (the zip64 record, for a zip64 one) is taken; if that is not exactly one, EAMBIGUOUS.
 const MAX_EOCD_CANDIDATES = 8;
 const readCentral = (fd, size, label) => {
   const tailLen = Math.min(size, 22 + 65535), tailPos = size - tailLen, tail = readAt(fd, tailPos, tailLen);
   const cands = [];
-  for (let i = tail.length - 22; i >= 0; i--) if (tail.readUInt32LE(i) === 0x06054b50 && i + 22 + tail.readUInt16LE(i + 20) <= tail.length) { cands.push(i); if (cands.length > MAX_EOCD_CANDIDATES) throw new ZipError(`${label}: ambiguous end-of-central-directory record (more than ${MAX_EOCD_CANDIDATES} candidates)`, "EAMBIGUOUS"); }
+  for (let i = tail.length - 22; i >= 0; i--) if (tail.readUInt32LE(i) === 0x06054b50) { cands.push(i); if (cands.length > MAX_EOCD_CANDIDATES) throw new ZipError(`${label}: ambiguous end-of-central-directory record (more than ${MAX_EOCD_CANDIDATES} candidates)`, "EAMBIGUOUS"); }
   if (!cands.length) throw new ZipError(`${label}: not a zip (no end-of-central-directory record)`, "ENOTZIP");
   const fields = (e) => { // what the record at tail[e] says, and where the central directory it describes has to end
     let total = tail.readUInt16LE(e + 10), cdSize = tail.readUInt32LE(e + 12), cdOff = tail.readUInt32LE(e + 16), endsAt = tailPos + e;
     const disk = tail.readUInt16LE(e + 4), cdDisk = tail.readUInt16LE(e + 6);
-    if (total === 0xffff || cdSize === 0xffffffff || cdOff === 0xffffffff) {
-      const loc = tailPos + e - 20;
-      if (loc < 0) throw new ZipError(`${label}: zip64 without locator`);
+    // G-C5 ZIP-006 (D133): Python and unzip use the zip64 record whenever the locator is in front of the record, whatever the plain fields say.
+    // ZIP-009: 0xffff in the plain count is a real count (Python writes 65 535 entries that way) unless there is a locator.
+    const loc = tailPos + e - 20, hasLoc = loc >= 0 && readAt(fd, loc, 4).readUInt32LE(0) === 0x07064b50;
+    if (hasLoc) {
       const l = readAt(fd, loc, 20);
-      if (l.readUInt32LE(0) !== 0x07064b50) throw new ZipError(`${label}: zip64 without locator`);
       if (l.readUInt32LE(4) > 0 || l.readUInt32LE(16) > 1) throw new ZipError(`${label}: multi-part zips are not supported`);
       endsAt = u64(l, 8);
       const z = readAt(fd, endsAt, 56);
       if (z.readUInt32LE(0) !== 0x06064b50 || u64(z, 4) < 44) throw new ZipError(`${label}: invalid zip64 record`);
+      const plain = { total, cdSize, cdOff };
       total = u64(z, 32); cdSize = u64(z, 40); cdOff = u64(z, 48);
       if (z.readUInt32LE(16) || z.readUInt32LE(20)) throw new ZipError(`${label}: multi-part zips are not supported`);
-    } else if ((disk && disk !== 0xffff) || (cdDisk && cdDisk !== 0xffff)) throw new ZipError(`${label}: multi-part zips are not supported`);
-    return { total, cdSize, cdOff, endsAt };
+      // the plain fields may differ from the zip64 record only by being the markers; anything else is a second central directory
+      if ((plain.total !== 0xffff && plain.total !== total) || (plain.cdSize !== 0xffffffff && plain.cdSize !== cdSize) || (plain.cdOff !== 0xffffffff && plain.cdOff !== cdOff))
+        throw new ZipError(`${label}: the end record and the zip64 record describe different central directories`, "EAMBIGUOUS");
+    } else {
+      if (cdSize === 0xffffffff || cdOff === 0xffffffff) throw new ZipError(`${label}: zip64 without locator`);
+      if ((disk && disk !== 0xffff) || (cdDisk && cdDisk !== 0xffff)) throw new ZipError(`${label}: multi-part zips are not supported`);
+    }
+    return { total, cdSize, cdOff, endsAt, e };
   };
   let f;
   if (cands.length === 1) f = fields(cands[0]);
@@ -124,11 +131,21 @@ const readCentral = (fd, size, label) => {
     for (const e of cands) { try { const g = fields(e); if (g.cdOff + g.cdSize === g.endsAt) fit.push(g); } catch (err) { if (!(err instanceof ZipError)) throw err; /* a record that does not even parse is not the one */ } }
     if (fit.length !== 1) throw new ZipError(`${label}: ambiguous end-of-central-directory record (${cands.length} candidates, ${fit.length} fit)`, "EAMBIGUOUS");
     f = fit[0];
+    // G-C5 C15.17 (D133): Python and unzip find a directory by SIZE (recordPos - cdSize) and ignore the offset field. A record AFTER the chosen one whose size leads to a central
+    // header is a second directory for them, even when its offset field is wrong (so it was not "fit"). Records BEFORE the chosen one (a stored zip inside an entry) stay ignored.
+    for (const e of cands) {
+      if (e <= f.e) continue;
+      try { const g = fields(e), at = g.endsAt - g.cdSize; if (at >= 0 && at + 4 <= size && readAt(fd, at, 4).readUInt32LE(0) === 0x02014b50) throw new ZipError(`${label}: a second end record after the real one describes another central directory`, "EAMBIGUOUS"); }
+      catch (err) { if (!(err instanceof ZipError)) throw err; if (err.code === "EAMBIGUOUS") throw err; /* a record that does not even parse is not a directory */ }
+    }
   }
   const { total, cdSize, cdOff } = f;
   if (cdSize > MAX_CENTRAL) throw new ZipError(`${label}: central directory too large (${cdSize} bytes; the limit is ${MAX_CENTRAL})`, "ECENTRAL");
   if (total * 46 > cdSize) throw new ZipError(`${label}: impossible entry count (${total} entries do not fit in ${cdSize} bytes)`);
   if (cdOff + cdSize > size) throw new ZipError(`${label}: central directory outside the file (truncated zip?)`);
+  // G-C5 ZIP-008 (D133): the directory ends exactly where its record starts. Anything else is data before the archive or a gap behind the directory (Python and unzip shift
+  // every offset by the difference, chicla would not), or a directory that reaches over its own record.
+  if (cdOff + cdSize !== f.endsAt) throw new ZipError(`${label}: the central directory does not end where its end record starts (data before the archive, a gap, or an overlap)`);
   return { cd: readAt(fd, cdOff, cdSize), total, cdOff };
 };
 const parseExtra = (extra) => { const f = new Map(); for (let i = 0; i + 4 <= extra.length; ) { const id = extra.readUInt16LE(i), len = extra.readUInt16LE(i + 2); if (i + 4 + len > extra.length) break; if (!f.has(id)) f.set(id, extra.subarray(i + 4, i + 4 + len)); i += 4 + len; } return f; };
@@ -165,14 +182,23 @@ const parseEntries = (cd, total, label, legacy = CP437) => {
     });
     pos += 46 + nl + xl + cl;
   }
+  // G-C5 ZIP-007 (D133): the counted entries use the whole directory. Python and unzip read until the SIZE is used up, so bytes left over are entries only they would see.
+  if (pos !== cd.length) throw new ZipError(`${label}: the central directory has ${cd.length - pos} bytes after the ${total} counted entries (hidden entries or junk)`);
   return entries;
 };
 
-// D125 (G-C5 §5.2): no two entries may share a byte of the file, and none may reach the central directory. Each entry's span starts at its local header and is AT LEAST
-// 30 + name + compressed size long (the local extra field and a data descriptor only add to it; they are not known without another read), so a hit here is a real overlap
-// and an ordinary zip never hits. Central directory data only, no I/O. A span that touches the next one (end == start) is fine.
-const checkLayout = (entries, cdOff, label) => {
-  const spans = entries.map((e) => ({ e, start: e.localOffset, end: e.localOffset + 30 + e.rawName.length + e.csize })).sort((a, b) => a.start - b.start);
+// D125 (G-C5 §5.2): no two entries may share a byte of the file, and none may reach the central directory. Each entry's span starts at its local header and is
+// 30 + name + local extra + compressed size long. C15.9 (ZIP-011): the local name and extra lengths are READ (one 30-byte read per entry, never the data), so an
+// entry hidden inside another's local extra field is a real overlap. A header that cannot be read (outside the file, no signature) keeps the central-only minimum
+// (30 + name + compressed size); `dataStart` refuses such an entry when it is used. The data descriptor only adds to a span and is not counted. An ordinary zip
+// never hits. A span that touches the next one (end == start) is fine.
+const localSpan = (fd, size, e) => { // the real end of the entry: header, name and extra as the LOCAL header says, then the compressed data
+  let nx = e.rawName.length;
+  if (e.localOffset + 30 <= size) { try { const h = readAt(fd, e.localOffset, 30); if (h.readUInt32LE(0) === 0x04034b50) nx = h.readUInt16LE(26) + h.readUInt16LE(28); } catch { /* the central-only minimum */ } }
+  return e.localOffset + 30 + nx + e.csize;
+};
+const checkLayout = (entries, cdOff, label, fd, size) => {
+  const spans = entries.map((e) => ({ e, start: e.localOffset, end: localSpan(fd, size, e) })).sort((a, b) => a.start - b.start);
   let prev = null;
   for (const s of spans) {
     if (prev && s.start < prev.end) throw new ZipError(`${label}: the entries «${prev.e.name}» and «${s.e.name}» overlap (corrupted or hostile zip)`, "EOVERLAP");
@@ -255,7 +281,7 @@ export const openZip = (zipPath, { legacyEncoding } = {}) => {
   // A system error on the zip itself (ENOENT, EACCES, EISDIR...) is a ZipError with the same code; the original stays in `cause`.
   const sys = (err) => err instanceof ZipError || typeof err?.syscall !== "string" || typeof err.code !== "string" ? err : new ZipError(`${path}: ${err.message}`, err.code, { cause: err });
   try { fd = openSync(path, "r"); } catch (err) { throw sys(err); }
-  try { const st = fstatSync(fd); if (st.isDirectory()) throw Object.assign(new Error("illegal operation on a directory"), { code: "EISDIR", syscall: "read" }); size = st.size; const c = readCentral(fd, size, path); cdOff = c.cdOff; entries = parseEntries(c.cd, c.total, path, legacy); checkLayout(entries, cdOff, path); }
+  try { const st = fstatSync(fd); if (st.isDirectory()) throw Object.assign(new Error("illegal operation on a directory"), { code: "EISDIR", syscall: "read" }); size = st.size; const c = readCentral(fd, size, path); cdOff = c.cdOff; entries = parseEntries(c.cd, c.total, path, legacy); checkLayout(entries, cdOff, path, fd, size); }
   catch (err) { closeSync(fd); throw sys(err); }
   const live = () => { if (fd === null) throw new ZipError(`${path}: the zip handle is closed`, "ECLOSED"); return fd; };
   // Reads ONE file into memory (by name; NFC and NFD count as the same name). Checks CRC and size.
@@ -380,12 +406,13 @@ const mergePlan = (src, dst, overwrite, ops = []) => {
 // (a hard link, so the replacing rename stays atomic; a copy where links are impossible). If the undo fails too, the error is EPARTIAL with
 // `leftBehind` (paths still holding the new content) and `backupDir` (kept, with the originals). `canRetry`: an EXDEV before anything moved
 // returns "retry" so the caller can redo the extraction with the temp folder inside the destination (C2.8). Every move goes through `rn`.
-const mergeMove = (plan, real, rn, canRetry) => {
+const mergeMove = (plan, real, rn, canRetry, overwrite) => {
   const done = []; let bakDir = null; const dropBackups = () => { if (bakDir) rmQuiet(bakDir, { recursive: true, force: true }); };
   for (const [from, to] of plan) {
     let saved = null;
     try {
       let st = null; try { st = lstatSync(to); } catch { /* new */ }
+      if (st && !overwrite) throw new ZipError(`${to}: appeared in the destination during the merge (use overwrite)`, "EEXIST"); // C15.14 (ZIP-004 B): looked at again right before the move; narrows the window, does not close it
       if (st) { bakDir ??= mkdtempSync(join(real, ".chicla-bak-")); saved = join(bakDir, String(done.length)); try { linkSync(to, saved); } catch { copyFileSync(to, saved); } }
       rn(from, to);
     } catch (err) {
@@ -442,7 +469,7 @@ export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalByt
   attempts: for (let at = 0; at < wheres.length; at++) {
   const lastAttempt = at === wheres.length - 1; tmp = null;
   try { tmp = mkdtempSync(join(wheres[at], ".chicla-tmp-")); } catch (err) { why = err; if (lastAttempt) throw new ZipError(`${dest}: cannot create a temporary folder next to it (${why.message})`, "EEXIST"); continue; }
-  chmodSync(tmp, 0o700); // mkdtemp honours the umask: under 0o277 the owner could not even write here (AUDIT-1, A-2); the final mode is set at the end
+  chmodSync(tmp, 0o700); // mkdtemp honours the umask: under 0o277 the owner could not even write here (AUDIT-1, A-2); the final mode is set after the final rename (C15.11)
   const root = realpathSync(tmp), made = new Set(), late = [], known = new Set(); // known: folders of the temp tree already checked or created (only this function creates folders in it, and it never removes one)
   let files = 0, dirs = 0, bytes = 0, fd = null;
   const ensureDir = (segs) => { // walks down folder by folder, refusing symlinks and files in the path
@@ -490,10 +517,9 @@ export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalByt
       files++; bytes += e.usize;
     }
     for (const [d, e] of late.reverse()) { if (e.mode & 0o777) chmodSync(d, (e.mode & 0o777) | 0o700); if (e.mtime) utimesSync(d, e.mtime, e.mtime); }
-    let um = 0o022; try { um = process.umask(); } catch { /* worker thread */ }
-    chmodSync(tmp, 0o777 & ~um);
-    if (!real) { mkdirSync(dirname(target), { recursive: true }); _rename(tmp, target); tmp = null; }
-    else if (mergeMove(mergePlan(tmp, real, overwrite), real, _rename, !lastAttempt) === "retry") continue attempts; // the finally below removes this temp folder
+    // C15.11 (ZIP-012): the temp folder stays 0700 up to and through the rename; a NEW destination gets its umask mode only afterwards (an existing one keeps its own).
+    if (!real) { mkdirSync(dirname(target), { recursive: true }); _rename(tmp, target); tmp = null; let um = 0o022; try { um = process.umask(); } catch { /* worker thread */ } chmodSync(target, 0o777 & ~um); }
+    else if (mergeMove(mergePlan(tmp, real, overwrite), real, _rename, !lastAttempt, overwrite) === "retry") continue attempts; // the finally below removes this temp folder
   } catch (err) { // C2.4: whatever the file system throws (name too long, no space, permissions) reaches the caller as a ZipError, never raw
     if (err instanceof ZipError) throw err;
     throw new ZipError(`${path}: extraction failed, nothing was kept (${err.code ?? "fs"}: ${err.message})`, "EZIP", { cause: err });
@@ -509,7 +535,7 @@ export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalByt
 export const markUtf8Names = (zipPath) => {
   const path = resolve(zipPath), fd = openSync(path, "r+");
   try {
-    const size = fstatSync(fd).size, { cd, total, cdOff } = readCentral(fd, size, path), entries = parseEntries(cd, total, path), todo = []; checkLayout(entries, cdOff, path);
+    const size = fstatSync(fd).size, { cd, total, cdOff } = readCentral(fd, size, path), entries = parseEntries(cd, total, path), todo = []; checkLayout(entries, cdOff, path, fd, size);
     // C4.1 (ROADMAP B1): `cdPos` is relative to the central directory, so the file position adds `cdOff`. Everything is checked BEFORE the first byte is
     // written, so a bad entry leaves the file as it was.
     for (const e of entries) {
@@ -593,6 +619,17 @@ const vetName = (s, seen, win) => {
   const nameBytes = Buffer.from(name, "utf8"); if (nameBytes.length > 0xffff) throw new ZipError(`name too long (${nameBytes.length} bytes)`, "EARG");
   return { name, nameBytes, dir };
 };
+// C15.10 (ZIP-010): the WRITER refuses, before anything is written, a list where a path is a file and also a folder (an explicit «a/» entry, or the parent of
+// another entry's path): the rule extractZip applies to a zip, exact comparison (case and NFC stay advisory, see collisionsOf). Names were already vetted.
+const refuseFileFolderClash = (items) => {
+  const files = new Set(), dirs = new Set();
+  for (const { name, dir } of items) {
+    const segs = name.split("/").filter(Boolean);
+    for (let i = 1; i < segs.length; i++) dirs.add(segs.slice(0, i).join("/"));
+    (dir ? dirs : files).add(segs.join("/"));
+  }
+  for (const k of files) if (dirs.has(k)) throw new ZipError(`unsafe name «${k}»: is a file and a folder at the same time`, "EUNSAFE");
+};
 const attrOf = (s, dir, deterministic) => (((deterministic ? (dir || (s.mode ?? 0) & 0o100 ? 0o755 : 0o644) : (s.mode ?? (dir ? 0o755 : 0o644)) & 0o777) | (dir ? 0o040000 : 0o100000)) << 16 | (dir ? 0x10 : 0)) >>> 0;
 // `deterministic: true` (C3.4): the same sources give the same bytes on any machine, day and time zone. Dates are read in UTC from `epoch` (seconds),
 // else from the SOURCE_DATE_EPOCH environment variable, else from each source's `mtime` (none: 1980-01-01 00:00); modes become 0644 (0755 for
@@ -621,6 +658,7 @@ export const writeZip = async (outPath, sources, { level = 6, zip64 = "auto", de
     items.push({ name, nameBytes, dir, method, body, size: data.length, crc: dg.crc, sha256: dg.sha256, stamp: dosStamp(when, deterministic), ut: extendedTime && utSecs(when) !== undefined ? 9 : 0, utv: utSecs(when), flags: /^[\x00-\x7f]*$/.test(name) ? 0 : 0x800, z64,
       attr: attrOf(s, dir, deterministic) });
   }
+  refuseFileFolderClash(items);
   let pos = 0; // layout first (nothing is opened yet, so a refusal leaves no file): local headers with their zip64 extra, then the central directory
   for (const it of items) {
     it.offset = pos; pos += 30 + it.nameBytes.length + (it.z64 ? 20 : 0) + it.ut + it.body.length;
@@ -721,6 +759,7 @@ export const writeZipStream = async (sink, sources, { level = 6, zip64 = "auto",
       const when = deterministic ? fixed ?? s.mtime ?? DOS_START : s.mtime ?? now;
       items.push({ name, nameBytes, dir, s, stamp: dosStamp(when, deterministic), ut: extendedTime && utSecs(when) !== undefined ? 9 : 0, utv: utSecs(when), flags: /^[\x00-\x7f]*$/.test(name) ? 0 : 0x800, attr: attrOf(s, dir, deterministic), crc: 0, csize: 0, usize: 0 });
     }
+    refuseFileFolderClash(items);
     for (const it of items) {
       it.offset = pos; it.offMark = pos > L.max32; if (it.offMark && zip64 === false) throw needsZip64(`the offset of «${it.name}»`);
       const file = !it.dir, h = Buffer.alloc(30); h.writeUInt32LE(0x04034b50, 0); h.writeUInt16LE(file || it.offMark ? 45 : 20, 4); h.writeUInt16LE(it.flags | (file ? 8 : 0), 6); h.writeUInt16LE(file ? 8 : 0, 8);

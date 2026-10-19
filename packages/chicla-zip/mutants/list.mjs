@@ -15,7 +15,7 @@ const writer = [
     why: "writeZip sets bit 11 (UTF-8 names) on non-ASCII names" },
   { id: "C5.2-reader-nfc-names", file: "src/zipkit.mjs", find: 'else if (flags & 0x800 && utf8Valid) { name = rawName.toString("utf8");', replace: 'else if (flags & 0x800 && utf8Valid) { name = rawName.toString("utf8").normalize("NFC");', tests: [D],
     why: "the reader never normalises names: NFC and NFD stay as written" },
-  { id: "C5.2-reader-local-extra", file: "src/zipkit.mjs", find: "h.readUInt16LE(26) + h.readUInt16LE(28);", replace: "h.readUInt16LE(26);", tests: [D],
+  { id: "C5.2-reader-local-extra", file: "src/zipkit.mjs", find: "e.localOffset + 30 + h.readUInt16LE(26) + h.readUInt16LE(28);", replace: "e.localOffset + 30 + h.readUInt16LE(26);", tests: [D],
     why: "the reader finds the data after the local header's own extra field, not the central one's" },
   { id: "C5.2-create-folder-entries", file: "src/zipkit.mjs", find: "if (isDir) { sources.push({ name: `${name}/`, ...meta }); walk(abs, `${name}/`); continue; }", replace: "if (isDir) { walk(abs, `${name}/`); continue; }", tests: [D],
     why: "createZip writes an entry for every folder, empty ones included" },
@@ -387,11 +387,10 @@ const writer3 = (() => {
     find: "a.mtimeMs === b.mtimeMs && a.ctimeMs", replace: "a.ctimeMs",
     survives: "redundant on purpose: a write changes size, mtime and ctime together and a replaced file changes inode and ctime, so on a real file system each of the four fields is covered by the others; sameFile is not exported, so no test can feed it a stat that differs in one field only" },
   { id: "M3c-same-ctime", file: F, tests: [C, CS, DIG], why: "a file is the same only if its ctime is the same",
-    find: "a.ctimeMs === b.ctimeMs && a.ino", replace: "a.ino",
-    survives: "redundant on purpose: a write changes size, mtime and ctime together and a replaced file changes inode and ctime, so on a real file system each of the four fields is covered by the others; sameFile is not exported, so no test can feed it a stat that differs in one field only" },
+    find: "a.ctimeMs === b.ctimeMs && a.ino", replace: "a.ino" },
   { id: "M3c-same-ino", file: F, tests: [C, CS, DIG], why: "a file is the same only if its inode is the same",
     find: "a.ino === b.ino && a.dev === b.dev", replace: "a.dev === b.dev",
-    survives: "redundant on purpose: a write changes size, mtime and ctime together and a replaced file changes inode and ctime, so on a real file system each of the four fields is covered by the others; sameFile is not exported, so no test can feed it a stat that differs in one field only" },
+    survives: "redundant on purpose, measured in round 190 (ext4): a file replaced by `rename` does not keep the ctime of the old one (the renamed inode's ctime moves), so a replacement changes the inode AND the ctime and the ctime check fires first; no test can make the inode the only difference, because sameFile is not exported and the kernel sets the ctime" },
   ];
 })();
 
@@ -452,7 +451,7 @@ const extract3 = (() => {
   { id: "M2-dirs-count", file: F, tests: [X, XF, G], why: "dirs counts the folders created",
     find: "if (!st) { mkdirSync(cur); dirs++; }", replace: "if (!st) { mkdirSync(cur); }" },
   { id: "M2-missing-parents", file: F, tests: [X], why: "a new destination gets its missing parent folders",
-    find: "if (!real) { mkdirSync(dirname(target), { recursive: true }); _rename(tmp, target); tmp = null; }", replace: "if (!real) { _rename(tmp, target); tmp = null; }" },
+    find: "if (!real) { mkdirSync(dirname(target), { recursive: true }); _rename(tmp, target); tmp = null;", replace: "if (!real) { _rename(tmp, target); tmp = null;" },
   { id: "M2-filter", file: F, tests: [X, XF, G], why: "the filter option leaves entries out",
     find: "const entries = filter ? all.filter(filter) : all,", replace: "const entries = all," },
   { id: "M2-mode-default-fast", file: F, tests: [XA, XF, X], why: "a file with no permission bits gets 0644 (fast path)",
@@ -471,7 +470,7 @@ const extract3 = (() => {
     find: "chmodSync(tmp, 0o700);", replace: "void 0;" ,
     survives: "root bypasses permissions, so the effect (an owner who cannot write the temp folder under umask 0o277) shows only as a non-root user; AUDIT-1 §4 ran the M2 suites as uid 65534, this session is root" },
   { id: "M2-umask-final", file: F, tests: [XA, X], why: "a new destination gets the mode the umask allows",
-    find: "chmodSync(tmp, 0o777 & ~um);", replace: "void 0;" },
+    find: "chmodSync(target, 0o777 & ~um);", replace: "void 0;" },
   { id: "M2-folder-cache", file: F, tests: [X, XF], why: "folders already checked are not checked again",
     find: "if (known.has(cur)) continue;\n", replace: "",
     survives: "equivalent: without the cache the folder is found again and nothing changes; the cache only saves work (C2.3)" },
@@ -698,7 +697,7 @@ const overlap172 = (() => {
     { id: "R172-overlap-no-sort", file: F, tests: O, why: "the check does not depend on the order of the central directory",
       find: ".sort((a, b) => a.start - b.start);", replace: ";" },
     { id: "R172-overlap-csize", file: F, tests: O, why: "the span includes the compressed size",
-      find: "e.localOffset + 30 + e.rawName.length + e.csize }", replace: "e.localOffset + 30 + e.rawName.length }" },
+      find: "return e.localOffset + 30 + nx + e.csize;", replace: "return e.localOffset + 30 + nx;" },
     { id: "R172-overlap-central", file: F, tests: O, why: "an entry that reaches the central directory is refused",
       find: "if (prev && prev.end > cdOff) throw", replace: "if (false) throw" },
     { id: "R172-overlap-central-exact", file: F, tests: O, why: "an entry that ends exactly at the central directory is fine",
@@ -706,9 +705,9 @@ const overlap172 = (() => {
     { id: "R172-overlap-code", file: F, tests: O, why: "the refusal carries the code EOVERLAP",
       find: "the entries «${prev.e.name}» and «${s.e.name}» overlap (corrupted or hostile zip)`, \"EOVERLAP\")", replace: "the entries «${prev.e.name}» and «${s.e.name}» overlap (corrupted or hostile zip)`, \"EZIP\")" },
     { id: "R172-overlap-open", file: F, tests: O, why: "openZip runs the check",
-      find: "checkLayout(entries, cdOff, path); }\n  catch", replace: "}\n  catch" },
+      find: "checkLayout(entries, cdOff, path, fd, size); }\n  catch", replace: "}\n  catch" },
     { id: "R172-overlap-mark", file: F, tests: O, why: "markUtf8Names runs the check before it writes",
-      find: "todo = []; checkLayout(entries, cdOff, path);", replace: "todo = [];" },
+      find: "todo = []; checkLayout(entries, cdOff, path, fd, size);", replace: "todo = [];" },
   ];
 })();
 
@@ -731,4 +730,150 @@ const central174 = (() => {
   ];
 })();
 
-export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14, ...win145, ...eocd170, ...local171, ...overlap172, ...central174];
+// Round 187 / C15.7 (D133, second review: ZIP-005, ZIP-006, ZIP-009): the end record read the way Python and unzip read it.
+const eocd187 = (() => {
+  const F = "src/zipkit.mjs", E = ["test/eocd-report2.test.mjs"];
+  return [
+    { id: "R187-eocd-fit-filter", file: F, tests: E, why: "a signature whose comment does not fit is still a candidate (ZIP-005)",
+      find: "if (tail.readUInt32LE(i) === 0x06054b50) {", replace: "if (tail.readUInt32LE(i) === 0x06054b50 && i + 22 + tail.readUInt16LE(i + 20) <= tail.length) {" },
+    { id: "R187-locator-ignored", file: F, tests: E, why: "a zip64 locator in front of the record is always followed (ZIP-006)",
+      find: "hasLoc = loc >= 0 && readAt(fd, loc, 4).readUInt32LE(0) === 0x07064b50;", replace: "hasLoc = loc >= 0 && readAt(fd, loc, 4).readUInt32LE(0) === 0x07064b50 && (total === 0xffff || cdSize === 0xffffffff || cdOff === 0xffffffff);" },
+    { id: "R187-plain-count-free", file: F, tests: E, why: "the plain count may differ from the zip64 record only by being 0xffff",
+      find: "(plain.total !== 0xffff && plain.total !== total)", replace: "false" },
+    { id: "R187-plain-size-free", file: F, tests: E, why: "the plain directory size may differ from the zip64 record only by being 0xffffffff",
+      find: "(plain.cdSize !== 0xffffffff && plain.cdSize !== cdSize)", replace: "false" },
+    { id: "R187-plain-offset-free", file: F, tests: E, why: "the plain directory offset may differ from the zip64 record only by being 0xffffffff",
+      find: "(plain.cdOff !== 0xffffffff && plain.cdOff !== cdOff)", replace: "false" },
+    { id: "R187-plain-equal-refused", file: F, tests: E, why: "plain fields equal to the zip64 record are fine, not only the markers",
+      find: "(plain.total !== 0xffff && plain.total !== total)", replace: "(plain.total !== 0xffff)" },
+    { id: "R187-disagree-code", file: F, tests: E, why: "the refusal of two directories carries the code EAMBIGUOUS",
+      find: 'describe different central directories`, "EAMBIGUOUS")', replace: 'describe different central directories`)' },
+    { id: "R187-count-marker-zip64", file: F, tests: E, why: "0xffff in the count without a locator is a real count (ZIP-009)",
+      find: "if (cdSize === 0xffffffff || cdOff === 0xffffffff) throw new ZipError(`${label}: zip64 without locator`);", replace: "if (total === 0xffff || cdSize === 0xffffffff || cdOff === 0xffffffff) throw new ZipError(`${label}: zip64 without locator`);" },
+    { id: "R187-size-marker-no-locator", file: F, tests: E, why: "0xffffffff as the plain directory size without a locator keeps its own refusal",
+      find: "if (cdSize === 0xffffffff || cdOff === 0xffffffff) throw new ZipError(`${label}: zip64 without locator`);", replace: "if (cdOff === 0xffffffff) throw new ZipError(`${label}: zip64 without locator`);" },
+  ];
+})();
+
+// Round 188 / C15.8 (D133, second review: ZIP-007, ZIP-008): the central directory is exactly where the end record says, and the counted entries use all of it.
+const layout188 = (() => {
+  const F = "src/zipkit.mjs", L = ["test/layout-report2.test.mjs"];
+  return [
+    { id: "R188-leftover-allowed", file: F, tests: L, why: "bytes left in the directory after the counted entries are refused (ZIP-007)",
+      find: "if (pos !== cd.length) throw", replace: "if (false) throw" },
+    { id: "R188-leftover-whole-entries-only", file: F, tests: L, why: "a few stray bytes are refused too, not only a whole hidden entry (ZIP-007)",
+      find: "if (pos !== cd.length) throw", replace: "if (pos + 46 <= cd.length) throw" },
+    { id: "R188-leftover-code", file: F, tests: L, why: "the refusal of a hidden entry carries the code EZIP",
+      find: "(hidden entries or junk)`)", replace: '(hidden entries or junk)`, "EAMBIGUOUS")' },
+    { id: "R188-fit-off", file: F, tests: L, why: "the directory must end where its end record starts (ZIP-008)",
+      find: "if (cdOff + cdSize !== f.endsAt) throw", replace: "if (false) throw" },
+    { id: "R188-fit-gap-only", file: F, tests: L, why: "a directory that reaches over its own record is refused (the sign of the difference)",
+      find: "if (cdOff + cdSize !== f.endsAt) throw", replace: "if (cdOff + cdSize < f.endsAt) throw" },
+    { id: "R188-fit-overlap-only", file: F, tests: L, why: "data before the archive and a gap behind the directory are refused (the other sign)",
+      find: "if (cdOff + cdSize !== f.endsAt) throw", replace: "if (cdOff + cdSize > f.endsAt) throw" },
+    { id: "R188-fit-plain-position", file: F, tests: L, why: "behind a zip64 record the directory ends at the zip64 record, not at the plain one",
+      find: "if (cdOff + cdSize !== f.endsAt) throw", replace: "if (cdOff + cdSize !== size - 22) throw" },
+    { id: "R188-fit-code", file: F, tests: L, why: "the refusal of a misplaced directory carries the code EZIP",
+      find: "(data before the archive, a gap, or an overlap)`)", replace: '(data before the archive, a gap, or an overlap)`, "EAMBIGUOUS")' },
+  ];
+})();
+
+// Round 189 / C15.17: a trailing end record found by SIZE (Python and unzip ignore the offset field) is a second directory.
+const sizeFake189 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/trailing-size-fake.test.mjs"];
+  return [
+    { id: "R189-after-check-off", file: F, tests: T, why: "a record after the chosen one whose size leads to a central header is refused",
+      find: "if (e <= f.e) continue;", replace: "continue;" },
+    { id: "R189-before-too", file: F, tests: T, why: "a record BEFORE the chosen one (a stored zip inside an entry) is still ignored",
+      find: "if (e <= f.e) continue;", replace: "if (e === f.e) continue;" },
+    { id: "R189-signature-ignored", file: F, tests: T, why: "only a size that leads to a central header signature counts",
+      find: "readAt(fd, at, 4).readUInt32LE(0) === 0x02014b50) throw", replace: "true) throw" },
+    { id: "R189-code", file: F, tests: T, why: "the refusal carries the code EAMBIGUOUS",
+      find: "describes another central directory`, \"EAMBIGUOUS\"); }", replace: "describes another central directory`); }" },
+  ];
+})();
+
+// Round 190 / C15.12: the hand mutants U11 and U14 of the second review, which the reviewer left untraced.
+const hand190 = (() => {
+  const F = "src/zipkit.mjs";
+  return [
+    { id: "R190-epoch-upper-bound", file: F, tests: ["test/write-determinism.test.mjs"], why: "an epoch above the last date a Date can hold is refused with EARG (U11)",
+      find: " || Number(v) > 8.64e12", replace: "",
+      survives: "equivalent in effect, traced in round 190: without the bound an epoch above 8.64e12 (9e12, \"9000000000000\", 8.64e12 + 1) is still refused with EARG and nothing is written, by the later check of the date (invalid modification time); 8.64e12 and 8.64e12 - 1 are written in both. Only the message differs, and tests assert codes, never message text" },
+    { id: "R190-ensuredir-symlink", file: F, tests: ["test/extract-escape.test.mjs", "test/extract.test.mjs"], why: "a path through a symlink is EUNSAFE, not EEXIST (U14)",
+      find: "if (st?.isSymbolicLink()) throw new ZipError(`«${segs.join(\"/\")}»: the path goes through a symlink", replace: "if (false) throw new ZipError(`«${segs.join(\"/\")}»: the path goes through a symlink",
+      survives: "not reachable by a test, read in round 190: `ensureDir` walks the PRIVATE temp tree (fresh mkdtemp, 0700), only this function creates folders in it and symlink entries are skipped before extraction, so a symlink can appear there only by a concurrent writer (D134); without the branch the next line refuses it with EEXIST instead of EUNSAFE (a refusal either way)" },
+  ];
+})();
+
+// Round 191 / C15.10 (ZIP-010): the writers refuse a path that is a file and also a folder or the parent of another path.
+const clash191 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/write-path-conflict.test.mjs"];
+  return [
+    { id: "R191-writezip-unchecked", file: F, tests: T, why: "writeZip runs the file/folder check before it opens anything",
+      find: "refuseFileFolderClash(items);\n  let pos", replace: "let pos" },
+    { id: "R191-stream-unchecked", file: F, tests: T, why: "writeZipStream runs the check before it writes the first byte",
+      find: "refuseFileFolderClash(items);\n    for (const it of items) {", replace: "for (const it of items) {" },
+    { id: "R191-implied-parents-off", file: F, tests: T, why: "the parent folders implied by a path count as folders (a file and a file inside it)",
+      find: "for (let i = 1; i < segs.length; i++) dirs.add(", replace: "for (let i = 1; i < 1; i++) dirs.add(" },
+    { id: "R191-explicit-dir-off", file: F, tests: T, why: "an explicit folder entry counts as a folder (a file and «a/»)",
+      find: "(dir ? dirs : files).add(segs.join(\"/\"));", replace: "files.add(segs.join(\"/\"));" },
+    { id: "R191-code", file: F, tests: T, why: "the refusal carries the code EUNSAFE",
+      find: "unsafe name «${k}»: is a file and a folder at the same time`, \"EUNSAFE\")", replace: "unsafe name «${k}»: is a file and a folder at the same time`)" },
+  ];
+})();
+
+// Round 192 / C15.9 (ZIP-011): the layout check uses the real span, the local extra field included.
+const span192 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/overlap-local-extra.test.mjs"];
+  return [
+    { id: "R192-extra-ignored", file: F, tests: T, why: "the local extra length counts in the span (an entry hidden in another's extra field)",
+      find: "nx = h.readUInt16LE(26) + h.readUInt16LE(28);", replace: "nx = h.readUInt16LE(26);" },
+    { id: "R192-name-from-central", file: F, tests: ["test/overlap-local-extra.test.mjs", "test/overlap.test.mjs"], why: "the span uses the local name length plus extra, not only the extra",
+      find: "nx = h.readUInt16LE(26) + h.readUInt16LE(28);", replace: "nx = h.readUInt16LE(28);" },
+    { id: "R192-no-read", file: F, tests: T, why: "the local header is read at all",
+      find: "if (e.localOffset + 30 <= size) { try {", replace: "if (false) { try {" },
+    { id: "R192-signature-unchecked", file: F, tests: T, why: "lengths are taken only from a header with the local signature",
+      find: "if (h.readUInt32LE(0) === 0x04034b50) nx =", replace: "if (true) nx =" },
+    { id: "R192-open-unchecked", file: F, tests: T, why: "openZip passes the file to the layout check",
+      find: "checkLayout(entries, cdOff, path, fd, size); }\n  catch", replace: "checkLayout(entries, cdOff, path); }\n  catch" },
+    { id: "R192-mark-unchecked", file: F, tests: T, why: "markUtf8Names passes the file to the layout check before it writes",
+      find: "todo = []; checkLayout(entries, cdOff, path, fd, size);", replace: "todo = []; checkLayout(entries, cdOff, path);" },
+  ];
+})();
+
+// Round 193 / C15.11 (ZIP-012): the temp folder stays 0700 until after the final rename; a new destination gets its mode afterwards.
+const tmpmode193 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/extract-tmp-mode.test.mjs"];
+  return [
+    { id: "R193-open-before-rename", file: F, tests: T, why: "the temp folder is never opened up before the rename (new destination)",
+      find: "if (!real) { mkdirSync(dirname(target), { recursive: true }); _rename(tmp, target);", replace: "if (!real) { chmodSync(tmp, 0o777); mkdirSync(dirname(target), { recursive: true }); _rename(tmp, target);" },
+    { id: "R193-open-before-merge", file: F, tests: T, why: "nor before a merge into an existing destination",
+      find: "else if (mergeMove(", replace: "else if (chmodSync(tmp, 0o777) ?? mergeMove(" },
+    { id: "R193-no-final-mode", file: F, tests: T, why: "the new destination gets its umask mode after the rename",
+      find: " chmodSync(target, 0o777 & ~um); }", replace: " }" },
+    { id: "R193-mode-ignores-umask", file: F, tests: T, why: "the mode afterwards is 0777 minus the umask, not a fixed one",
+      find: "chmodSync(target, 0o777 & ~um);", replace: "chmodSync(target, 0o755);" },
+  ];
+})();
+
+// Round 195 / C15.14 slice b (ZIP-004 B, D134): `mergeMove` looks at the target again right before each move when `overwrite` is false.
+const recheck195 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/merge-recheck.test.mjs"];
+  return [
+    { id: "R195-recheck-off", file: F, tests: T, why: "the target is looked at again before a move: something that appeared meanwhile is EEXIST, not replaced",
+      find: "if (st && !overwrite) throw new ZipError(", replace: "if (false) throw new ZipError(" },
+    { id: "R195-ignores-overwrite", file: F, tests: T, why: "the re-check applies only with overwrite: false (overwrite: true still replaces what appeared)",
+      find: "if (st && !overwrite) throw new ZipError(", replace: "if (st) throw new ZipError(" },
+    { id: "R195-inverted", file: F, tests: T, why: "the re-check refuses with overwrite: false, not with overwrite: true",
+      find: "if (st && !overwrite) throw new ZipError(", replace: "if (st && overwrite) throw new ZipError(" },
+    { id: "R195-files-only", file: F, tests: T, why: "the re-check covers a folder that appeared too, not only a file",
+      find: "if (st && !overwrite) throw new ZipError(", replace: "if (st && !st.isDirectory() && !overwrite) throw new ZipError(" },
+    { id: "R195-first-move-only", file: F, tests: T, why: "the re-check runs before EACH move, not only before the first",
+      find: "if (st && !overwrite) throw new ZipError(", replace: "if (st && !overwrite && !done.length) throw new ZipError(" },
+    { id: "R195-code", file: F, tests: T, why: "the refusal carries the code EEXIST",
+      find: "appeared in the destination during the merge (use overwrite)`, \"EEXIST\")", replace: "appeared in the destination during the merge (use overwrite)`, \"EUNSAFE\")" },
+  ];
+})();
+
+export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14, ...win145, ...eocd170, ...local171, ...overlap172, ...central174, ...eocd187, ...layout188, ...sizeFake189, ...hand190, ...clash191, ...span192, ...tmpmode193, ...recheck195];
