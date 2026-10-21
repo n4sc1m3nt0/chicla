@@ -1,5 +1,53 @@
-<!-- CHANGELOG_FINGERPRINT: seq=226 file=CHICLA_PROJECT_STATUS-226.md app_sha256_12=065d37032ef1 changelog_sha256_12=ae1ae8f00802 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=232 file=CHICLA_PROJECT_STATUS-232.md app_sha256_12=065d37032ef1 changelog_sha256_12=4c827856c755 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 228 — the Decisions page of the panel, laid out (v0.0.231)
+
+- Task (Rodrigo, again: the text in the CLI, especially the Decisions section, should be prettier and easier to read). The page showed the whole «Next up» paragraph as one 40-line block. Round 227 had read the request as the layout of Claude's replies (kept); this round does the panel. Tests first (3 red).
+- `packages/chicla-kit/src/panel.mjs`: the page has the heading «Open decisions», one block per entry `(round N: …)` (an `(Earlier …)` group, even one that never closes, counts too), the newest in full, older ones as one dim line cut with «…», the text between entries as «Note», and «Rodrigo's to do» as a labelled bullet list split at «; » outside brackets. Read by shape, not by wording; nothing is dropped except the tails of older entries. Other pages, plain text, `--json`, pipes and NO_COLOR unchanged.
+- `test/panel-decisions.test.mjs` (5 tests). 4 hand mutants (split ignores brackets, older entries shown whole, trailing «;» kept, unclosed group not an entry): all red, source restored byte for byte.
+- Files: `panel.mjs`, one new test, the status file, this CHANGELOG, `package.json` version.
+- NOT run: whole `npm test` (see the round close below if it was), Node 18 and 20, `npm run smoke`, CI, macOS, `npm run mutants`, a real terminal (colours and height unseen).
+
+## Round 227 — reply format for open decisions (v0.0.230)
+
+- Task (Rodrigo: the text of the replies, especially the «Open decisions» part, should look better and be easier to read; the rest was fine). Docs only.
+- Status file: new item 21 «Reply format: open decisions» (heading, one block per decision with `Suggestion:`, `Why:` and `Quick answer:`, one sentence when none is open, Rodrigo's own to-dos under `## What is left for you`, `---` to close). `CLAUDE.md` rule 6 points to it.
+- Files: `CLAUDE.md`, the status file, this CHANGELOG, `package.json` version. No source, no test, nothing pinned touched.
+- NOT run: `npm test` (whole), Node 18 and 20, `npm run smoke`, CI, macOS, `npm run mutants`; only `bump-round`, `check-build` and the delivery guards below.
+
+
+## Round 226 — panel highlights corrected: blue and white LETTERS, not backgrounds (v0.0.229)
+
+- Task (Rodrigo: round 225 was wrong; he wanted blue letters and white letters for the action keys at the bottom, not a blue background and a white background). Cause: Claude read «highlights» as background colours. Tests first (2 red: `panel.test.mjs`, `ui.test.mjs`), then the code.
+- `ui.mjs`: `blueBg` and `whiteBg` removed; `blue` (`1;94`, bold bright blue) and `white` (`1;97`, bold bright white) added, both letter colours. `panel.mjs`: the active tab is `blue`, the footer keys (`←/→`, `Tab`, `r`, `q`) are `white`, labels stay dim, other tabs stay dim. The tests now also fail on any background code (40 to 47, 100 to 107) in the panel. Text unchanged; plain text, `--json`, pipes, CI and NO_COLOR unchanged.
+- 4 hand mutants (blue to a background code, white to a background code, active tab dim, footer keys dim): all red, sources restored byte for byte.
+- Files: `ui.mjs`, `panel.mjs`, `panel.test.mjs`, `ui.test.mjs`, this CHANGELOG, the status file, `package.json` version. Neither source is one of the five pinned files, so the pin did not move.
+- NOT run: Claude never ran the panel on a real terminal (injected streams only: the blue and the white are Rodrigo's to see; if `94` is too light or `97` shows wrong, `34` and `37` are the fallbacks), whole `npm test`, `npm run smoke`, Node 18 and 20, macOS, Windows, CI.
+
+## Round 225 — panel highlights: blue active tab, white footer keys (v0.0.228)
+
+- Task (Rodrigo ran the round 224 panel on a real terminal: «the blue highlights do not show, nor the white highlights of the actions at the bottom»). Cause: the panel painted only bold and dim; no background colour existed in `ui.mjs`, so there was nothing for the terminal to show (not a terminal fault). Tests first (2 red: `panel.test.mjs`, `ui.test.mjs`), then the code.
+- `ui.mjs`: two styles, `blueBg` (bold bright white on blue, `1;97;44`) and `whiteBg` (black on white, `30;47`). `panel.mjs`: the active tab is `blueBg`, the other tabs stay dim; in the footer each key (`←/→`, `Tab`, `r`, `q`) is `whiteBg` and its label stays dim. The text is the same with or without colour; plain text, `--json`, pipes, CI and NO_COLOR unchanged.
+- 6 hand mutants (active tab back to bold, footer keys dim, code 44 to 46, code 47 to 43, every tab blue, footer wording): 1 survived the first test (wording compared only with itself) and was killed by asserting the exact footer text; all red now, sources restored byte for byte.
+- Files: `ui.mjs`, `panel.mjs`, `panel.test.mjs` (+1), `ui.test.mjs` (+1), this CHANGELOG, the status file, `package.json` version. Neither source is one of the five pinned files, so the pin did not move.
+- NOT run: Claude never ran the panel on a real terminal (injected streams only: the blue and the white are Rodrigo's to see; if `97` shows wrong on his terminal, `37` is the fallback), `npm run smoke`, Node 18 and 20, macOS, Windows, CI.
+
+## Round 224 — panel polish: alternate screen, coloured gates, labelled Status page (v0.0.227)
+
+- Task (Rodrigo: «let's polish the panel now»; two complaints: the colours cannot be checked without the kit installed, and every page switch stays in the terminal's scrollback, even after `q`). Tests first (5 red: 4 in `panel.test.mjs`, 1 in `ui.test.mjs`), then the code.
+- `panel.mjs`: runs in the alternate screen (`ESC[?1049h` before the first draw, `ESC[?1049l` with the cursor back on `q`, Ctrl-C and end of input), so pages never reach the scrollback and the old screen returns. Gate states are painted by their first word (CLOSED/done green, open/proposed/waiting yellow, red/failed/blocked red; other wording stays plain). Status page: labelled fields (File, Version, Round, Updated, Gates count, Latest) with long text wrapped under the text, raw fallback when a line does not match; Delivery page has a «Zip» label.
+- `ui.mjs`: `box` cuts a too-long painted line on its visible text (it counted escape codes before, which would have broken colour rows near the edge); a line that fits keeps its codes.
+- 7 hand mutants (alternate screen in and out, gate paint, tone, label wrap, `box` fit and cut), 2 survived the first tests and were killed by tightening them; all red now, sources restored byte for byte.
+- Files: `panel.mjs`, `ui.mjs`, `panel.test.mjs` (+4), `ui.test.mjs` (+1), this CHANGELOG, the status file, `package.json` version. Plain text, `--json`, pipes, CI and NO_COLOR unchanged; neither source is one of the five pinned files, so the pin did not move.
+- NOT run: Claude never ran the panel on a real terminal (only injected streams: colours and the alternate screen are Rodrigo's to see), `npm test` whole, `npm run smoke`, Node 18 and 20, macOS, Windows, CI.
+
+## Round 223 — G-C12 closed by Rodrigo, panel polish scheduled, docs only (v0.0.226)
+
+- Task (Rodrigo ran the panel on a real terminal and said it works). His notes: no colour, and the Status page is plain text that looks like an eyesore. Claude read `panel.mjs` and `ui.mjs`: the panel paints only bold and dim; `ui.mjs` has red, green, yellow and cyan but only `styleSummary` (command summaries such as `bump-round --verify`) uses them. So both notes describe the code as written, not a regression. The checklist Claude gave in the reply wrongly said the panel's marks would be coloured.
+- Decision (Rodrigo, 2026-10-21, «close G-C12 now, polish later»): G-C12 is CLOSED; the polish (labelled Status fields, coloured gate states, shorter text; `panel.mjs` and `ui.mjs`, tests first) is a later round, before the kit `0.1.0` version round or after the release, his choice. `panel.mjs` is not one of the five pinned files, so the pin would not move.
+- Files: this CHANGELOG, the status file, `ROADMAP.md` (G-C12 row), `package.json` version. No source or test changed.
+- NOT run: `npm test`, `npm run smoke`, the mutants, Node 18 and 20, macOS, Windows, CI (Rodrigo reported the round 222 tree green, tests and CI). The coloured marks of the command summaries on a terminal were not part of his check.
 
 ## Round 222 — recovered from emergency dump (rehearsal); G-C11 repeated and closed by Rodrigo, docs only (v0.0.225)
 

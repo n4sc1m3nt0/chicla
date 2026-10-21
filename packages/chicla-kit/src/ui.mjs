@@ -2,7 +2,7 @@
 // A caller decides WHETHER to style (`shouldStyle`, from the stream and the environment it already holds) and passes `on`; with `on` false nothing here emits an escape code.
 // Slice b (D93) wires `styleSummary` into the human output of the commands; slice c adds the navigable panel. `--json`, pipes, CI and NO_COLOR keep today's plain text.
 
-const CODES = { bold: "1", dim: "2", red: "31", green: "32", yellow: "33", cyan: "36" };
+const CODES = { bold: "1", dim: "2", red: "31", green: "32", yellow: "33", cyan: "36", blue: "1;94", white: "1;97" };
 const ANSI = /\u001b\[[0-9;]*m/g;
 
 /** Style only on an interactive terminal: a TTY, not --json, not CI, no NO_COLOR (an empty one does not count), not TERM=dumb. */
@@ -36,11 +36,11 @@ export function truncate(s, n) {
   return n <= 0 ? "" : chars.slice(0, n - 1).join("") + "…";
 }
 
-/** A box `width` characters wide: the title in the top edge, one padded line per entry (long lines are cut with «…»). */
+/** A box `width` characters wide: the title in the top edge, one padded line per entry (long lines are cut with «…», counting visible characters only). */
 export function box(title, lines, { width: w = 60, on = false } = {}) {
   const t = truncate(title, Math.max(0, w - 6));
   const head = `┌─ ${paint(t, "bold", on)} ${"─".repeat(Math.max(0, w - width(t) - 5))}┐`;
-  const body = lines.map((l) => `│ ${pad(truncate(l, w - 4), w - 4)} │`);
+  const body = lines.map((l) => `│ ${pad(width(l) <= w - 4 ? l : truncate(stripAnsi(l), w - 4), w - 4)} │`); // a painted line that fits keeps its codes; one that is too long is cut on its visible text (round 224)
   return [head, ...body, `└${"─".repeat(w - 2)}┘`].join("\n");
 }
 

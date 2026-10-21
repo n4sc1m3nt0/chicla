@@ -157,3 +157,76 @@ test('a real argument never opens the panel, even on a TTY', async () => {
   try { const r = await launch(P, { args: ['check-manifest', '--root', P] }); const st = await settled(r.p); if (st === 'HUNG') r.stdin.send('q'); assert.notEqual(st, 'HUNG'); assert.equal(r.stdin.raw, null); }
   finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
+
+// Panel polish (round 224, Rodrigo: «if I switch between pages they all get printed in the terminal and I can scroll up, even after I quit»; «no colour, plain Status page»).
+test('polish: the panel lives in the terminal\'s alternate screen: entered before the first draw, left (with the cursor shown) on q, Ctrl-C and end of input', async () => {
+  const { W, P } = world();
+  try {
+    for (const leave of [(s) => s.send('q'), (s) => s.send('\u0003'), (s) => s.end()]) {
+      const r = await launch(P);
+      const enter = r.out.indexOf('\u001b[?1049h');
+      assert.ok(enter >= 0, 'alternate screen entered'); assert.ok(enter < r.out.indexOf('v1.2.3'), 'entered before the first draw');
+      r.stdin.send('\u001b[C'); r.stdin.send('\t'); r.stdin.send('r');
+      assert.ok(r.out.split('\u001b[?1049h').length === 2, 'entered exactly once, however many pages were drawn');
+      r.clear(); leave(r.stdin); assert.equal(await settled(r.p), 0);
+      assert.ok(r.out.includes('\u001b[?1049l'), 'alternate screen left'); assert.ok(r.out.includes('\u001b[?25h'), 'cursor shown');
+      assert.ok(!r.out.includes('\u001b[2J'), 'nothing is drawn after leaving');
+    }
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
+});
+
+test('polish: gate states are coloured (CLOSED green, open yellow) only when `on`, and no line is cut through an escape code', () => {
+  const long = STATUS.replace('open (Rodrigo\'s)', 'open: ' + 'a very long state '.repeat(12));
+  const { W, P } = world({ status: long });
+  try {
+    const d = panel.readPanelData(P);
+    for (const width of [40, 50, 80]) {
+      const on = panel.renderPanel(d, 1, { width, on: true });
+      const row = (id) => on.split('\n').find((l) => l.includes(id));
+      assert.ok(/\u001b\[32m[^\u001b]*CLOSED/.test(row('G-C1')), 'CLOSED is green');
+      assert.ok(/\u001b\[33m[^\u001b]*open/.test(row('G-C2')), 'open is yellow');
+      for (const l of on.split('\n')) { assert.ok(!/\u001b(?!\[[0-9;]*m)/.test(l), `broken escape: ${JSON.stringify(l)}`); assert.ok([...stripAnsi(l)].length <= width, `too wide: ${stripAnsi(l)}`); }
+      for (const l of on.split('\n').filter((x) => x.includes('│'))) assert.ok(stripAnsi(l).endsWith('│'), 'the right edge of the box stays');
+    }
+    assert.ok(!panel.renderPanel(d, 1, { width: 50, on: false }).includes('\u001b['), 'on=false: plain');
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
+});
+
+test('polish: the Status page has labelled fields (File, Version, Round, Updated, Gates, Latest) and the long text wraps under its label', () => {
+  const { W, P } = world();
+  try {
+    const d = panel.readPanelData(P);
+    const s = screen(panel.renderPanel(d, 0, { width: 50, on: false }));
+    assert.match(s, /File\s+CHICLA_PROJECT_STATUS-7\.md/); assert.match(s, /Version\s+v1\.2\.3/); assert.match(s, /Round\s+9\b/); assert.match(s, /Updated\s+2026-10-14/);
+    assert.match(s, /Gates\s+1 closed, 1 open/); assert.match(s, /Latest\s+The newest entry/);
+    assert.ok(!/older text/.test(s));
+    const long = panel.renderPanel({ ...d, updated: 'Last updated (round 9): 2026-10-14. ' + 'word '.repeat(40) }, 0, { width: 50, on: false }).split('\n');
+    const i = long.findIndex((l) => /Latest/.test(l)); assert.ok(/^│ {10}\S/.test(long[i + 1]), 'continuation lines are indented under the text, not under the label');
+    for (const l of long) assert.ok([...l].length <= 50);
+    assert.ok(!long.join('').includes('…'), 'wrapped, not cut'); assert.equal((long.join(' ').match(/word/g) ?? []).length, 40, 'every word of the long text is on screen');
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
+});
+
+test('polish: a status file with odd or missing lines still renders the Status page (raw text, no throw)', () => {
+  const d = { root: '/x', statusFile: 'CHICLA_PROJECT_STATUS-1.md', version: 'something odd', updated: 'no round here', next: null, gates: [{ id: 'G-X', state: '???' }], delivery: null };
+  const s = screen(panel.renderPanel(d, 0, { width: 60, on: true }));
+  assert.match(s, /something odd/); assert.match(s, /no round here/); assert.match(s, /CHICLA_PROJECT_STATUS-1\.md/);
+  assert.match(screen(panel.renderPanel({ ...d, gates: [] }, 0, { width: 60 })), /Gates\s+none/);
+});
+
+test('highlights: the active tab is in blue letters, each key of the footer in white letters (no backgrounds), only when `on`; the text is the same either way', () => {
+  const d = { root: '/x', statusFile: null, version: null, updated: null, next: null, gates: [], delivery: null };
+  const BG = /\u001b\[[0-9;]*(?:;|\[)(?:4[0-7]|10[0-7])(?:;|m)/;
+  for (const page of [0, 1, 2, 3]) {
+    const on = panel.renderPanel(d, page, { width: 60, on: true }).split('\n'), off = panel.renderPanel(d, page, { width: 60, on: false }).split('\n');
+    assert.ok(/\u001b\[1;94m\[/.test(on[0]), 'the active tab has blue letters (code 94)');
+    assert.equal((on[0].match(/\u001b\[1;94m/g) ?? []).length, 1, 'only the active tab is blue');
+    assert.equal(stripAnsi(on[0]), off[0], 'same text with or without colour');
+    const foot = on[on.length - 1];
+    for (const key of ['←/→', 'Tab', 'r', 'q']) assert.ok(new RegExp(`\\u001b\\[1;97m${key.replace('/', '\\/')}\\u001b\\[0m`).test(foot), `key «${key}» has white letters (code 97)`);
+    assert.equal(stripAnsi(foot), off[off.length - 1], 'same footer text with or without colour');
+    assert.equal(stripAnsi(foot), '←/→ or Tab: page   r: re-read   q: quit', 'the footer wording is the one from before the highlights');
+    assert.ok(!off.join('\n').includes('\u001b['), 'on=false: plain');
+    for (const l of on) { assert.ok(!/\u001b(?!\[[0-9;]*m)/.test(l), `broken escape: ${JSON.stringify(l)}`); assert.ok(!BG.test(l), `no background colour: ${JSON.stringify(l)}`); }
+  }
+});

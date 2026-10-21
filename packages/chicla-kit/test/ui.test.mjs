@@ -104,3 +104,18 @@ test('styleSummary: handles CRLF and an empty string', () => {
   assert.equal(styleSummary('', true), '');
   assert.equal(stripAnsi(styleSummary('✓ a\r\n✗ b', true)), '✓ a\r\n✗ b');
 });
+
+test('box: a painted line that fits keeps its escape codes; one that is too long is cut on its visible text and never mid-escape', () => {
+  const ok = box('T', [paint('ab', 'green', true)], { width: 12, on: false }).split('\n')[1];
+  assert.ok(ok.includes('\u001b[32mab\u001b[0m')); assert.equal(width(ok), 12);
+  const cut = box('T', [paint('abcdefghijklmnop', 'green', true)], { width: 12, on: false }).split('\n')[1];
+  assert.equal(width(cut), 12); assert.ok(stripAnsi(cut).includes('abcdefg…'), 'cut on the visible text: 7 characters and «…»'); assert.ok(!/\u001b(?!\[[0-9;]*m)/.test(cut));
+});
+
+test('paint: blue and white are LETTER colours (94 and 97, bold), never a background, and always reset', () => {
+  assert.ok(/^\u001b\[1;94mx\u001b\[0m$/.test(paint('x', 'blue', true)), 'blue: bold bright blue letters');
+  assert.ok(/^\u001b\[1;97mx\u001b\[0m$/.test(paint('x', 'white', true)), 'white: bold bright white letters');
+  for (const st of ['blue', 'white']) assert.ok(!/\u001b\[[0-9;]*(?:;|\[)(?:4[0-7]|10[0-7])(?:;|m)/.test(paint('x', st, true)), `${st} sets no background`);
+  assert.equal(paint('x', 'blue', false), 'x'); assert.equal(paint('x', 'white', false), 'x');
+  assert.throws(() => paint('x', 'blueBg', true)); assert.throws(() => paint('x', 'whiteBg', true));
+});
