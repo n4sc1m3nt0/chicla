@@ -1,5 +1,13 @@
-<!-- CHANGELOG_FINGERPRINT: seq=232 file=CHICLA_PROJECT_STATUS-232.md app_sha256_12=065d37032ef1 changelog_sha256_12=4c827856c755 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=233 file=CHICLA_PROJECT_STATUS-233.md app_sha256_12=065d37032ef1 changelog_sha256_12=dd1e677b2ea5 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 229 — `chicla-kit` 0.1.0 (v0.0.232)
+
+- Task (Rodrigo: «está pronto para o kit»; the CI of the round 228 tree was 12 of 12 green once the old status file was removed with `git rm`, and his `npm test`, `npm run smoke` and mutants were green). The release round of D130: the number and the README line, nothing else.
+- `packages/chicla-kit/package.json` `0.0.0` → `0.1.0`; `packages/chicla-kit/README.md` status line «pre-release `0.1.0`, ready to release, not published yet»; `docs/release.md` (item 4 and kit «Before you start» 3) says both packages are `0.1.0`. Tests first (2 red): `test/layout.test.mjs` and `packages/chicla-kit/test/cli-check-manifest.test.mjs` now pin `0.1.0`.
+- Noticed, not changed: the last sentence of the kit README still says it «cannot be installed alone yet (card C13.5)», although round 166 made it reach `chicla-zip` by name; Rodrigo decides whether it goes before the publish.
+- Files: those five, the status file, this CHANGELOG, root `package.json` version. No source, nothing pinned touched.
+- NOT run by Claude: Node 18 and 20, `npm run smoke`, `npm run mutants`, CI (Rodrigo ran them on the round 228 tree), `npm publish` (never by Claude).
 
 ## Round 228 — the Decisions page of the panel, laid out (v0.0.231)
 

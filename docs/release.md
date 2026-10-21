@@ -11,7 +11,7 @@ What is still between the tree and the tag, in order. Claude keeps this list tru
 1. **G-C5, the last review.** The sixth narrow pass (C15.28, report `chicla-zip-security-review-6.md`, round 212 tree, `zipkit.mjs` sha256 starts `89478bbe`) found no bypass of the ZIP-022 fix and three INFO findings: ZIP-024 (an old test expected the old behavior; its expectation was updated in round 213), ZIP-025 and ZIP-026 (documented as known limits in `SECURITY.md`). `zipkit.mjs` was not touched after it, so the pin did not move. Rodrigo closed G-C5 on 2026-10-21 (round 216).
 2. **`/dump` and «recovery mode» once more**, after the LAST `zipkit.mjs` change (the pin moved in rounds 201, 202, 203, 207, 208 and 210).
 3. **The checks only Rodrigo can run:** `npm test` on Node 18, 20 and 22, the two mutants `R210-*` (`node scripts/mutants.mjs --only R210-no-dup-check --timeout 60`, then `R210-dup-after-skip`), `npm run smoke`, CI green on every job of the last pushed commit (G-C10 `pack`, G-C13 `windows`, G-C9 `bench`). The CI part was seen green on the round 219 tree (round 220: 12 of 12 jobs; push the final tree and read it again before the tag).
-4. **`chicla-zip` already says `"version": "0.1.0"`**, so it needs no round for that. The kit still says `0.0.0`: when you say it is ready, one round sets `"version": "0.1.0"` in `packages/chicla-kit/package.json` and changes the «pre-release» line of its README, and nothing else.
+4. **Both packages say `"version": "0.1.0"`**: `chicla-zip` since round 163 and `chicla-kit` since round 229 (that round changed the number and the status line of the kit README, nothing else).
 5. **Then the steps below**, `chicla-zip` first.
 
 Open gates that do not block the tarball but decide what the README may claim: G-C4 (Windows statement), G-C12 (the panel on a real terminal), G-C15 (the agent files on each vendor's page), G-C8 (ROADMAP §9).
@@ -81,7 +81,7 @@ The tag is `chicla-kit-v0.1.0` (D116). Same rules as above: the AI never runs `n
 
 1. `chicla-zip` 0.1.0 is published and checked (zip steps 1 to 9), and `npm view chicla-zip version` says `0.1.0`.
 2. The last pushed commit is green on every CI job, and the `pack-kit` job is one of them (it builds `chicla-kit-<version>.tgz`; the artifact is `chicla-kit-tarball`).
-3. `packages/chicla-kit/package.json` says `"version": "0.1.0"`. Today it says `0.0.0` on purpose: the versions of the two packages change only at their releases. When you say the kit is ready, ask Claude for a round that changes this number, and the «pre-release, not published» line at the top of `packages/chicla-kit/README.md`, and nothing else.
+3. `packages/chicla-kit/package.json` says `"version": "0.1.0"`. Round 229 set it (it said `0.0.0` before; the versions of the two packages change only at their releases), together with the status line at the top of `packages/chicla-kit/README.md`.
 4. The gates you decided to close before the release are closed or accepted by you: G-C12 (the panel on a real terminal), G-C15 (the agent files checked on each vendor's page) and G-C4 (Windows support statement). They do not block the tarball; they decide what the README may claim.
 
 ### Steps

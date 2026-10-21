@@ -1,6 +1,6 @@
 {
   "name": "chicla-kit",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Workflow completo para coding agents: estado, fingerprints, política, manifesto, entrega verificada, dump e recovery.",
   "type": "module",
   "bin": {
