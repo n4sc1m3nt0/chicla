@@ -10,7 +10,7 @@ import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-open-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (buf) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buf); return p; };
 
 const NFC = 'relatório.txt', NFD = NFC.normalize('NFD');

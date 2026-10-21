@@ -13,7 +13,7 @@ import { openZip, listZip, readZipFile, ZipError } from '../src/zipkit.mjs';
 
 let dir;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-opendir-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 
 const withEmptyReads = (fn) => {
   const real = fs.readSync;

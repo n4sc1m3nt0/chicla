@@ -74,13 +74,13 @@ test('readPanelData: version, newest «Last updated» entry only, Next up, gates
     assert.match(d.version, /v1\.2\.3/); assert.match(d.updated, /newest entry/); assert.ok(!/older text/.test(d.updated));
     assert.match(d.next, /D7/); assert.deepEqual(d.gates.map((g) => g.id), ['G-C1', 'G-C2']); assert.match(d.gates[1].state, /^open/);
     assert.equal(d.delivery, 'chicla-round2-2026-01-02.zip');
-  } finally { rmSync(W, { recursive: true, force: true }); }
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('readPanelData: a project with no status file and no zip gives nulls and empty lists, never throws', () => {
   const { W, P } = world({ status: null });
   try { const d = panel.readPanelData(P); assert.equal(d.version, null); assert.equal(d.delivery, null); assert.deepEqual(d.gates, []); }
-  finally { rmSync(W, { recursive: true, force: true }); }
+  finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('with the highest-numbered status file: -10 wins over -9', () => {
@@ -88,7 +88,7 @@ test('with the highest-numbered status file: -10 wins over -9', () => {
   try {
     writeFileSync(join(P, 'CHICLA_PROJECT_STATUS-9.md'), '**Current version:** v9\n'); writeFileSync(join(P, 'CHICLA_PROJECT_STATUS-10.md'), '**Current version:** v10\n');
     assert.match(panel.readPanelData(P).version, /v10/);
-  } finally { rmSync(W, { recursive: true, force: true }); }
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('renderPanel: every page fits the width and shows its own content; the tab bar marks the page', () => {
@@ -101,7 +101,7 @@ test('renderPanel: every page fits the width and shows its own content; the tab 
     for (const p of pages) for (const l of p.split('\n')) assert.ok([...l].length <= 50, `too wide: ${l}`);
     assert.ok(!panel.renderPanel(d, 0, { width: 50, on: false }).includes('\u001b['), 'on=false: no escape code');
     assert.ok(panel.renderPanel(d, 0, { width: 50, on: true }).includes('\u001b['));
-  } finally { rmSync(W, { recursive: true, force: true }); }
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('no arguments on a TTY (stdout, stdin, clean env): the panel opens in raw mode; →, ←, Tab change page; q leaves, restores the terminal and exits 0', async () => {
@@ -117,7 +117,7 @@ test('no arguments on a TTY (stdout, stdin, clean env): the panel opens in raw m
     r.clear(); r.stdin.send('q');
     assert.equal(await settled(r.p), 0); assert.equal(r.stdin.raw, false); assert.equal(r.stdin.listeners.length, 0, 'every listener is removed');
     assert.ok(r.out.includes('\u001b[?25h'), 'the cursor is shown again');
-  } finally { rmSync(W, { recursive: true, force: true }); }
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('Ctrl-C and the end of the input also leave and restore the terminal', async () => {
@@ -125,7 +125,7 @@ test('Ctrl-C and the end of the input also leave and restore the terminal', asyn
   try {
     const a = await launch(P); a.stdin.send('\u0003'); assert.equal(await settled(a.p), 0); assert.equal(a.stdin.raw, false);
     const b = await launch(P); b.stdin.end(); assert.equal(await settled(b.p), 0); assert.equal(b.stdin.raw, false);
-  } finally { rmSync(W, { recursive: true, force: true }); }
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('the panel only READS: nothing in the project or beside it changes', async () => {
@@ -134,13 +134,13 @@ test('the panel only READS: nothing in the project or beside it changes', async 
     const before = snapshot(W); const r = await launch(P);
     for (const k of ['\u001b[C', '\u001b[C', '\u001b[C', 'r', 'q']) r.stdin.send(k);
     await r.p; assert.equal(snapshot(W), before);
-  } finally { rmSync(W, { recursive: true, force: true }); }
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('a project with no status file still opens the panel and says so', async () => {
   const { W, P } = world({ status: null });
   try { const r = await launch(P); assert.match(screen(r.out), /no status file/i); r.stdin.send('q'); assert.equal(await r.p, 0); }
-  finally { rmSync(W, { recursive: true, force: true }); }
+  finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('the panel is the STYLED path only: a pipe, a non-TTY stdin, NO_COLOR, CI, TERM=dumb and --json keep today\'s usage error (exit 2)', async () => {
@@ -149,11 +149,11 @@ test('the panel is the STYLED path only: a pipe, a non-TTY stdin, NO_COLOR, CI, 
     for (const o of [{ outTTY: false }, { inTTY: false }, { env: { NO_COLOR: '1' } }, { env: { CI: 'true' } }, { env: { TERM: 'dumb' } }, { args: ['--json'] }]) {
       const r = await launch(P, o); const st = await settled(r.p); if (st === 'HUNG') r.stdin.send('q'); assert.equal(st, 2, JSON.stringify(o)); assert.equal(r.stdin.raw, null, 'raw mode was never touched');
     }
-  } finally { rmSync(W, { recursive: true, force: true }); }
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('a real argument never opens the panel, even on a TTY', async () => {
   const { W, P } = world();
   try { const r = await launch(P, { args: ['check-manifest', '--root', P] }); const st = await settled(r.p); if (st === 'HUNG') r.stdin.send('q'); assert.notEqual(st, 'HUNG'); assert.equal(r.stdin.raw, null); }
-  finally { rmSync(W, { recursive: true, force: true }); }
+  finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });

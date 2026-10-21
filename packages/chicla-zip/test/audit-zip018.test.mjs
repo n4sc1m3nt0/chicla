@@ -13,7 +13,7 @@ import { local, central, eocd } from './zipraw.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(realTmp(), 'chicla-zip-018-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 
 test('merge without overwrite: an existing file is refused in the plan, no rename is attempted, the destination is untouched', async () => {
   const dest = join(dir, `d${n++}`); mkdirSync(dest); writeFileSync(join(dest, 'a.txt'), 'OLD'); writeFileSync(join(dest, 'keep.txt'), 'KEEP');

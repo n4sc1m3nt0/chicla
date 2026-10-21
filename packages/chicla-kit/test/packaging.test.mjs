@@ -107,5 +107,5 @@ test("installed from the two tarballs into a clean folder, the kit finds chicla-
     assert.ok(existsSync(join(proj, "node_modules", "chicla-zip", "src", "zipkit.mjs")));
     writeFileSync(join(proj, "probe.mjs"), `import { loadZipkit } from "chicla-kit/src/zipkit-loader.mjs"; const m = await loadZipkit(); process.stdout.write(typeof m.writeZip + " " + typeof m.writeZipStream);`);
     assert.equal(execFileSync("node", ["probe.mjs"], { cwd: proj, encoding: "utf8" }), "function function");
-  } finally { rmSync(tmp, { recursive: true, force: true }); }
+  } finally { rmSync(tmp, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });

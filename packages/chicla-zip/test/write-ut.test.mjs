@@ -20,7 +20,7 @@ import { checkZip, readers } from './interop.mjs';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-ut-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const fresh = () => join(base, `t${n++}`);
 const writeZip = (o, s, opts = {}) => rawWriteZip(o, s, { extendedTime: true, ...opts }); // the option is opt-in; the guard tests below call rawWriteZip
 const blocks = (extra) => { const m = new Map(); for (let o = 0; o + 4 <= extra.length;) { const id = extra.readUInt16LE(o), len = extra.readUInt16LE(o + 2); m.set(id, extra.subarray(o + 4, o + 4 + len)); o += 4 + len; } return m; };

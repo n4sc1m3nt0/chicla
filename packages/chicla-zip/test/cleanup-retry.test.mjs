@@ -17,7 +17,7 @@ import { buildZip } from './zipfab.mjs';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-cleanup-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const fresh = () => { const d = join(base, `t${n++}`); mkdirSync(d); return d; };
 
 // Runs fn with the Windows-like file system; returns what the fake saw. busy: the first N rmSync calls on each path fail with EPERM.
@@ -67,7 +67,7 @@ test('a remove that never works is bounded and silent: the real error still wins
   assert.ok(took >= 300, `it waited between the tries (${took} ms)`);
   assert.ok(took < 5000, 'bounded');
   assert.ok(log.refused >= 3 && log.refused < 100, `tried more than once and gave up (${log.refused} refusals)`);
-  for (const d of readdirSync(p)) rmSync(join(p, d), { recursive: true, force: true }); // the fake left it on purpose
+  for (const d of readdirSync(p)) rmSync(join(p, d), { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); // the fake left it on purpose
 });
 
 test('a stale .partial that is busy for the first two tries is removed after the retries and the zip is written', async () => {

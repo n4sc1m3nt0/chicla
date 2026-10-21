@@ -11,7 +11,7 @@ import { checkZip, readers } from './interop.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-write-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const out = () => join(dir, `w${n++}.zip`);
 const f = (name, s = 'x') => ({ name, data: Buffer.from(s) });
 const rejects = async (p, sources, code, opts) => {

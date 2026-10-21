@@ -25,7 +25,7 @@ const WIN = process.platform === 'win32';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-create-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const fresh = () => { const d = join(base, `t${n++}`); mkdirSync(d); return d; };
 const tree = (root, files) => { for (const [name, v] of Object.entries(files)) { const p = join(root, name); if (name.endsWith('/')) mkdirSync(p, { recursive: true }); else { mkdirSync(join(p, '..'), { recursive: true }); writeFileSync(p, v); } } return root; };
 const names = (zip) => listZip(zip).entries.map((e) => e.name);

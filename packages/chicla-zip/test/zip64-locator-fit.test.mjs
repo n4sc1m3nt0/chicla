@@ -15,7 +15,8 @@ import { local, central, eocd, eocd64, u64 } from './zipraw.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-loc-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+// Windows: an antivirus or the indexer may hold a file for a moment and Node 18/20 `rmSync` fails with ENOTEMPTY (CI, round 216 tree, windows 18 and 20); the cleanup retries, like `fuzz-read.test.mjs`.
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (buf) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buf); return p; };
 const refused = (err) => err instanceof ZipError && err.code === 'EZIP';
 const names = (p) => listZip(p).entries.map((e) => e.name);

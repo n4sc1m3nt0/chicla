@@ -17,7 +17,7 @@ const skip = process.platform === 'win32' ? 'symlinks need rights on Windows' : 
 let base, n = 0;
 before(() => { base = realpathSync(mkdtempSync(join(tmpdir(), 'chicla-zip-c1513-'))); });
 // realpath: on macOS tmpdir() is /var/..., a symlink to /private/var/...; the code hands the hooks the REAL path, so the tests compare real paths (round 198).
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const fresh = () => { const d = join(base, `t${n++}`); mkdirSync(d); return d; };
 
 // ---- ZIP-003: the walk of createZip -------------------------------------------------------------------------------------------------------------

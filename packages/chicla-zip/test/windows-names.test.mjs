@@ -12,7 +12,7 @@ import { writeZip, writeZipStream, createZip, extractZip, windowsNameProblems } 
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-winnames-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const fresh = () => { const d = join(base, `t${n++}`); mkdirSync(d); return d; };
 const D = (name) => ({ name, data: Buffer.from('data data data data') });
 const sinkOf = () => new Writable({ write(_c, _e, cb) { cb(); } });

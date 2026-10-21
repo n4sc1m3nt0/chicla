@@ -20,7 +20,7 @@ const PINNED = ['baseline', 'manifest', 'policy'].map((n) => pinnedSpec(CORE, n)
 const read = (f) => readFileSync(join(ROOT, f), 'utf8');
 const imp = (f) => import(pathToFileURL(join(ROOT, f)).href);
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111-5d-'));
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 let n = 0;
 /** A copy of the real project (every file the manifest lists). `core: false` leaves the core out; `extra` adds a file that the manifest will list. */
 const project = ({ core = true, extra } = {}) => {

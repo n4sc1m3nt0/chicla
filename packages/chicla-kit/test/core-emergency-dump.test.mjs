@@ -20,7 +20,7 @@ const TOOL = [WRAPPER, CORE, LOADER, ...Object.values(TOOLCHAIN_SOURCES)];
 const read = (f) => readFileSync(join(ROOT, f), 'utf8');
 const imp = (f) => import(pathToFileURL(join(ROOT, f)).href);
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111-5f-'));
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 let n = 0;
 /** A copy of the tool (only what a dump needs, `core: false` leaves the core out) and a small work folder with a project in it. */
 const setup = ({ core = true } = {}) => {

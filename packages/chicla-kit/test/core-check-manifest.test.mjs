@@ -17,7 +17,7 @@ const WRAPPER = 'scripts/check-manifest.mjs';
 const read = (f) => readFileSync(join(ROOT, f), 'utf8');
 const imp = (f) => import(pathToFileURL(join(ROOT, f)).href);
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111-5b-'));
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 let n = 0;
 /** A project that mirrors the real layout: wrapper, core and the two pinned files, plus a file to list. */
 const project = ({ core = true } = {}) => {

@@ -18,7 +18,7 @@ const WIN = process.platform === 'win32';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-slimits-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const fresh = () => join(base, `t${n++}`);
 const memSink = () => { const parts = []; const w = new Writable({ write(c, _e, cb) { parts.push(c); cb(); } }); w.bytes = () => Buffer.concat(parts); return w; };
 const toBuffer = async (sources, opts) => { const s = memSink(); const r = await writeZipStream(s, sources, opts); return { buf: s.bytes(), ...r }; };

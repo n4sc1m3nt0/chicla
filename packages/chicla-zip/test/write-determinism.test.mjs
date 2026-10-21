@@ -23,7 +23,7 @@ import { checkZip } from './interop.mjs';
 const SRC = pathToFileURL(fileURLToPath(new URL('../src/zipkit.mjs', import.meta.url))).href;
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-det-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const out = () => join(dir, `d${n++}.zip`);
 const f = (name, extra = {}) => ({ name, data: Buffer.from(`content of ${name}`), ...extra });
 const sha = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');

@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 const SRC = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'zipkit.mjs');
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-au3-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const fresh = () => { const d = join(base, `t${n++}`); mkdirSync(d); return d; };
 const zipOf = (entries, name = 'a.zip') => { const p = join(fresh(), name); writeFileSync(p, buildZip(entries)); return p; };
 const run = (...args) => {

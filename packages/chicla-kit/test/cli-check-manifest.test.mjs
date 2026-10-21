@@ -25,7 +25,7 @@ const project = (files = { 'a.txt': 'a', 'sub/b.txt': 'b' }) => {
   for (const [rel, text] of Object.entries(files)) { mkdirSync(dirname(join(T, rel)), { recursive: true }); writeFileSync(join(T, rel), text); }
   return T;
 };
-const done = (T) => rmSync(T, { recursive: true, force: true });
+const done = (T) => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 });
 const holdsBoth = (() => { const T = project({ [NFC]: '1', [NFD]: '2' }); try { return existsSync(join(T, NFC)) && existsSync(join(T, NFD)) && readFileSync(join(T, NFC), 'utf8') === '1'; } finally { done(T); } })();
 
 /** Runs the CLI in-process; returns { status, out, err }. */

@@ -24,7 +24,7 @@ const { emergencyDump } = await imp('scripts/emergency-dump.mjs');
 const { recoveryReport, renderRecoveryReport } = await importPinned('recovery-report');
 
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111f-'));
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 let n = 0;
 const fresh = (name) => join(T, `${name}${n++}`);
 /** A dump of a small project (note «half done»): a.txt is in the manifest, ghost.txt is listed but absent, new.txt is on disk but not listed. */

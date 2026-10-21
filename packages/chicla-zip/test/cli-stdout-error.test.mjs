@@ -8,13 +8,14 @@ import { mkdtempSync, writeFileSync, rmSync, existsSync, readFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { buildZip } from './zipfab.mjs';
 
 const skip = existsSync('/dev/full') && process.platform === 'linux' ? false : 'needs /dev/full (Linux)';
 let dir, zip;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-stdout-')); zip = join(dir, 'a.zip'); writeFileSync(zip, buildZip([{ name: 'a.txt', data: 'HELLO' }])); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
-const CLI = new URL('../src/zipkit.mjs', import.meta.url).pathname;
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
+const CLI = fileURLToPath(new URL('../src/zipkit.mjs', import.meta.url)); // not `.pathname`: on Windows that is /D:/a/… (round 217)
 const sh = (cmd) => spawnSync('sh', ['-c', cmd], { encoding: 'utf8', env: { ...process.env, CLI, ZIP: zip, NODE: process.execPath } });
 const noStack = (s) => assert.doesNotMatch(s, /\n\s+at |node:internal|Unhandled|throw er/);
 

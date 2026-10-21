@@ -14,7 +14,7 @@ import { buildZip } from './zipfab.mjs';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-escape-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 
 // Recursive snapshot of `root` (lstat only): relative path -> type + mode + content. `skip` is a relative path whose CONTENTS are ignored.
 const snap = (root, skip) => {
@@ -192,7 +192,7 @@ test('fuzz: random hostile zips against random destinations never leak, never th
     const label = `seed=${seed} i=${i} pre=${pre} overwrite=${overwrite} entries=${JSON.stringify(entries.map((e) => ({ ...e, data: undefined })))}`;
     judge(r, label, r.error ? null : expectedPaths(entries));
     if (r.error) refused++; else ok++;
-    rmSync(zip, { force: true }); rmSync(r.w, { recursive: true, force: true });
+    rmSync(zip, { force: true }); rmSync(r.w, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 });
   }
   assert.ok(ok > 0 && refused > 0, `the fuzz must exercise both outcomes (ok=${ok}, refused=${refused})`);
 });

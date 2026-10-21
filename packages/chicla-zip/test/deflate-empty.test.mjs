@@ -11,7 +11,7 @@ import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-emptydef-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (entries) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buildZip(entries)); return p; };
 const BAD = { name: 'bad', data: '', method: 8, rawData: Buffer.alloc(0) };      // deflate, csize 0
 const REAL_EMPTY_DEFLATE = { name: 'e8', data: '', method: 8, rawData: Buffer.from([0x03, 0x00]) }; // what Java, Python... write

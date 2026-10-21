@@ -41,7 +41,7 @@ test('not a TTY: the output is plain (no escape code) and is what a styled run g
     assert.ok(!plain.out.includes(ESC) && !plain.err.includes(ESC));
     assert.ok((styled.out + styled.err).includes(ESC), 'a TTY with a clean env is styled');
     assert.equal(stripAnsi(styled.out), plain.out); assert.equal(stripAnsi(styled.err), plain.err);
-  } finally { rmSync(T, { recursive: true, force: true }); }
+  } finally { rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('a passing check is styled too, on stdout', async () => {
@@ -53,7 +53,7 @@ test('a passing check is styled too, on stdout', async () => {
     assert.equal(styled.status, 0);
     assert.ok(styled.out.includes(ESC + '32m'), 'the ✓ is green');
     assert.equal(stripAnsi(styled.out), plain.out);
-  } finally { rmSync(T, { recursive: true, force: true }); }
+  } finally { rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('the lists of files are never painted: every styled line is a summary line starting with a mark', async () => {
@@ -64,7 +64,7 @@ test('the lists of files are never painted: every styled line is a summary line 
     const listed = lines.filter((l) => /^ {2}\S/.test(stripAnsi(l)) && !/^ {2}[✓✗⚠]/.test(stripAnsi(l)));
     assert.ok(listed.length >= 1, 'the failing run lists the lost file');
     for (const l of listed) assert.ok(!l.includes(ESC), `file line painted: ${l}`);
-  } finally { rmSync(T, { recursive: true, force: true }); }
+  } finally { rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('NO_COLOR, CI and TERM=dumb switch the style off; an empty NO_COLOR does not', async () => {
@@ -76,7 +76,7 @@ test('NO_COLOR, CI and TERM=dumb switch the style off; an empty NO_COLOR does no
     }
     const r = await run(['check-manifest', '--root', T], { tty: true, env: { NO_COLOR: '' } });
     assert.ok((r.out + r.err).includes(ESC));
-  } finally { rmSync(T, { recursive: true, force: true }); }
+  } finally { rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('--json: one JSON object on stdout and plain text on stderr, even on a TTY', async () => {
@@ -85,7 +85,7 @@ test('--json: one JSON object on stdout and plain text on stderr, even on a TTY'
     const r = await run(['check-manifest', '--json', '--root', T], { tty: true });
     assert.ok(!r.out.includes(ESC) && !r.err.includes(ESC));
     assert.equal(JSON.parse(r.out).ok, false);
-  } finally { rmSync(T, { recursive: true, force: true }); }
+  } finally { rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('the environment comes from io.env, not process.env, and the two streams are judged separately', async () => {
@@ -99,7 +99,7 @@ test('the environment comes from io.env, not process.env, and the two streams ar
     await main(['check-manifest', '--root', T], { stdout: { isTTY: false, write: (s) => { out += s; } }, stderr: { isTTY: true, write: (s) => { err += s; } }, env: {} });
     assert.ok(!out.includes(ESC), 'stdout is a pipe: plain');
     assert.ok(err.includes(ESC), 'stderr is a TTY: styled');
-  } finally { if (saved === undefined) delete process.env.NO_COLOR; else process.env.NO_COLOR = saved; rmSync(T, { recursive: true, force: true }); }
+  } finally { if (saved === undefined) delete process.env.NO_COLOR; else process.env.NO_COLOR = saved; rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('usage errors and --help stay plain on a TTY', async () => {

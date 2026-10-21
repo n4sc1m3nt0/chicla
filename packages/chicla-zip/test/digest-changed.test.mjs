@@ -19,7 +19,7 @@ import { checkZip } from './interop.mjs';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-digest-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const fresh = () => { const d = join(base, `t${n++}`); mkdirSync(d); return d; };
 const sha = (b) => createHash('sha256').update(b).digest('hex');
 const noOut = (out) => { assert.throws(() => statSync(out), { code: 'ENOENT' }, 'output exists after a refusal'); assert.deepEqual(readdirSync(join(out, '..')).filter((x) => x.endsWith('.partial')), [], 'a .partial was left'); };

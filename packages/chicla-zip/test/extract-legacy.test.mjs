@@ -10,7 +10,7 @@ import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-xlegacy-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (entries) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buildZip(entries)); return p; };
 const parent = () => { const p = join(dir, `case${n++}`); mkdirSync(p); return p; };
 const cafeE9 = Buffer.from([0x63, 0x61, 0x66, 0xe9, 0x2e, 0x74, 0x78, 0x74]); // "caf" 0xE9 ".txt": not UTF-8; cp437 says Θ, windows-1252 says é

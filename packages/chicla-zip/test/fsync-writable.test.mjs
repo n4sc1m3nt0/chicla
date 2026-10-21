@@ -40,5 +40,5 @@ test('createZip { stream: true } to a path syncs the file through a handle that 
     assert.deepEqual(res.ok, true, JSON.stringify(res));
     assert.equal(readFileSync(out).subarray(0, 2).toString(), 'PK');
     assert.deepEqual(readdirSync(T).filter((x) => x.endsWith('.partial')), []);
-  } finally { rmSync(T, { recursive: true, force: true }); }
+  } finally { rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });

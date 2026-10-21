@@ -14,7 +14,7 @@ const skip = process.platform === 'win32' ? 'POSIX modes' : false;
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-zip012-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (entries) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buildZip(entries)); return p; };
 const world = () => { const parent = join(dir, `w${n++}`); mkdirSync(parent); return parent; };
 const ZIP = () => put([{ name: 'a.txt', data: 'alpha', mode: 0o100666 }, { name: 'sub/b.txt', data: 'beta', mode: 0o100777 }]);

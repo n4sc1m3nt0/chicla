@@ -14,7 +14,7 @@ const WIN = process.platform === 'win32';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-fast-')); mkdirSync(join(dir, 'zips')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (entries) => { const p = join(dir, 'zips', `z${n++}.zip`); writeFileSync(p, buildZip(entries)); return p; };
 const parent = () => { const p = join(dir, `case${n++}`); mkdirSync(p); return p; };
 const py = spawnSync('python3', ['-c', 'import zipfile']).status === 0;

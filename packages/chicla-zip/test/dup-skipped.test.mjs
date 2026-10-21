@@ -11,7 +11,7 @@ import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-dupskip-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (buf) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buf); return p; };
 const FILE = { name: 'a', data: 'BENIGN', mode: 0o100644 }, LINK = { name: 'a', data: 'zz', mode: 0o120777 }, FIFO = { name: 'a', data: 'x', mode: 0o010644 };
 const code = (c) => (e) => e instanceof ZipError && e.code === c;

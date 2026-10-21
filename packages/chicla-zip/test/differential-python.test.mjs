@@ -122,7 +122,7 @@ for (let i = 0; i < N; i++) {
       const mine = join(dir, 'x-chicla'), theirs = join(dir, 'x-python'); await extractZip(b, mine); py(PY_EXTRACT, [b, theirs]);
       const want = treeShape(t);
       assert.deepEqual([...same(walk(mine), want, 'chicla extract vs tree'), ...same(walk(theirs), want, 'python extractall vs tree'), ...same(walk(mine), walk(theirs), 'chicla vs python extract')], [], `B (extraction): ${why}`);
-    } finally { rmSync(dir, { recursive: true, force: true }); }
+    } finally { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
   });
 }
 

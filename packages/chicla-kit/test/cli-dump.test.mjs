@@ -21,7 +21,7 @@ const { main } = await imp('packages/chicla-kit/src/cli.mjs');
 const { emergencyDump, renderEmergencyDump } = await imp('scripts/emergency-dump.mjs');
 
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111e-'));
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 let n = 0;
 const AWS = `AKIA${'ABCDEFGHIJKLMNOP'}`;
 const RECOVER = ['baseline.mjs', 'manifest.mjs', 'policy.mjs', 'recovery-report.mjs', 'zipkit.mjs'].map((f) => `RECOVER/${f}`);

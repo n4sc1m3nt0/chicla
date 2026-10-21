@@ -26,7 +26,7 @@ const { checkManifest } = await imp('scripts/check-manifest.mjs');
 const { main } = await imp('packages/chicla-kit/src/cli.mjs');
 
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111d-'));
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 let n = 0;
 /** A copy of this tree (the files FILES.manifest lists) in a temp folder: a full project, scripts included. */
 const tree = () => {

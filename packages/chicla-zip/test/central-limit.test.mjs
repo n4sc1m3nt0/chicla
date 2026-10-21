@@ -13,7 +13,7 @@ import { buildZip } from './zipfab.mjs';
 const LIMIT = 64 * 1024 * 1024;
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-central-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (buf) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buf); return p; };
 const u16 = (v) => { const b = Buffer.alloc(2); b.writeUInt16LE(v); return b; };
 const u32 = (v) => { const b = Buffer.alloc(4); b.writeUInt32LE(v); return b; };

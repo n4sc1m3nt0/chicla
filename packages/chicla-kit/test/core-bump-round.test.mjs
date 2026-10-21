@@ -19,7 +19,7 @@ const WRAPPER = 'scripts/bump-round.mjs';
 const read = (f) => readFileSync(join(ROOT, f), 'utf8');
 const imp = (f) => import(pathToFileURL(join(ROOT, f)).href);
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111-5c-'));
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 let n = 0;
 /** A copy of the real project (every file the manifest lists), so the fingerprints, the pin and the manifest step are the real ones. `core: false` leaves the core out. */
 const project = ({ core = true } = {}) => {

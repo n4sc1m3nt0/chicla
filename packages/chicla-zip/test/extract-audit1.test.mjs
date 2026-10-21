@@ -15,7 +15,7 @@ const WIN = process.platform === 'win32';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-audit1-')); mkdirSync(join(dir, 'zips')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (entries) => { const p = join(dir, 'zips', `z${n++}.zip`); writeFileSync(p, buildZip(entries)); return p; };
 const parent = () => { const p = join(dir, `case${n++}`); mkdirSync(p); return p; };
 const text = (len) => Buffer.from('chicla '.repeat(Math.ceil(len / 7)).slice(0, len));
@@ -73,6 +73,6 @@ test('extracting into the root of a mounted volume works (temp folder on the sam
     assert.equal(readFileSync(join(mount, tag, 'b.txt'), 'utf8'), 'there');
     assert.deepEqual(readdirSync(join(mount, '..')).filter((x) => x.startsWith('.chicla-tmp-')), [], 'temp folder left in the parent');
     assert.deepEqual(readdirSync(mount).filter((x) => x.startsWith('.chicla-tmp-')), [], 'temp folder left in the mount');
-  } finally { for (const f of files) rmSync(join(mount, f), { recursive: true, force: true }); }
+  } finally { for (const f of files) rmSync(join(mount, f), { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
   assert.equal(existsSync(join(mount, tag)), false);
 });

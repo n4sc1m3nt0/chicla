@@ -16,7 +16,7 @@ const WRAPPER = 'scripts/check-build.mjs';
 const read = (f) => readFileSync(join(ROOT, f), 'utf8');
 const imp = (f) => import(pathToFileURL(join(ROOT, f)).href);
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111-5a-'));
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 let n = 0;
 /** A project that mirrors the real layout: the wrapper and the core, plus one source file (valid or with a syntax error). */
 const project = ({ broken = false, core = true } = {}) => {

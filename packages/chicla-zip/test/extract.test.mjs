@@ -13,7 +13,7 @@ const WIN = process.platform === 'win32';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-extract-')); mkdirSync(join(dir, 'zips')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (entries, opts) => { const p = join(dir, 'zips', `z${n++}.zip`); writeFileSync(p, buildZip(entries, opts)); return p; };
 // A fresh parent folder per case, so "nothing left behind" means "the parent is exactly as it was".
 const parent = () => { const p = join(dir, `case${n++}`); mkdirSync(p); return p; };

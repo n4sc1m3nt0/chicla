@@ -14,7 +14,7 @@ import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-dirname-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (buf) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buf); return p; };
 const havePython = spawnSync('python3', ['-c', '1'], { stdio: 'ignore' }).status === 0;
 const FILE = { name: 'a', data: 'BENIGN', mode: 0o100644 }, MODEDIR = { name: 'a', data: 'EVIL', mode: 0o040755 };

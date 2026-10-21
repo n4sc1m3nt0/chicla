@@ -10,7 +10,7 @@ import { buildZip, unicodePathExtra } from './zipfab.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-legacy-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (buf) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buf); return p; };
 const nameOf = (raw, opts, extra = {}) => listZip(put(buildZip([{ name: raw, data: 'x', ...extra }])), opts).entries[0];
 

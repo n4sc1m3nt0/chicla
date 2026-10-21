@@ -24,7 +24,7 @@ import { checkZip, readers } from './interop.mjs';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-stream-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const fresh = () => join(base, `t${n++}`);
 const noise = (len, seed = 1) => { const b = Buffer.alloc(len); let x = seed; for (let i = 0; i < len; i++) { x = (Math.imul(x, 1103515245) + 12345) >>> 0; b[i] = x >>> 24; } return b; };
 const sha = (b) => createHash('sha256').update(b).digest('hex');

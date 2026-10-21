@@ -18,7 +18,7 @@ const { checkManifest, renderCheckManifest } = await imp('src/check-manifest.mjs
 const tpl = (n) => readFileSync(join(KIT, 'templates', n), 'utf8');
 const regen = (root) => { const m = checkManifest({ root, write: true }); return { ok: m.ok, ...renderCheckManifest(m) }; };
 const T = () => mkdtempSync(join(tmpdir(), 'chicla-agent-'));
-const done = (d) => rmSync(d, { recursive: true, force: true });
+const done = (d) => rmSync(d, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 });
 const run = async (args, cwd) => { let out = '', err = ''; const status = await main(args, { stdout: { write: (s) => { out += s; } }, stderr: { write: (s) => { err += s; } }, cwd }); return { status, out, err }; };
 const tree = (d, p = '') => readdirSync(join(d, p), { withFileTypes: true }).flatMap((e) => e.isDirectory() ? [`${p}${e.name}/`, ...tree(d, `${p}${e.name}/`)] : [`${p}${e.name}`]).sort();
 

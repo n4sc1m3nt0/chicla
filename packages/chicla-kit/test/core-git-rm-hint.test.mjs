@@ -19,7 +19,7 @@ const { verifyDelivery, renderVerifyDelivery, gitRmLine } = await imp('packages/
 const { listZip, readZipFile, writeZip } = await imp('packages/chicla-zip/src/zipkit.mjs');
 
 const T = mkdtempSync(join(tmpdir(), 'chicla-d102-'));
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 let n = 0;
 const tree = () => {
   const proj = join(T, `tree${n++}`);

@@ -11,7 +11,7 @@ import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-interop-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const P = (ext = 'zip') => join(dir, `z${n++}.${ext}`);
 const have = (cmd, ...a) => !spawnSync(cmd, a).error;
 const TREE = { 'a.txt': 'hello', 'dir/': '', 'dir/b.bin': Buffer.alloc(70000, 7), 'é-ß.txt': 'unicode', 'empty': '' };

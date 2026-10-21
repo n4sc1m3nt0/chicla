@@ -14,7 +14,7 @@ import { buildZip } from './zipfab.mjs';
 let base, n = 0;
 before(() => { base = realpathSync(mkdtempSync(join(tmpdir(), 'chicla-zip-c1514-'))); });
 // realpath: on macOS tmpdir() is /var/..., a symlink to /private/var/...; the code hands the hooks the REAL path, so the tests compare real paths (round 198).
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 
 // dest exists and is empty; the zip has two new top-level items, whatever order the plan takes them in.
 const world = (entries) => {

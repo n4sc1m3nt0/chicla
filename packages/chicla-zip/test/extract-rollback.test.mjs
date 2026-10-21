@@ -14,7 +14,7 @@ import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(realTmp(), 'chicla-zip-rollback-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 // Three ops in a fixed order (readdir order): a.txt (replaces an existing file), b.txt (new file), sub (new folder, moved whole).
 const ZIP = () => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buildZip([{ name: 'a.txt', data: 'NEW-A' }, { name: 'b.txt', data: 'NEW-B' }, { name: 'sub/c.txt', data: 'NEW-C', method: 8 }])); return p; };
 const world = () => { const parent = join(dir, `w${n++}`), dest = join(parent, 'out'); mkdirSync(join(dest, 'old'), { recursive: true }); writeFileSync(join(dest, 'keep.txt'), 'KEEP'); writeFileSync(join(dest, 'a.txt'), 'OLD-A'); writeFileSync(join(dest, 'old', 'z.txt'), 'OLD-Z'); return { parent, dest }; };

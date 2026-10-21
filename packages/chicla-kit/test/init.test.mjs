@@ -21,7 +21,7 @@ const ALL = ['AGENTS.md', 'CHANGELOG.md', 'CHICLA_PROJECT_STATUS-1.md', 'CLAUDE.
 const regen = (root) => { const m = checkManifest({ root, write: true }); return { ok: m.ok, ...renderCheckManifest(m) }; };
 
 const T = () => mkdtempSync(join(tmpdir(), 'chicla-init-'));
-const done = (d) => rmSync(d, { recursive: true, force: true });
+const done = (d) => rmSync(d, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 });
 const run = async (args, cwd) => { let out = '', err = ''; const status = await main(args, { stdout: { write: (s) => { out += s; } }, stderr: { write: (s) => { err += s; } }, cwd }); return { status, out, err }; };
 
 test('core: an empty folder gets the six files and nothing else; the two instruction files are byte for byte the templates', () => {

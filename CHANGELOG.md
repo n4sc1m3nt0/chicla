@@ -1,5 +1,18 @@
-<!-- CHANGELOG_FINGERPRINT: seq=220 file=CHICLA_PROJECT_STATUS-220.md app_sha256_12=065d37032ef1 changelog_sha256_12=11c6b2b19479 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=222 file=CHICLA_PROJECT_STATUS-222.md app_sha256_12=065d37032ef1 changelog_sha256_12=ee9137ac1827 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 218 — the Windows cleanup and path patterns fixed in every test, tests only (v0.0.221)
+
+- Task (Rodrigo: «corrige esses outros pontos parecidos», after the two Windows reds of round 217). (1) 98 temp-folder cleanups in 80 test files of `packages/chicla-zip/test` and `packages/chicla-kit/test` used `rmSync(x, { recursive: true, force: true })`; they now pass `maxRetries: 8, retryDelay: 25` (Node retries only the busy errors, so nothing changes on Linux and macOS). (2) `cli-stdout-error.test.mjs` builds the CLI path with `fileURLToPath` instead of `.pathname`. Left alone on purpose: `rmSync` calls on a single file, with `{ recursive: true }` only or with `{ force: true }` only (they do not hit a folder that an antivirus may hold), and the library's own `rmBounded`.
+- Files: test files only. No source changed, `zipkit.mjs` sha256 still `89478bbe…`, the pin did not move. Every edited file passes `node --check`.
+- NOT seen: Windows (only the next CI log shows whether the `ENOTEMPTY` flake is gone), Node 18 and 20 locally, `npm run smoke`, mutants. Whole `npm test` is reported in the reply.
+
+## Round 217 — the two Windows reds of the round 216 CI fixed in the tests (v0.0.220)
+
+- Task (Rodrigo sent `logs_107227332319.zip`, the CI of the round 216 tree). Ubuntu, macOS (Node 18, 20, 22), `bench`, `pack` and `pack-kit` green; `chicla-kit` on Windows 231 of 231. `chicla-zip` on Windows: Node 22 1 red, Node 18 and 20 2 red, both test bugs, no source involved. (1) `read-duplicate.test.mjs` «ZIP-014: `cat` exits 1…» (round 202) built the CLI path with `new URL(…).pathname`, which on Windows is `/D:/a/…` and became `D:\D:\a\…` (`MODULE_NOT_FOUND`); now `fileURLToPath`. (2) `zip64-locator-fit.test.mjs` (round 208), Node 18 and 20 only: the `after` hook failed with `ENOTEMPTY` on `rmSync`; it now retries (`maxRetries: 8, retryDelay: 25`), like `fuzz-read.test.mjs`.
+- Files: those two test files. No source changed, `zipkit.mjs` sha256 still `89478bbe…`, the pin did not move. Both files pass alone on Linux (7 and 9 tests); the Windows fix is NOT seen on Windows, it waits for the next CI log.
+- Noticed, not fixed: `cli-stdout-error.test.mjs` also uses `.pathname` but is skipped on Windows (`/dev/full`), so harmless; most other test files clean up with a plain `rmSync` and may flake the same way.
+- NOT run: Windows, Node 18 and 20 locally, `npm run smoke`, mutants. Whole `npm test` is reported in the reply.
 
 ## Round 216 — G-C5 recorded as closed by Rodrigo, docs only (v0.0.219)
 

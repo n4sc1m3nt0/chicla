@@ -64,5 +64,5 @@ test("a packed tarball installs in a clean folder: import works and the bin runs
     execFileSync("unzip", ["-tq", "a.zip"], { cwd: proj, stdio: "pipe" }); // independent reader
     const ls = JSON.parse(execFileSync(bin, ["ls", "a.zip", "--json"], { cwd: proj, encoding: "utf8", ...NPM }));
     assert.equal(ls.ok, true);
-  } finally { rmSync(tmp, { recursive: true, force: true }); }
+  } finally { rmSync(tmp, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });

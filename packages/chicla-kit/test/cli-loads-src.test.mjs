@@ -29,7 +29,7 @@ test('a copy of the kit and chicla-zip WITHOUT any scripts/ folder runs check-ma
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.ok(existsSync(join(proj, 'FILES.manifest')));
     assert.ok(!/ECOMMAND_LOAD/.test(r.stdout + r.stderr));
-  } finally { rmSync(T, { recursive: true, force: true }); }
+  } finally { rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
 test('every core the CLI loads exists under src/ (recovery from src/pinned/)', () => {

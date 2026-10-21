@@ -23,7 +23,7 @@ const { main } = await import(pathToFileURL(CLI).href);
 
 // one project + one valid delivery zip for the whole file (made by the real writer, in a copy of this tree)
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111c-')), proj = join(T, 'proj'), ZIP = join(T, 'new.zip');
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 for (const { path: rel } of parseManifest(readFileSync(join(ROOT, 'FILES.manifest'), 'utf8'))) {
   if (!existsSync(join(ROOT, rel))) continue;
   mkdirSync(dirname(join(proj, rel)), { recursive: true }); copyFileSync(join(ROOT, rel), join(proj, rel));

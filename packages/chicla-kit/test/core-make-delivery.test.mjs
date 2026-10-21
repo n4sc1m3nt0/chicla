@@ -21,7 +21,7 @@ const IMPORTS_OK = [pinnedSpec(CORE, 'baseline'), pinnedSpec(CORE, 'manifest'), 
 const read = (f) => readFileSync(join(ROOT, f), 'utf8');
 const imp = (f) => import(pathToFileURL(join(ROOT, f)).href);
 const T = mkdtempSync(join(tmpdir(), 'chicla-c111-5e-'));
-after(() => rmSync(T, { recursive: true, force: true }));
+after(() => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }));
 let n = 0;
 /** A copy of the real project (every file the manifest lists, plus the core, which the manifest only lists once it is regenerated). `core: false` leaves the core out; `extra` adds a file. */
 const project = ({ core = true, extra } = {}) => {

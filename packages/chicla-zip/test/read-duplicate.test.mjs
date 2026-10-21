@@ -9,17 +9,18 @@ import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { openZip, listZip, readZipFile, testZip, ZipError } from '../src/zipkit.mjs';
 import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-readdup-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (buf) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buf); return p; };
 const ambiguous = (err) => err instanceof ZipError && err.code === 'EAMBIGUOUS';
 const havePython = spawnSync('python3', ['-c', '1'], { stdio: 'ignore' }).status === 0;
 const DUP = () => put(buildZip([{ name: 'a.txt', data: 'FIRST-benign' }, { name: 'a.txt', data: 'SECOND-evil' }, { name: 'b.txt', data: 'bravo' }]));
-const cli = (...args) => spawnSync(process.execPath, [new URL('../src/zipkit.mjs', import.meta.url).pathname, ...args], { encoding: 'utf8' });
+const cli = (...args) => spawnSync(process.execPath, [fileURLToPath(new URL('../src/zipkit.mjs', import.meta.url)), ...args], { encoding: 'utf8' });
 
 test('ZIP-014: readZipFile and the handle refuse a name that two entries share (EAMBIGUOUS), nothing is returned', () => {
   const p = DUP();

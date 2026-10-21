@@ -12,7 +12,7 @@ import { buildZip } from './zipfab.mjs';
 
 let dir;
 before(() => { dir = mkdtempSync(join(realTmp(), 'chicla-zip-parent-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const zip = (name) => { const p = join(dir, name); writeFileSync(p, buildZip([{ name: 'a.txt', data: 'A' }])); return p; };
 const failing = () => { throw Object.assign(new Error('EACCES'), { code: 'EACCES' }); };
 const tmpLeft = (...folders) => folders.flatMap((f) => readdirSync(f)).filter((x) => /^\.chicla-(tmp|bak)-/.test(x));

@@ -20,7 +20,7 @@ import { join } from 'node:path';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-mark-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (bytes) => { const p = join(base, `t${n++}.zip`); writeFileSync(p, bytes); return p; };
 const LATIN1 = Buffer.from([0x63, 0x61, 0x66, 0xe9, 0x2e, 0x74, 0x78, 0x74]); // «café.txt» in Latin-1: not valid UTF-8
 const body = 'hello hello hello hello hello hello hello hello';

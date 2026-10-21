@@ -123,7 +123,7 @@ if (process.env.CHICLA_FUZZ_READ_CHILD) {
         await assert.rejects(() => testZip(zip), refused, 'testZip must refuse');
         await assert.rejects(() => extractZip(zip, dest), refused, 'extractZip must refuse');
         assert.deepEqual(readdirSync(dest), [], 'a refused extraction creates nothing');
-      } finally { rmSync(dir, { recursive: true, force: true }); }
+      } finally { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
     });
   }
 

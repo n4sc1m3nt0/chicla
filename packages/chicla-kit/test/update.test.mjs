@@ -20,7 +20,7 @@ const { checkManifest } = await imp('src/check-manifest.mjs');
 const tpl = (n) => readFileSync(join(KIT, 'templates', n), 'utf8');
 
 const T = () => mkdtempSync(join(tmpdir(), 'chicla-update-'));
-const done = (d) => rmSync(d, { recursive: true, force: true });
+const done = (d) => rmSync(d, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 });
 const fresh = (agents = []) => { const d = T(); assert.equal(initProject({ root: d, agents }).ok, true); return d; };
 const read = (d, f) => readFileSync(join(d, f), 'utf8');
 const snapshot = (d) => Object.fromEntries(readdirSync(d, { recursive: true }).map((f) => { try { return [f, readFileSync(join(d, f), 'utf8')]; } catch { return [f, null]; } }));

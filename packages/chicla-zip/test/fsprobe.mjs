@@ -12,7 +12,7 @@ const probe = (names) => {
   const d = mkdtempSync(join(tmpdir(), 'chicla-fsprobe-'));
   try { for (const n of names) writeFileSync(join(d, n), 'x'); return readdirSync(d).length; }
   catch (e) { return e.code === 'EILSEQ' ? -1 : -2; }
-  finally { rmSync(d, { recursive: true, force: true }); }
+  finally { rmSync(d, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 };
 /** true when `a.txt` and `A.txt` are the same file here */
 export const caseInsensitive = probe(['a.txt', 'A.txt']) === 1;
@@ -38,7 +38,7 @@ const lossyProbe = (() => {
     const z = join(d, 'p.zip'); writeFileSync(z, buildZip([{ name: PROBE_NAME, data: 'x', flags: 0x800 }]));
     const r = spawnSync('zipinfo', ['-1', z], { encoding: 'utf8' });
     return { lossy: decideLossy(r, process.platform), diag: describeProbe(r) };
-  } catch (e) { return { lossy: process.platform === 'win32', diag: `the probe threw: ${e.message}` }; } finally { try { rmSync(d, { recursive: true, force: true }); } catch { /* a temp folder left behind is not a failure */ } }
+  } catch (e) { return { lossy: process.platform === 'win32', diag: `the probe threw: ${e.message}` }; } finally { try { rmSync(d, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); } catch { /* a temp folder left behind is not a failure */ } }
 })();
 export const lossyNames = lossyProbe.lossy;
 export const lossyDiag = lossyProbe.diag;

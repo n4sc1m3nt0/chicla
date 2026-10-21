@@ -39,7 +39,7 @@ const project = ({ seq = 5, appSeq = seq, extraStatus = false, scripts = true } 
   checkManifest({ root, write: true });
   return root;
 };
-const done = (T) => rmSync(T, { recursive: true, force: true });
+const done = (T) => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 });
 const snap = (T) => readdirSync(T).sort().map((f) => (f === 'scripts' || f === 'packages' ? f : `${f}\n${readFileSync(join(T, f), 'utf8')}`)).join('\n--\n');
 const rd = (T, f) => readFileSync(join(T, f), 'utf8');
 const run = async (args, cwd) => {

@@ -15,7 +15,7 @@ import { buildZip } from './zipfab.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(realTmp(), 'chicla-zip-exdev-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (entries) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buildZip(entries)); return p; };
 const world = () => { const parent = join(dir, `w${n++}`), dest = join(parent, 'out'); mkdirSync(dest, { recursive: true }); writeFileSync(join(dest, 'keep.txt'), 'mine'); return { parent, dest }; };
 const exdev = () => Object.assign(new Error('EXDEV: cross-device link not permitted'), { code: 'EXDEV' });

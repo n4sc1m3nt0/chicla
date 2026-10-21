@@ -17,7 +17,7 @@ import { normalizing } from './fsprobe.mjs';
 const writeZip = zk.writeZip, T = writeZip ? test : test.todo;
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-winterop-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const out = () => join(dir, `w${n++}.zip`);
 const asSources = (tree) => Object.entries(tree).map(([name, v]) => (name.endsWith('/') ? { name } : { name, data: Buffer.from(v) }));
 const noise = (len) => { const b = Buffer.alloc(len); let x = 12345; for (let i = 0; i < len; i++) { x = (Math.imul(x, 1103515245) + 12345) >>> 0; b[i] = x >>> 24; } return b; };

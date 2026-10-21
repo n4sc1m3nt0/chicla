@@ -15,7 +15,7 @@ import { local, central, eocd } from './zipraw.mjs';
 
 let dir, n = 0;
 before(() => { dir = mkdtempSync(join(tmpdir(), 'chicla-zip-zip011-')); });
-after(() => { rmSync(dir, { recursive: true, force: true }); });
+after(() => { rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const put = (buf) => { const p = join(dir, `z${n++}.zip`); writeFileSync(p, buf); return p; };
 const isOverlap = (err) => err instanceof ZipError && err.code === 'EOVERLAP';
 const assemble = (locals, centrals) => { const body = Buffer.concat(locals), cd = Buffer.concat(centrals); return Buffer.concat([body, cd, eocd({ total: centrals.length, cdSize: cd.length, cdOff: body.length })]); };

@@ -19,7 +19,7 @@ import { buildZip } from './zipfab.mjs';
 
 let base, n = 0;
 before(() => { base = mkdtempSync(join(tmpdir(), 'chicla-zip-audit2-')); });
-after(() => { rmSync(base, { recursive: true, force: true }); });
+after(() => { rmSync(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); });
 const fresh = () => { const d = join(base, `t${n++}`); mkdirSync(d); return d; };
 const sink = () => { const w = new Writable({ write(_c, _e, cb) { cb(); } }); return w; };
 const tree = () => { const root = join(fresh(), 'root'); mkdirSync(root); writeFileSync(join(root, 'f.txt'), 'data data data data'); return root; };
