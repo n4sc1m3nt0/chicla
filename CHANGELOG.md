@@ -1,5 +1,27 @@
-<!-- CHANGELOG_FINGERPRINT: seq=223 file=CHICLA_PROJECT_STATUS-223.md app_sha256_12=065d37032ef1 changelog_sha256_12=a1cd4917a49f (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=226 file=CHICLA_PROJECT_STATUS-226.md app_sha256_12=065d37032ef1 changelog_sha256_12=ae1ae8f00802 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 222 — recovered from emergency dump (rehearsal); G-C11 repeated and closed by Rodrigo, docs only (v0.0.225)
+
+- Task (Rodrigo ran `/dump` on the round 221 tree with a simulated task in progress, sent the dump with «recovery mode», then the round 221 zip). Item 17 start line: the shell digest of `RECOVER/` matched the pin (`1afe9e3e…`) before anything ran; `recovery-report` ran with NO baseline zip (the baseline travelled in the dump); 228 files matched the dump's sha256; `check-manifest` and `check-build` passed in the recovered root. The dump had no top-level dot entry under `work/` (round 221 fix confirmed).
+- Recovered from emergency dump: the only differences from the round 221 zip were the rehearsal leftovers, `docs/SIMULATION-dump-rehearsal.md` (new) and an unfinished «Release notes template (DRAFT, simulation)» tail of `docs/release.md`. Both are dropped: `release.md` is byte-identical to round 221, the simulation file is not carried (it was never in a delivery, so no `--allow-removed`). Nothing real was lost or half-finished.
+- G-C11 repeated on the round 221 tree; Rodrigo said «close g-c11» (2026-10-21), recorded in the gate row. Not verified by Claude beyond the checks above.
+- Files: this CHANGELOG, the status file, `package.json` version. No source or test changed, the pin did not move.
+- NOT run: whole `npm test` (Rodrigo: no reason for it to catch anything new on an unchanged tree), `npm run smoke`, mutants, Node 18 and 20, macOS, Windows, CI.
+
+## Round 221 — the dump no longer carries the home folder's credentials (v0.0.224)
+
+- Task (Rodrigo ran `/dump` and recovery mode on the round 220 tree and found `work/.claude/remote/.oauth_token`, `.session_ingress_token`, `work/.pki/nssdb/*` and `work/.gitconfig` inside the zip, with «Held back: 0»; «temos que corrigir esta fuga antes do 0.1»). Cause: the skip list `HOME_NOISE` had four names (`.local`, `.config`, `.npmrc`, `.wget-hsts`) and the content detector does not know those token formats. Claude read neither the tokens nor any other secret file.
+- Fix (a call made on delegation, to confirm): when `work/` is NOT the project root, every top-level entry of `work/` whose name starts with a dot stays out, in the three write paths (chicla-zip writer, external `zip`, `tar`), and is named in the report and `marker.homeSkipped`. Unchanged: only the top level, never when `work/` is the project root, a dot folder inside the project (`chicla/.claude`, `chicla/.github`) and `recovered*` stay in.
+- Files: `packages/chicla-kit/src/emergency-dump.mjs` (`isHomeDot` replaces `HOME_NOISE`; the external paths list the dot names of `work/`). `test/emergency-home-dotfiles.test.mjs` (5, 3 red first, 3 hand mutants red: the predicate, the `zip` exclusions, the `tar` exclusions). `test/emergency-home-noise.test.mjs` unchanged and green (4). Status file item 17: the hand-run fallback `zip` command gets `-x '.*'`. The pin did not move (`emergency-dump.mjs` is not one of the 5 pinned files).
+- The round 220 dump zip holds those tokens: treat them as exposed.
+- NOT run here: Node 18 and 20, macOS, Windows, CI, the mutants, and `/dump` plus recovery on this tree (G-C11 must be done again, the dump changed). Whole `npm test` and `check-build` are reported in the reply.
+
+## Round 220 — the CI of the round 219 tree read, all 12 jobs green, docs only (v0.0.223)
+
+- Task (Rodrigo sent `logs_107247410567.zip`: «já veio tudo verde»; Claude read the logs, not only his word). 12 of 12 jobs with no `##[error]`: Ubuntu Node 18, 20, 22 each 1378 tests, 1376 pass, 0 fail, 2 skipped; macOS Node 18, 20, 22 each 1378, 1364 pass, 0 fail, 14 skipped; Windows Node 18, 20, 22 `chicla-zip` each 816 tests, 777 pass, 0 fail, 39 skipped, and `chicla-kit` 231 of 231; `bench` ratio 1.5x; `pack` and `pack-kit` built. So the Windows reds of rounds 217 to 219 are gone on all three Nodes, and Node 18 and 20 on Ubuntu and macOS are seen green for the first time since the round 210 hunk.
+- Files: this CHANGELOG, the status file (G-C13 evidence), `docs/release.md` item 3 (CI part done). No source or test changed, the pin did not move. Gates stay Rodrigo's to mark.
+- NOT run: `npm run smoke` is part of the Ubuntu and macOS jobs (not read in detail here), the mutants, `/dump` and recovery, the checks outside CI. Whole `npm test` is reported in the reply.
 
 ## Round 219 — the last Windows red: a test left a zip handle open, test only (v0.0.222)
 

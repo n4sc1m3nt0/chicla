@@ -65,7 +65,7 @@ const secretFile = (n) => { const l = n.toLowerCase(); return l === ".npmrc" || 
 const ci = (g) => g.replace(/[a-z]/gi, (c) => `[${c.toLowerCase()}${c.toUpperCase()}]`);
 const SECRET_EX = ["*/.ssh/*", "*/.aws/*", `*/${ci(".npmrc")}`, `*/${ci(".netrc")}`, `*/${ci(".git-credentials")}`, `*.${ci("pem")}`, `*/${ci("id_rsa")}*`];
 const skipFile = (n) => secretFile(n) || n === ".DS_Store" || n.endsWith(".tsbuildinfo") || n.endsWith(".zip") || n.endsWith(".pyc") || ((n === ".env" || n.startsWith(".env.")) && !isKeptEnv(n)); // secrets never enter a dump
-// C9.8: tool and home-directory noise at the TOP of work/ (the 60 MB `uv` binary, an `.npmrc` that can hold a registry token) stays out and is named
+// C9.8, widened in round 221: home-directory state at the TOP of work/ (every dot name: the 60 MB `uv` binary, `.npmrc`, `.claude/` and `.pki/` credentials) stays out and is named
 // in the report and the marker. Only the top level, and never when work/ is itself the project root (then those names are the project's own work).
 // `recovered*` is NOT skipped on purpose: a recovery session works inside `recovered/work/<project>` (D59).
 // C6.3 slice b2 (D73, D76): the dump's OWN copy (D7) of policy.mjs's content detector; test/dump-secret-content.test.mjs ties it to detectSecret by behaviour.
@@ -82,7 +82,8 @@ const scanKind = (path, size) => {
   try { const b = readFileSync(path); if (b.length === 0 || b.length > SCAN_LIMIT || b.includes(0)) return null; const t = b.toString("latin1"); for (const [kind, re] of DETECTORS) if (re.test(t)) return kind; } catch { /* unreadable: not scanned */ }
   return null;
 };
-const HOME_NOISE = [".local", ".config", ".npmrc", ".wget-hsts"];
+// Round 221: the rule is every name that starts with a dot (it was four names, and a session's own tokens in .claude/ and .pki/ got through). `isHomeDot` is the one predicate.
+const isHomeDot = (n) => n.startsWith(".");
 
 // C9.2: RECOVER/ = the recovery toolchain, ASCII names, taken from THIS tree (the scripts that ran), with its sha256 in the marker.
 const TOOLCHAIN = { "RECOVER/recovery-report.mjs": "packages/chicla-kit/src/pinned/recovery-report.mjs", "RECOVER/baseline.mjs": "packages/chicla-kit/src/pinned/baseline.mjs", "RECOVER/manifest.mjs": "packages/chicla-kit/src/pinned/manifest.mjs", "RECOVER/policy.mjs": "packages/chicla-kit/src/pinned/policy.mjs", "RECOVER/zipkit.mjs": "packages/chicla-zip/src/zipkit.mjs" };
@@ -131,7 +132,7 @@ async function dump(o, say) {
       for (const e of ents) {
         const p = join(dir, e.name);
         if (e.isSymbolicLink()) continue;
-        if (prefix === "work" && skipHome && dir === root && HOME_NOISE.includes(e.name)) { homeSkipped.add(e.name); continue; }
+        if (prefix === "work" && skipHome && dir === root && isHomeDot(e.name)) { homeSkipped.add(e.name); continue; }
         if (e.isDirectory()) {
           if (EXCLUDE_DIRS.has(e.name)) continue;
           go(p); continue;
@@ -301,7 +302,8 @@ ${errors.length ? `\n## Errors while generating this report (the zip was created
 
   // --- The zip, written by chicla-zip. Order: files, then marker and report (they need the hashes and the errors). ---
   const includeOutputs = !noOutputs && !projectOnly && outScan.files.length > 0;
-  const HOME_EX = skipHome ? HOME_NOISE.flatMap((n) => [`work/${n}`, `work/${n}/*`]) : []; // the external zip/tar path skips the same names
+  const homeDots = skipHome ? safe("list work", () => readdirSync(WORK).filter(isHomeDot), []) : []; // the external zip/tar path skips the same names (a glob character in a name stands for itself: «?» over-excludes, never leaks)
+  const HOME_EX = homeDots.map((n) => n.replace(/[*?[\]]/g, "?")).flatMap((n) => [`work/${n}`, `work/${n}/*`]);
   const HELD_EX = heldList.map((h) => h.path.replace(/[*?[\]]/g, "?")); // a glob character in a held name stands for itself: «?» matches the literal one (may over-exclude, never leaks)
   const EX = ["*/node_modules/*", "*/.next/*", "*/.git/*", "*/__MACOSX/*", "*/.npm-global/*", "*/.cache/*", "*/.npm/*", "*/.venv/*", "*/__pycache__/*", "*.DS_Store", "*.tsbuildinfo", "*.zip", "*.pyc", "*/.env", "*/.env.*", ...SECRET_EX, ...POLICY_EX, ...HELD_EX];
   let finalName = zipName;
@@ -345,7 +347,7 @@ ${errors.length ? `\n## Errors while generating this report (the zip was created
     if (r.status !== 0 && r.status !== 18) { // 18 = some unreadable files; the zip exists anyway
       finalName = zipName.replace(/\.zip$/, ".tar.gz"); // fallback: tar.gz (follows symlinks), in case `zip` does not exist
       const tmpTar = join(tmpdir(), finalName);
-      r = spawnSync("tar", ["-czhf", tmpTar, ...EX.filter((x) => !x.startsWith("*.")).map((x) => `--exclude=${x.replace(/^\*\//, "").replace(/\/\*$/, "")}`), "--exclude=*.zip", "--exclude=*.pyc", `--exclude=*.${ci("pem")}`, "--exclude=*.tsbuildinfo", "--exclude=.DS_Store", "--exclude=.env", "--exclude=.env.*", ...(skipHome ? HOME_NOISE.map((n) => `--exclude=work/${n}`) : []), "-C", stage, ...members], { stdio: ["ignore", "ignore", "pipe"], encoding: "utf8", env: { ...process.env, COPYFILE_DISABLE: "1" } }); relay(r); // COPYFILE_DISABLE: macOS bsdtar would add an AppleDouble «._name» member for every file or folder with extended attributes
+      r = spawnSync("tar", ["-czhf", tmpTar, ...EX.filter((x) => !x.startsWith("*.")).map((x) => `--exclude=${x.replace(/^\*\//, "").replace(/\/\*$/, "")}`), "--exclude=*.zip", "--exclude=*.pyc", `--exclude=*.${ci("pem")}`, "--exclude=*.tsbuildinfo", "--exclude=.DS_Store", "--exclude=.env", "--exclude=.env.*", ...homeDots.map((n) => `--exclude=work/${n.replace(/[*?[\]]/g, "?")}`), "-C", stage, ...members], { stdio: ["ignore", "ignore", "pipe"], encoding: "utf8", env: { ...process.env, COPYFILE_DISABLE: "1" } }); relay(r); // COPYFILE_DISABLE: macOS bsdtar would add an AppleDouble «._name» member for every file or folder with extended attributes
       if (r.status !== 0) { rmSync(stage, { recursive: true, force: true }); return fail("EDUMP_FAILED", "✗ neither the chicla-zip writer, zip nor tar worked — dump NOT created."); }
       copyFileSync(tmpTar, join(OUTDIR, finalName)); rmSync(tmpTar, { force: true });
     } else {

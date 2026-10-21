@@ -2,14 +2,14 @@
 .gitattributes	44424052	367
 .github/workflows/ci.yml	72813154	4036
 .gitignore	1b52e6b9	47
-CHANGELOG.md	1295a1c6	299714
-CHICLA_PROJECT_STATUS-223.md	1215cbb0	150145
+CHANGELOG.md	518a1d23	304078
+CHICLA_PROJECT_STATUS-226.md	1fb8283f	152886
 CLAUDE.md	e4f9a4f6	8485
 CONTRIBUTING.md	816ec6e1	1896
-FILES.baseline.json	43f406be	35509
+FILES.baseline.json	8de4d3d1	35667
 LICENSE	1ea3b7b0	10174
 README.md	528048e7	10780
-ROADMAP.md	47f59a7f	146475
+ROADMAP.md	fe9bf8fd	146548
 SECURITY.md	863843c2	7273
 big-cm.log	32670c1b	269
 docs/README.md	f53c8d3a	2573
@@ -19,12 +19,12 @@ docs/audits/AUDIT-3.md	60ae3fb1	4975
 docs/fingerprint.md	7cb55680	7652
 docs/manifest.md	7fff4cf1	6597
 docs/pinned-files-design.md	6256c946	6552
-docs/release.md	0b1c4b88	11373
+docs/release.md	d07ee7a3	11504
 docs/state-file.md	94ef876f	5916
 docs/zip-handling.md	4ee06488	28560
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	18f7614d	541
+package.json	397236bb	541
 packages/chicla-kit/LICENSE	1ea3b7b0	10174
 packages/chicla-kit/README.md	523f8af0	6106
 packages/chicla-kit/package.json	e4592d26	547
@@ -33,7 +33,7 @@ packages/chicla-kit/src/bump-round.mjs	c4a478fe	15113
 packages/chicla-kit/src/check-build.mjs	c2ba103f	3493
 packages/chicla-kit/src/check-manifest.mjs	0c5b60d5	8579
 packages/chicla-kit/src/cli.mjs	6b361091	15703
-packages/chicla-kit/src/emergency-dump.mjs	cb7c05a3	32795
+packages/chicla-kit/src/emergency-dump.mjs	719e1455	33179
 packages/chicla-kit/src/init.mjs	eb2e695c	4886
 packages/chicla-kit/src/make-delivery.mjs	ae83a9eb	7867
 packages/chicla-kit/src/panel.mjs	da6e43a0	5174
@@ -189,6 +189,7 @@ test/dump-sentence.test.mjs	e895f073	3063
 test/emergency-collisions.test.mjs	2d329d0b	3423
 test/emergency-dump-nozip.test.mjs	8549aebd	7163
 test/emergency-fallback.test.mjs	612e97d0	6018
+test/emergency-home-dotfiles.test.mjs	5c614e0d	9828
 test/emergency-home-noise.test.mjs	c69cc93f	6977
 test/emergency-recover-folder.test.mjs	45cf6bcc	4420
 test/emergency-report-text.test.mjs	e1ef108a	2046
@@ -223,4 +224,4 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	e7472492	531
+version.mjs	a0cf3be3	531
