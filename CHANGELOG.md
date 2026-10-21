@@ -1,5 +1,138 @@
-<!-- CHANGELOG_FINGERPRINT: seq=202 file=CHICLA_PROJECT_STATUS-202.md app_sha256_12=065d37032ef1 changelog_sha256_12=ac627a783c8a (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=220 file=CHICLA_PROJECT_STATUS-220.md app_sha256_12=065d37032ef1 changelog_sha256_12=11c6b2b19479 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 216 — G-C5 recorded as closed by Rodrigo, docs only (v0.0.219)
+
+- Task (Rodrigo: «fecha o g-c5»). Recorded in `ROADMAP.md` §9, the status file and `docs/release.md` as CLOSED by Rodrigo, 2026-10-21; Claude did not verify more than the report and the rounds 213 to 215 say (item 19: a gate is his word, not Claude's). What is left to the tag: `/dump` and «recovery mode», the checks only he can run, the push and CI, the kit version round when he says so, then the steps of `docs/release.md`.
+- Files: `ROADMAP.md`, `docs/release.md`, the status file. No source or test changed, the pin did not move.
+- NOT run: the whole `npm test` is reported in the reply; Node 18 and 20, `npm run smoke`, mutants, CI, macOS, Windows not run.
+
+## Round 215 — release notes and the `chicla-zip` README list the known limits, docs only (v0.0.218)
+
+- Task (Rodrigo: «atualiza as notas em release e o readme»). `docs/release.md` («Where the release stands», now round 215): the known limits for the release notes now include ZIP-025, ZIP-026 and a pointer to the smaller shapes of review 6 in `SECURITY.md`. `packages/chicla-zip/README.md` has a new «Known limits» section (ZIP-003/004, ZIP-017, ZIP-021, ZIP-023, ZIP-025, ZIP-026 and the advice to use one tool to check and extract), linking to `SECURITY.md` and `docs/zip-handling.md` §7.
+- Files: those two docs only. No source or test changed, `zipkit.mjs` sha256 still `89478bbe…`, the pin did not move.
+- Run: `release-docs.test.mjs` and `docs-accuracy.test.mjs` (14 of 14). NOT run: Node 18 and 20, `npm run smoke`, mutants, CI, macOS, Windows. Whole `npm test` is reported in the reply.
+
+## Round 214 — two stale mutant anchors from ZIP-022 updated (v0.0.217)
+
+- Task (Rodrigo: «corrige o que encontraste fora do âmbito»). The whole `npm test` of round 213 had 1 red: `test/docs-accuracy.test.mjs` «every find occurs exactly once». `AUDIT-1-V2` and `M2-coll-files` still looked for the code before the ZIP-022 hunk of round 210 (`seen.has(key)`, `seen.add(key);`); they now look for `seen.has(k0)` and `declared += e.usize; noteName(groups, key, key, true);`, same mutation. The sixth reviewer ran only the `chicla-zip` suite, so it was not seen; it existed in the round 212 tree.
+- File: `packages/chicla-zip/mutants/list.mjs` only. `zipkit.mjs` NOT changed (sha256 `89478bbe…`), the pin did not move.
+- Run: `docs-accuracy.test.mjs` 7 of 7; `mutants.mjs --only AUDIT-1-V2` RED and `--only M2-coll-files` RED (`--timeout 60`, one at a time).
+- NOT run: the other 346 mutants, Node 18 and 20, `npm run smoke`, CI, macOS, Windows. Whole `npm test` is reported in the reply.
+
+## Round 213 — C15.28: the sixth review verified, ZIP-024 test updated, ZIP-025 and ZIP-026 documented (v0.0.216)
+
+- Task (Rodrigo sent `chicla-zip-security-review-6.md` and confirmed three decisions: update the test, document ZIP-025, document ZIP-026 and the §6 items). Claude checked the tree first: `zipkit.mjs` sha256 `89478bbe…` equals the report, the hunk is at lines 445–457, `bump-round --verify` green.
+- Review result: no bypass of the ZIP-022 fix (0 violations in 776 hand and 40 000 fuzz files); ZIP-024 (INFO), ZIP-025 (INFO/LOW) and ZIP-026 (INFO); mutants `R210-*` RED.
+- Files: `packages/chicla-zip/test/extract-escape.test.mjs` (test «a symlink entry followed by a file through it» now expects `EUNSAFE`; green, 84 of 84 in that file), `SECURITY.md`, `docs/zip-handling.md` §7, `docs/release.md` item 1, `ROADMAP.md` (C15.28). `zipkit.mjs` NOT changed, the pin did not move.
+- Not reproduced by Claude: the reviewer's fuzz, UnZip/Python comparisons and Info-ZIP result (taken from the report). NOT run: Node 18 and 20, `npm run smoke`, the mutants, CI, macOS, Windows. The whole `npm test` is reported in the reply.
+
+## Round 212 — `docs/release.md` corrected, docs only (v0.0.215)
+
+- Task (Rodrigo asked for the reviewer package; while preparing it Claude found its own mistake). The round 211 section «Where the release stands» said a round must set `chicla-zip` to `0.1.0`; `packages/chicla-zip/package.json` already says `0.1.0` (only the kit says `0.0.0`). Item 4 of that section is fixed. No source file changed; the pin did not move (`zipkit.mjs` sha256 starts `89478bbe`).
+- NOT run: `npm test`, the mutants, `npm run smoke`, CI, macOS, Windows, Node 18, 20 and 22.
+
+## Round 211 — release runbook state and ZIP-023 in SECURITY.md, docs only (v0.0.214)
+
+- Task (Rodrigo: «avança» after confirming the open decisions: a short sixth review C15.28 of the ZIP-022 hunk, and «docs/release.md and gates» as the work meanwhile). No source file changed: `docs/release.md` has a new section «Where the release stands (round 211)» (the order of what is left: the sixth pass, `/dump` and recovery after the last `zipkit.mjs` change, the checks Rodrigo runs, the `0.1.0` round, then the steps; the gates that do not block; the known limits for the notes), `SECURITY.md` lists ZIP-023 among the known limits.
+- The pin did not move (no `RECOVER/` file changed). The sixth pass needs the `zipkit.mjs` diff between the round 209 file (`a894b2ba…`) and the round 210 file (`89478bba…`).
+- NOT run: `npm test` (the release-docs test slices `docs/release.md` before «## chicla-kit»; the new section sits before it and does not contain the phrase it forbids, read by eye, not run), the mutants, `npm run smoke`, CI, macOS, Windows, Node 18, 20 and 22.
+
+## Round 210 — C15.28: ZIP-022, a duplicate name with a symlink or special entry is refused by `extractZip` (v0.0.213)
+
+- Task (Rodrigo: «aplica o patch», fifth review report C15.27 verified first: `zipkit.mjs` sha256 `a894b2ba…` equals the brief, and `diff` against the round 205 file shows exactly the C15.24 and C15.25 hunks plus one comment, nothing else). ZIP-022 (LOW) and ZIP-023 (INFO) are not in those hunks; ZIP-022 existed in round 205.
+- `zipkit.mjs` (the only source file): in `extractZip` the name is counted before the symlink/special `continue`, so `[file a, symlink a]`, `[symlink a, symlink a]` and `[file a, fifo a]` are `EUNSAFE`, nothing written (they were extracted: Chicla the file, Python the last entry, `unzip` the symlink). Folders are not counted, as before. New refusal: a symlink named `a` next to a file `a/x` is now «file and folder at once».
+- Tests first: `test/dup-skipped.test.mjs` (7), run alone, green; not run red on the old code. Mutants `R210-no-dup-check` and `R210-dup-after-skip` added (348 in `CLAUDE.md` and `README.md`), NOT run. `docs/zip-handling.md` §3 documents ZIP-022 and ZIP-023 (a slash plus symlink mode is listed as a folder and not created: safe, Chicla writes less).
+- THE PIN MOVED (`zipkit.mjs`): the review cycle repeats (D130 (3)); `FILES.baseline.json` regenerated by the delivery script.
+- NOT run: `npm test` (whole suite), the two new mutants, `npm run mutants`, `npm run smoke`, CI, macOS, Windows, Node 18 and 20 and 22.
+
+## Round 209 — C15.26: the end-record search window documented, ZIP-021, docs and comments only (v0.0.212)
+
+- Task (Rodrigo: «avança», D136, «Next up»). No source file changed: `docs/zip-handling.md` §2 has a new bullet on where the end record is searched; the header comment of `packages/chicla-zip/test/trailing-size-fake.test.mjs` now names ZIP-015 (the general rule since round 200) and the two edges.
+- Measured before writing (Python 3.11, 3.12, 3.13, `unzip`, Chicla): a signature in the last 21 bytes: Python `BadZipFile`, `unzip` and Chicla read the earlier record. A fake record 65 558 bytes from the end: Python 3.11 and 3.12 read it, Python 3.13 does not (its window is 65 557, like Chicla's), `unzip` lists nothing; Chicla refuses (`ENOTZIP`/`EZIP`), never misreads. So the card's «Python's 65 558» holds for 3.11 and 3.12 only; the doc says so.
+- Test first (red, then green): `test/docs-accuracy.test.mjs` +1 (the doc sentences and the new header). The window itself is not widened and no test of the code was added.
+- The pin did not move (no `RECOVER/` file changed). Next: the fifth narrow review C15.27 on the final tree, then `/dump` and «recovery mode» (G-C11).
+- NOT run: the full mutant list, `npm run smoke` (no script changed), CI, macOS, Windows, Node 18 and 20.
+
+## Round 208 — C15.25: the zip64 record must end at its locator, ZIP-019 (v0.0.211)
+
+- Task (Rodrigo: «avança», D136). `zipkit.mjs` (the only source file): `readCentral` now requires `endsAt + 12 + size field === locator position` for the zip64 record the locator points at, else `EZIP`. A gap, a wrong size field or a second record in front of the locator is refused; extensible data is allowed when the size field counts it.
+- Tests first, 5 of 9 red on the old code: `test/zip64-locator-fit.test.mjs` (a normal zip64, one with counted extensible data, a gap of 8 and of 1 byte, uncounted extensible data, a size field too large, and the reviewer's `poc_loc2` shape built by hand). Mutants `R208-*` (5), each alone with `--only` and `--timeout 60`: 5 RED. The list has 346 entries (`CLAUDE.md` and `README.md` say 346).
+- Python 3.12.3 REFUSES the `poc_loc2` shape (`Corrupt zip64 end of central directory record`) and `unzip` reads the record the locator names; the reviewer's claim that an older Python reads the record in front of the locator was NOT reproduced, so the differential test only says Python does not read what the locator points at. `docs/zip-handling.md` §2 says so.
+- THE PIN MOVED (`zipkit.mjs`): G-C11 is still due, after the LAST fix.
+- NOT run: the full mutant list, `npm run smoke` (no script changed), CI, macOS, Windows, Node 18 and 20.
+- Run on the final tree (after `bump-round`, Node 22, Linux): `check-build` passed; the whole `npm test`: 1370 tests, 1369 pass, 0 fail, 1 skipped.
+
+## Round 207 — C15.24: a folder is decided by the name only, ZIP-020 (v0.0.210)
+
+- Task (Rodrigo: «avança», D136). `zipkit.mjs` (the only source file): `isDir` is the trailing slash only; a new `modeDir` marks an entry whose mode says folder but whose name has no slash. `read` and `cat` count it as a file (a duplicate is `EAMBIGUOUS` in both orders), extraction refuses it (`EUNSAFE`, nothing written). A name with a slash stays a folder whatever its mode.
+- Tests first, 3 of 5 red on the old code: `test/dir-by-name.test.mjs` (6 with a docs test; the Python differential and the slash control passed before). The control of `read-duplicate.test.mjs` used a folder named `a` without a slash, the unsafe case of the report, and now uses `a/`. Mutants `R207-*` (3), each alone with `--only` and `--timeout 60`: 3 RED. The list has 341 entries (`CLAUDE.md` and `README.md` say 341).
+- THE PIN MOVED (`zipkit.mjs`): G-C11 is still due, after the LAST fix. `docs/zip-handling.md` §3 says it.
+- NOT run: the full mutant list, `npm run smoke` (no script changed), CI, macOS, Windows, Node 18 and 20.
+- Run on the final tree (after `bump-round`, Node 22, Linux): `check-build` passed; the whole `npm test`: 1361 tests, 1360 pass, 0 fail, 1 skipped.
+
+## Round 206 — the fourth security review verified, D136 and cards C15.24 to C15.27, docs only (v0.0.209)
+
+- Task (Rodrigo: «avança» with `chicla-zip-security-review-4.md`, narrow review C15.23 on the round 205 tree). The reviewer found ZIP-015, ZIP-014 and ZIP-016 fixed, both old PoCs give `EAMBIGUOUS`, and three new findings, none blocking: ZIP-019 (a zip64 record that does not end at its locator is accepted), ZIP-020 (a folder is decided by mode bits, ignoring the name) and ZIP-021 (docs: a signature in the last 21 bytes).
+- Claude reproduced ZIP-020 on the round 205 tree (`a` + `a` with the mode-folder entry second: `cat a` gives `BENIGN`, Python `EVIL`; one mode-folder entry `a`: Chicla extracts a folder, Python and `unzip` a file). ZIP-019 was read in the code, NOT reproduced with an old Python (the reviewer's old-rule result is an emulation); ZIP-021 read.
+- D136 CONFIRMED by Rodrigo with all four suggestions: ZIP-020 and ZIP-019 fixed before 0.1 (cards C15.24, C15.25), ZIP-021 docs only (C15.26), a fifth narrow review C15.27 on the diff. No source file changed; the pin did not move. The reviewer did not see the Node 18 suite result.
+- NOT run: anything on the new cards (nothing is built yet), mutants, `npm run smoke`, CI, macOS, Windows, Node 18 and 20.
+- Run on the final tree (after `bump-round`, Node 22, Linux): `check-build` passed; the whole `npm test`: 1355 tests, 1354 pass, 0 fail, 1 skipped.
+
+## Round 205 — C15.22: ZIP-018, two mutants judged and the stale numbers fixed (v0.0.208)
+
+- Task (Rodrigo: «avança», D135). `C5.3b-A13` and `C5.1-central-bounds` both SURVIVED when run alone; each is a second line of defence (the extraction loop already refuses an existing target with the same `EEXIST`; an entry that runs past the directory is caught by the leftover-bytes check), so both now carry a `survives` reason. `test/audit-zip018.test.mjs` (2) pins both refusals and that nothing moved. Stale numbers: `CLAUDE.md` and `README.md` say 338 mutants and a test (`docs-accuracy`, 2 new) reads the count from the list; `docs/zip-handling.md` §7 says all twelve CI jobs and `SECURITY.md` §7 names 7-Zip 25.01 on Linux (reviewer's report, not repeated by Claude).
+- Files: tests, the mutant list and docs only; `zipkit.mjs` did not change, the pin did not move. Both mutants re-run alone: «all as listed».
+- NOT run: the full mutant list, `npm run smoke`, CI, macOS, Windows, Node 18 and 20.
+- Run on the final tree (after `bump-round`, Node 22, Linux): `check-build` passed (182 files); the whole `npm test`: 1355 tests, 1354 pass, 0 fail, 1 skipped.
+
+## Round 204 — C15.21: a failed extraction into a new destination can leave its parent folders, documented, ZIP-017 (v0.0.207)
+
+- Task (Rodrigo: «avança», D135, docs only). `docs/zip-handling.md` §3.2 and `SECURITY.md` now say that when the destination is NEW, the parent folders created for it just before the final rename stay (empty) after a failure; the destination and the `.chicla-tmp-*` folder do not. No source file changed, so the pin did not move and G-C11 is not touched by this round.
+- Test: `packages/chicla-zip/test/extract-parent-leftover.test.mjs` (2, with the `_rename` hook: new destination under two missing parents; existing parent as the control). It passes on the old code by design, because it pins existing behaviour that the docs now describe.
+- NOT run: mutants (none added), `npm run smoke` (no script changed), CI, macOS, Windows, Node 18 and 20.
+- Run on the final tree (after `bump-round`, Node 22, Linux): `check-build` passed (181 files, before `bump-round`); the whole `npm test`: 1351 tests, 1350 pass, 0 fail, 1 skipped.
+
+## Round 203 — C15.20: an output error of the CLI ends with exit 1, not a stack trace, ZIP-016 (v0.0.206)
+
+- Task (Rodrigo: «avança», D135). The handler of the `error` event of stdout and stderr (`zipkit.mjs`, the only source file, in the `isMain` block): a closed pipe stays quiet (exit 1); any other error (`ENOSPC` on `> /dev/full`) used to be thrown, a stack trace; now exit 1 and, when stdout failed, one short line on stderr. A stdout closed with `>&-` is not an error for Node (reopened on `/dev/null`): documented, not changed.
+- Tests first, red on the old code: `test/cli-stdout-error.test.mjs` (7: `ls`, `ls --json`, `cat`, `test` into `/dev/full`, a failing stderr, controls for a closed pipe with about 200 KB of output and a normal run, a docs test; 4 red before; Linux only, skipped elsewhere with the reason). Mutants `R203-*` (5), each alone with `--only` and `--timeout 60`: 4 RED and 1 `survives` with its reason; two of them first survived and the tests were tightened (a one-line assertion that passed on an empty stderr; a pipe test whose output was too small to meet the closed pipe). The list has 338 entries. The first whole `npm test` found 1 red (`docs-accuracy`: stale anchors): the two old mutants `M4-epipe` and `M14-eof-pipe` pointed at the handler line that was rewritten; they are re-anchored on the new line and both RED again. `docs/zip-handling.md` §8.
+- THE PIN MOVED (`zipkit.mjs`): G-C11 is still due, after the last fix. Run green one file at a time: the new file and 9 neighbours.
+- NOT run: the full mutant list, `npm run smoke` (no script changed), CI, macOS, Windows (the new tests skip there), Node 18 and 20; `npm test` and `check-build` are below.
+- Run on the final tree (after `bump-round`, Node 22, Linux): `check-build` passed (180 files); the whole `npm test`: 1349 tests, 1348 pass, 0 fail, 1 skipped.
+
+## Round 202 — C15.19: `read` and `cat` refuse a duplicate name, ZIP-014 (v0.0.205)
+
+- Task (Rodrigo: «avança», D135; the next card). `read` in `openZip` (`zipkit.mjs`, the only source file, about 6 lines): more than one file entry with the name, `EAMBIGUOUS`, nothing returned (Python's `read` takes the last, the old `find` the first). The exact spelling is tried first and one exact match is read as before; the NFC fallback counts only without an exact match. `readZipFile` and `cat` go through it; `ls`, `test` and `extract` unchanged.
+- Tests first, red on the old code: `test/read-duplicate.test.mjs` (7; 3 red before; the Python differential and the controls were green before and after). Mutants `R202-*` (6), each alone with `--only` and `--timeout 60`: all RED. The list has 333 entries. `docs/zip-handling.md` §2 (pinned by a docs test).
+- THE PIN MOVED (`zipkit.mjs`): G-C11 is still due, after the last fix. Run green one file at a time: the new file and 16 neighbours.
+- NOT run: the full mutant list, `npm run smoke` (no script changed), CI, macOS, Windows, Node 18 and 20; `npm test` and `check-build` are below.
+- Run on the final tree (after `bump-round`, Node 22, Linux): `check-build` passed (179 files); the whole `npm test`: 1342 tests, 1341 pass, 0 fail, 1 skipped.
+
+## Round 201 — C15.18: the end record chosen must be the last of the tail, ZIP-015 (v0.0.204)
+
+- Task (Rodrigo: «avança», D135 confirmed; the blocking card of the third review). `readCentral` in `zipkit.mjs` (the only source file, 8 lines out, 4 in): with several candidates, the one that fits must be the LAST signature of the tail, else `EAMBIGUOUS`, with no exception for «empty» or «does not parse» (Python and unzip take the last record). The C15.17 loop is gone, it was one case of this. A comment that holds the bytes of an end record is refused (cost, documented).
+- Tests first, red on the old code: new `test/eocd-last-record.test.mjs` (9: the two PoCs, Python as the differential reader, zip64 markers, a far record, controls, a docs test), 10 red before; the 6 old tests that pinned the old behaviour rewritten in `eocd-ambiguity.test.mjs` (4 + the 8-candidates test with the false records BEFORE the real one + 1 zip64 control for R170) and `trailing-size-fake.test.mjs` (1).
+- Mutants: `R189-*` (4, their line is gone) replaced by `R200-*` (6), each alone with `--only` and `--timeout 60`: all RED; the 8 `R170-eocd-*` rerun: 7 RED, 1 survives as explained; `R170-eocd-zip64-ends-at` had survived until the zip64 control test was added. The list has 327 entries. `docs/zip-handling.md` §2.
+- THE PIN MOVED (`zipkit.mjs` is one of the 5 files of `RECOVER/`): G-C11 is due again, after the last fix. Run green one file at a time: the new file and 22 neighbours.
+- NOT run: the full mutant list, `npm run smoke` (no script changed), CI, macOS, Windows, Node 18 and 20; `npm test` and `check-build` are below.
+- Run on the final tree (after `bump-round`, Node 22, Linux): `check-build` passed (178 files); the whole `npm test`: 1335 tests, 1334 pass, 0 fail, 1 skipped.
+
+## Round 200 — third security review verified: ZIP-015 blocks the release (v0.0.203)
+
+- Task (Rodrigo: «já veio o relatório», `chicla-zip-security-review-3.md`, on the round 199 tree). DOCS ONLY: `ROADMAP.md` (D135, cards C15.18 to C15.23, C15.16 row), the status file and this entry. No source, no test, no script; the pin did not move.
+- Reproduced by Claude on the round 199 tree (`zipkit.mjs` sha256 `61abc966dedc78fb`): ZIP-015 both PoCs (Python lists 0 entries for the first and `evil.txt` for the second, Chicla extracts 2 and lists `benign.txt`; `unzip` agrees with Python), ZIP-014 (`cat` gives the first entry, Python the last), ZIP-016 (`ls > /dev/full` ends in an uncaught error with a stack trace). Read only, NOT reproduced: ZIP-017, ZIP-018, the fix prototype, the fuzz numbers, the Node 18 and 20 runs, the 7-Zip and EXDEV runs.
+- ZIP-015 is blocking: the third review does not close G-C5. Five more findings are cards (one fix per round, tests first); the fixes touch `zipkit.mjs`, so the pin will move and a narrow fourth review (C15.23) is needed. D135 was PROPOSED and CONFIRMED by Rodrigo the same day as suggested (the five fixes before 0.1, ZIP-017 in the docs only, a narrow fourth review).
+- NOT run: the mutant list (none touched), `npm run smoke`, CI, macOS, Windows; `npm test` and `check-build` are below.
+- Run on the final tree (after `bump-round`, Node 22, Linux): `check-build` passed (177 files); the whole `npm test`: 1325 tests, 1324 pass, 0 fail, 1 skipped.
+
+## Round 199 — CI of round 198 read: all green (v0.0.202)
+
+- Task (Rodrigo: «tudo verde. avança» after the CI logs `logs_106470803225.zip`, round 198 tree). DOCS ONLY: the status file (Snapshot, Next up, G-C13) and this entry; no source, no test, no script, the pin did not move.
+- The CI: 12 jobs, 0 fail. Ubuntu 1325 tests on Node 18, 20, 22 (1323 pass, 2 skipped); macOS 1325 (1316 pass, 9 skipped); Windows `chicla-zip` 766 (733 pass, 33 skipped) and `chicla-kit` 231 pass; `bench` 1.5x; `pack` built `chicla-zip-0.1.0.tgz` (35833 bytes), `pack-kit` built `chicla-kit-0.0.0.tgz` (64430 bytes). The macOS and Windows fixes of round 198 are confirmed there.
+- What is left for Claude to build before the release: nothing. C15.16 (third review on the final tree) and the gates are Rodrigo's.
+- NOT run: the mutant list (no mutant touched), the `sha256sum -c` of the `pack` artifact (G-C10, Rodrigo's); `npm test` and `check-build` are below.
+- Run on the final tree (after `bump-round`, Node 22, Linux): `check-build` passed (177 files); the whole `npm test`: 1325 tests, 1324 pass, 0 fail, 1 skipped.
 
 ## Round 198 — CI of round 197: 5 red tests were test bugs, fixed (v0.0.201)
 

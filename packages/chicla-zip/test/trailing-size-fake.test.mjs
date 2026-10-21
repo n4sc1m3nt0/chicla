@@ -1,7 +1,9 @@
 // Round 189 / C15.17 (found by Claude in round 187, not in the report): a trailing fake end record whose directory is found by SIZE.
 // Python and unzip compute the directory start as `recordPos - cdSize` and ignore the offset field, so a fake record after the real one with a wrong
 // offset (not "strict fit") is read by them and was skipped by chicla. A candidate AFTER the chosen record whose `recordPos - cdSize` starts with a
-// central header signature is now EAMBIGUOUS; candidates BEFORE it (a stored zip inside an entry) are still ignored.
+// central header signature is EAMBIGUOUS; candidates BEFORE it (a stored zip inside an entry) are still ignored.
+// Since round 200 (ZIP-015, D135) that is one case of a general rule: ANY end record after the chosen one is EAMBIGUOUS, whatever its size and offset
+// fields say; the cases below stay as the by-SIZE variant. Candidates only count inside the last 65 557 bytes and not in the last 21 (docs/zip-handling.md §2, ZIP-021).
 // Hostile bytes come from test/zipraw.mjs. Assertions use error codes, never message text.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -50,11 +52,11 @@ test('C15.17: any offset value on the fake is refused, not only 7', () => {
   for (const cdOff of [0, 1, 0xffff, 123456]) assert.throws(() => openZip(put(trailing({ cdOff }))), refused, `cdOff ${cdOff}`);
 });
 
-test('C15.17: a trailing record whose size does not lead to a central header is not a second directory (still read)', () => {
+test('ZIP-015 (was C15.17 «still read»): a trailing record whose size leads nowhere is refused too, Python and unzip take the last record', () => {
   const l = local('good.txt', GOOD), c = central('good.txt', GOOD, 0);
   const real = eocd({ total: 1, cdSize: c.length, cdOff: l.length });
-  assert.deepEqual(names(put(Buffer.concat([l, c, real, eocd({ total: 0, cdSize: 0, cdOff: 0 })]))), ['good.txt'], 'size 0');
-  assert.deepEqual(names(put(Buffer.concat([l, c, real, Buffer.alloc(40), eocd({ total: 1, cdSize: 30, cdOff: 3 })]))), ['good.txt'], 'size that lands on zeros');
+  assert.throws(() => openZip(put(Buffer.concat([l, c, real, eocd({ total: 0, cdSize: 0, cdOff: 0 })]))), refused, 'size 0');
+  assert.throws(() => openZip(put(Buffer.concat([l, c, real, Buffer.alloc(40), eocd({ total: 1, cdSize: 30, cdOff: 3 })]))), refused, 'size that lands on zeros');
 });
 
 test('C15.17: a stored zip inside an entry (its record is BEFORE the real one) is still read', () => {

@@ -121,10 +121,10 @@ for (const name of CONTAINED) {
 }
 
 // ---------- symlinks ----------
-test('a symlink entry followed by a file through it: the symlink is never created, the file lands in a real folder', async () => {
+test('a symlink entry followed by a file through it: refused whole (a name that is a file and a folder), nothing is written', async () => {
+  // ZIP-024 (sixth review, round 213): since ZIP-022 the symlink name counts, so `link` is a file and `link/pwn.txt` makes it a folder: EUNSAFE, not an extraction.
   for (const target of ['../outside', '../../outside', '/etc', 'sub', '.']) {
-    const r = await attack([{ name: 'link', data: target, mode: 0o120777 }, { name: 'link/pwn.txt', data: 'pwn' }], { pre: 'empty' });
-    assert.equal(r.error, null, 'extraction itself is fine'); assert.equal(r.destAfter['link'], 'dir'); assert.equal(r.destAfter[join('link', 'pwn.txt')].startsWith('file:'), true);
+    await attack([{ name: 'link', data: target, mode: 0o120777 }, { name: 'link/pwn.txt', data: 'pwn' }], { pre: 'empty', code: 'EUNSAFE' });
   }
 });
 test('a symlink entry alone is reported in skipped and never created', async () => {

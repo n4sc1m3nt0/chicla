@@ -4,6 +4,20 @@ Only Rodrigo publishes (login and two-factor authentication): the AI never runs 
 
 The tag name is proposed in D116: one tag per package, `chicla-zip-v0.1.0` and later `chicla-kit-v0.1.0`, because the two packages are versioned apart (D4). If D116 is changed, change the tag in steps 5 and 6 only.
 
+## Where the release stands (round 216)
+
+What is still between the tree and the tag, in order. Claude keeps this list true; Rodrigo marks the gates.
+
+1. **G-C5, the last review.** The sixth narrow pass (C15.28, report `chicla-zip-security-review-6.md`, round 212 tree, `zipkit.mjs` sha256 starts `89478bbe`) found no bypass of the ZIP-022 fix and three INFO findings: ZIP-024 (an old test expected the old behavior; its expectation was updated in round 213), ZIP-025 and ZIP-026 (documented as known limits in `SECURITY.md`). `zipkit.mjs` was not touched after it, so the pin did not move. Rodrigo closed G-C5 on 2026-10-21 (round 216).
+2. **`/dump` and «recovery mode» once more**, after the LAST `zipkit.mjs` change (the pin moved in rounds 201, 202, 203, 207, 208 and 210).
+3. **The checks only Rodrigo can run:** `npm test` on Node 18, 20 and 22, the two mutants `R210-*` (`node scripts/mutants.mjs --only R210-no-dup-check --timeout 60`, then `R210-dup-after-skip`), `npm run smoke`, CI green on every job of the last pushed commit (G-C10 `pack`, G-C13 `windows`, G-C9 `bench`).
+4. **`chicla-zip` already says `"version": "0.1.0"`**, so it needs no round for that. The kit still says `0.0.0`: when you say it is ready, one round sets `"version": "0.1.0"` in `packages/chicla-kit/package.json` and changes the «pre-release» line of its README, and nothing else.
+5. **Then the steps below**, `chicla-zip` first.
+
+Open gates that do not block the tarball but decide what the README may claim: G-C4 (Windows statement), G-C12 (the panel on a real terminal), G-C15 (the agent files on each vendor's page), G-C8 (ROADMAP §9).
+
+Known limits to carry in the release notes (all in `SECURITY.md` or `docs/zip-handling.md` §7): the concurrent writer (ZIP-003, ZIP-004), parent folders left by a failed extraction (ZIP-017), a zip whose comment contains an end-record signature is refused, more than 8 end-record candidates is refused, the end-record window of 65 557 bytes (ZIP-021), a slash-named entry with the symlink mode that is listed as a folder and not created (ZIP-023), a symlink stored together with a folder of the same name is refused, which Info-ZIP can produce with `zip -y -r z.zip d dirlink d/ dirlink/` (ZIP-025), and names that two entries share only through the Unicode Path extra field, which Python 3.11 does not apply (ZIP-026); the sixth review's smaller shapes (a name ending in `/.`, symlink bits with host OS 2, 5 or 30, the `filter` option and the duplicate check) are listed in `SECURITY.md`.
+
 ## Before you start
 
 1. G-C5 (security review) is done and every finding is fixed or scheduled. A fix that touches `packages/chicla-zip/src/zipkit.mjs` needs a new round first; do not release code that was reviewed before the fix.

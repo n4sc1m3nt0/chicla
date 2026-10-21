@@ -1,10 +1,12 @@
 // Round 170 / G-C5 ZIP-001 (D123): a false end-of-central-directory record inside the zip comment.
 // Several records can look like the EOCD (every candidate whose comment fits the end of the file). The reader picks the one
 // whose central directory ends exactly where the record starts; if that does not give ONE answer it refuses (EAMBIGUOUS).
+// Round 200 / ZIP-015 (D135): and the chosen one must be the LAST record of the tail, because Python and unzip take the last one:
+// a record after it, empty or not, is refused (the old tests that read such a zip are rewritten below). Records BEFORE it are ignored.
 // Hostile bytes are built here, never with the writer under test. Error assertions use classes and codes, never message text.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openZip, listZip, readZipFile, testZip, extractZip, ZipError } from '../src/zipkit.mjs';
@@ -36,37 +38,38 @@ test('ZIP-001: an ordinary comment is read as before', () => {
   assert.equal(readZipFile(p, 'secret.txt').toString(), 'HELLO');
 });
 
-test('ZIP-001: a false zero-entry EOCD in the comment does not hide the real entries', async () => {
+const ambiguous = (err) => err instanceof ZipError && err.code === 'EAMBIGUOUS';
+
+test('ZIP-015: a false zero-entry EOCD in the comment is refused (EAMBIGUOUS), not read as the archive and not ignored', async () => {
   const p = put(withComment(base(), EVIL()));
-  const z = openZip(p);
-  try {
-    assert.deepEqual(z.entries.map((e) => e.name), ['secret.txt']);
-    assert.equal(z.read('secret.txt').toString(), 'HELLO');
-  } finally { z.close(); }
-  assert.deepEqual(await testZip(p), { files: 1, bytes: 5 });
+  assert.throws(() => openZip(p), ambiguous);
+  assert.throws(() => listZip(p), ambiguous);
+  await assert.rejects(testZip(p), ambiguous);
 });
 
-test('ZIP-001: extractZip writes the real entry (it used to extract nothing and say nothing)', async () => {
+test('ZIP-015: extractZip refuses it and writes nothing (it used to extract and the other readers saw an empty zip)', async () => {
   const p = put(withComment(base(), EVIL())), out = join(dir, 'out-evil');
-  await extractZip(p, out);
-  assert.equal(readFileSync(join(out, 'secret.txt'), 'utf8'), 'HELLO');
+  await assert.rejects(extractZip(p, out), ambiguous);
+  assert.equal(existsSync(out), false);
 });
 
-test('ZIP-001: several false records in the comment, with different fields, are all passed over', () => {
+test('ZIP-015: several false records in the comment, with different fields, are refused', () => {
   const comment = Buffer.concat([
     eocd({ total: 5, cdSize: 230, cdOff: 10 }), Buffer.from('x'),
     eocd({ total: 1, cdSize: 46, cdOff: 0 }), Buffer.from('yy'),
     eocd({ total: 0, cdSize: 0, cdOff: 0, comment: 3 }), Buffer.from('zzz'),
   ]);
-  const p = put(withComment(base(), comment));
-  assert.deepEqual(listZip(p).entries.map((e) => e.name), ['secret.txt']);
+  assert.throws(() => openZip(put(withComment(base(), comment))), ambiguous);
 });
 
-test('ZIP-001: the same holds when the real record is a zip64 one', () => {
+test('ZIP-015: the same holds when the real record is a zip64 one', () => {
   const zip = buildZip([{ name: 'secret.txt', data: 'HELLO', zip64: {} }, { name: 'b.txt', data: 'bravo' }], { zip64Eocd: true });
-  const p = put(withComment(zip, EVIL()));
-  assert.deepEqual(listZip(p).entries.map((e) => e.name), ['secret.txt', 'b.txt']);
-  assert.equal(readZipFile(p, 'b.txt').toString(), 'bravo');
+  assert.throws(() => openZip(put(withComment(zip, EVIL()))), ambiguous);
+});
+
+test('ZIP-001: a zip64 archive with a false record BEFORE its real one is read (the directory has to end at the zip64 record)', () => {
+  const zip = buildZip([{ name: 'secret.txt', data: Buffer.concat([Buffer.from('HELLO'), eocd()]), zip64: {} }, { name: 'b.txt', data: 'bravo' }], { zip64Eocd: true });
+  assert.deepEqual(listZip(put(zip)).entries.map((x) => x.name), ['secret.txt', 'b.txt']);
 });
 
 test('ZIP-001: bytes after the record are still tolerated when there is only one candidate', () => {
@@ -93,10 +96,12 @@ test('ZIP-001: several candidates and none whose directory ends at its record ar
 });
 
 test('ZIP-001: at most 8 candidates are weighed; the 9th is refused without parsing them (EAMBIGUOUS)', () => {
+  // the false records sit BEFORE the real one (inside the data of an entry), where they are ignored; ZIP-015 refuses the ones after it
   const falses = (k) => Buffer.concat(Array.from({ length: k }, () => eocd()));
-  const ok = put(withComment(base(), falses(7))); // 8 candidates with the real one
+  const withFalses = (k) => buildZip([{ name: 'secret.txt', data: Buffer.concat([Buffer.from('HELLO'), falses(k)]) }]);
+  const ok = put(withFalses(7)); // 8 candidates with the real one
   assert.deepEqual(listZip(ok).entries.map((x) => x.name), ['secret.txt']);
-  const many = put(withComment(base(), falses(8))); // 9 candidates
+  const many = put(withFalses(8)); // 9 candidates
   assert.throws(() => openZip(many), (err) => err instanceof ZipError && err.code === 'EAMBIGUOUS');
 });
 

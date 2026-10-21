@@ -40,4 +40,16 @@ Supported on Node 18, 20 and 22. The whole test suite runs on `windows-latest` i
 
 Encryption, methods other than stored and deflate, multi-part archives, paths over 260 characters on Windows.
 
+## Known limits
+
+Full list and reasons in [`SECURITY.md`](../../SECURITY.md) and [`docs/zip-handling.md`](../../docs/zip-handling.md) §7. The ones to know before you use it on untrusted zips:
+
+- Not safe against another process writing to the tree or the destination at the same time: `createZip` and the merge mode of `extractZip` (ZIP-003, ZIP-004). Use a private folder.
+- A failed extraction into a new destination can leave the empty parent folders it created (ZIP-017).
+- A zip is refused, never guessed at, when its end record is ambiguous: a comment that contains an end-record signature, more than 8 candidates, or a signature in the last 21 bytes (ZIP-021).
+- A folder entry with the symlink mode is not created (ZIP-023). Chicla writes less than `unzip` or Python, never more.
+- A symlink stored together with a folder or file of the same name is refused as a whole (ZIP-025). `zip -y -r z.zip d dirlink d/ dirlink/` makes such a zip.
+- Names that two entries share only through the Unicode Path extra field are refused; Python 3.11 does not apply that field, 3.12 and 3.13 and `unzip` do (ZIP-026).
+- Use the same tool to check and to extract a hostile zip: a few odd shapes are read differently by Chicla, `unzip` and Python, always in the direction where Chicla writes less.
+
 Licence: Apache-2.0.

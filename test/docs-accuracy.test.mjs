@@ -38,3 +38,25 @@ test('D118: C5.3b-A15 is an accepted survivor with a reason (equivalent since ro
   const x = m.default.find((e) => e.id === 'C5.3b-A15');
   assert.ok(x, 'the entry exists'); assert.equal(typeof x.survives, 'string'); assert.ok(x.survives.length > 40);
 });
+
+test('C15.22 (ZIP-018): CLAUDE.md and README.md state the mutant count of the list, so it cannot go stale again', async () => {
+  const m = await import(pathToFileURL(join(root, 'packages/chicla-zip/mutants/list.mjs')).href);
+  for (const f of ['CLAUDE.md', 'README.md']) { const hit = read(f).match(/\((?:\d+ )?(\d+) (?:hand-made )?mutants\)|(\d+) hand-made mutants/); const n = Number(hit?.[1] ?? hit?.[2]); assert.equal(n, m.default.length, `${f} says ${n}`); }
+});
+
+test('C15.22 (ZIP-018): C5.3b-A13 and C5.1-central-bounds are accepted survivors with a reason and are pinned by test/audit-zip018.test.mjs', async () => {
+  const m = await import(pathToFileURL(join(root, 'packages/chicla-zip/mutants/list.mjs')).href);
+  for (const id of ['C5.3b-A13', 'C5.1-central-bounds']) { const x = m.default.find((e) => e.id === id); assert.ok(x, id); assert.ok(typeof x.survives === 'string' && x.survives.length > 40, id); assert.ok(x.tests.includes('test/audit-zip018.test.mjs'), id); }
+});
+
+test('ZIP-021 (round 209, C15.26): docs/zip-handling.md §2 documents the end-record search window, and trailing-size-fake.test.mjs no longer describes the pre-ZIP-015 rule', () => {
+  const s = read('docs/zip-handling.md');
+  const sec = s.slice(s.indexOf('## 2. What the reader does'), s.indexOf('## 3. What extraction promises'));
+  assert.match(sec, /last 21 bytes/, 'the 21-byte rule is not written');
+  assert.match(sec, /65 557/, 'the tail window is not written');
+  assert.match(sec, /65 558/, 'the Python window is not written');
+  assert.match(sec, /never misread/, 'the safe direction is not written');
+  const t = read('packages/chicla-zip/test/trailing-size-fake.test.mjs').split('\n').slice(0, 12).join('\n');
+  assert.match(t, /ZIP-015/, 'the header does not mention the general rule of round 200');
+  assert.doesNotMatch(t, /is now EAMBIGUOUS; candidates BEFORE/, 'the stale one-case sentence is still there');
+});

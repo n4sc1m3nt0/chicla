@@ -112,6 +112,9 @@ const readCentral = (fd, size, label) => {
       endsAt = u64(l, 8);
       const z = readAt(fd, endsAt, 56);
       if (z.readUInt32LE(0) !== 0x06064b50 || u64(z, 4) < 44) throw new ZipError(`${label}: invalid zip64 record`);
+      // G-C5 ZIP-019 (D136): the record the locator points at must END where the locator starts (12 bytes of signature and size field, then the size field says how many
+      // more, extensible data included). A gap, a wrong size or another record in front of the locator is a file the other readers read differently.
+      if (endsAt + 12 + u64(z, 4) !== loc) throw new ZipError(`${label}: the zip64 record does not end where its locator starts (a gap, a wrong size field, or a second record)`);
       const plain = { total, cdSize, cdOff };
       total = u64(z, 32); cdSize = u64(z, 40); cdOff = u64(z, 48);
       if (z.readUInt32LE(16) || z.readUInt32LE(20)) throw new ZipError(`${label}: multi-part zips are not supported`);
@@ -131,13 +134,10 @@ const readCentral = (fd, size, label) => {
     for (const e of cands) { try { const g = fields(e); if (g.cdOff + g.cdSize === g.endsAt) fit.push(g); } catch (err) { if (!(err instanceof ZipError)) throw err; /* a record that does not even parse is not the one */ } }
     if (fit.length !== 1) throw new ZipError(`${label}: ambiguous end-of-central-directory record (${cands.length} candidates, ${fit.length} fit)`, "EAMBIGUOUS");
     f = fit[0];
-    // G-C5 C15.17 (D133): Python and unzip find a directory by SIZE (recordPos - cdSize) and ignore the offset field. A record AFTER the chosen one whose size leads to a central
-    // header is a second directory for them, even when its offset field is wrong (so it was not "fit"). Records BEFORE the chosen one (a stored zip inside an entry) stay ignored.
-    for (const e of cands) {
-      if (e <= f.e) continue;
-      try { const g = fields(e), at = g.endsAt - g.cdSize; if (at >= 0 && at + 4 <= size && readAt(fd, at, 4).readUInt32LE(0) === 0x02014b50) throw new ZipError(`${label}: a second end record after the real one describes another central directory`, "EAMBIGUOUS"); }
-      catch (err) { if (!(err instanceof ZipError)) throw err; if (err.code === "EAMBIGUOUS") throw err; /* a record that does not even parse is not a directory */ }
-    }
+    // G-C5 ZIP-015 (D135): Python and unzip take the LAST end record of the tail and trust it, whatever it says (an empty one, a disk number, markers without a locator,
+    // a directory found by size: C15.17 was one case of this). So a record AFTER the chosen one is a second archive for them, and is refused, with no exception for
+    // "empty" or "does not parse". Records BEFORE the chosen one (a stored zip inside an entry) stay ignored. cands[0] is the last signature of the tail.
+    if (f.e !== cands[0]) throw new ZipError(`${label}: an end record follows the one that fits (the readers would take the last one)`, "EAMBIGUOUS");
   }
   const { total, cdSize, cdOff } = f;
   if (cdSize > MAX_CENTRAL) throw new ZipError(`${label}: central directory too large (${cdSize} bytes; the limit is ${MAX_CENTRAL})`, "ECENTRAL");
@@ -177,7 +177,7 @@ const parseEntries = (cd, total, label, legacy = CP437) => {
     const mtime = ut && ut.length >= 5 && ut[0] & 1 ? new Date(ut.readInt32LE(1) * 1000) : dosDate(cd.readUInt16LE(pos + 14), cd.readUInt16LE(pos + 12));
     entries.push({
       name, rawName, nameSource, flags, method, crc, csize, usize, localOffset, cdPos: pos, hostOs, mode, mtime,
-      isDir: name.endsWith("/") || type === 0o040000, isSymlink: type === 0o120000, isSpecial: type !== 0 && type !== 0o100000 && type !== 0o040000 && type !== 0o120000,
+      isDir: name.endsWith("/"), modeDir: type === 0o040000 && !name.endsWith("/"), isSymlink: type === 0o120000, isSpecial: type !== 0 && type !== 0o100000 && type !== 0o040000 && type !== 0o120000,
       encrypted: !!(flags & 0x41), nonAscii, flagMissing: nonAscii && utf8Valid && !(flags & 0x800),
     });
     pos += 46 + nl + xl + cl;
@@ -208,7 +208,7 @@ const checkLayout = (entries, cdOff, label, fd, size) => {
 };
 
 // Lists the entries. Each one: { name, rawName, nameSource, flags, method, crc, csize, usize, localOffset, mode, mtime,
-//   isDir, isSymlink, isSpecial, encrypted, nonAscii, flagMissing }
+//   isDir (by the name only), modeDir (folder mode without a slash: a file for `read`, refused by `extractZip`), isSymlink, isSpecial, encrypted, nonAscii, flagMissing }
 export const listZip = (zipPath, opts) => {
   const z = openZip(zipPath, opts);
   try { return { path: z.path, size: z.size, entries: z.entries }; }
@@ -287,7 +287,12 @@ export const openZip = (zipPath, { legacyEncoding } = {}) => {
   // Reads ONE file into memory (by name; NFC and NFD count as the same name). Checks CRC and size.
   const read = (name, { maxBytes = 256 * 1024 * 1024 } = {}) => {
     const f = live();
-    const e = entries.find((x) => !x.isDir && x.name === name) ?? entries.find((x) => !x.isDir && sameName(x.name, name));
+    // G-C5 ZIP-014 (D135): Python's read(name) takes the LAST of several entries with one name, a plain find() the FIRST: refuse instead of picking (the extractor refuses a duplicate too).
+    // The exact spelling is tried first; the NFC fallback counts only when there is no exact match.
+    let hits = entries.filter((x) => !x.isDir && x.name === name);
+    if (!hits.length) hits = entries.filter((x) => !x.isDir && sameName(x.name, name));
+    if (hits.length > 1) throw new ZipError(`${path}: «${name}» matches ${hits.length} entries (a duplicate name)`, "EAMBIGUOUS");
+    const e = hits[0];
     if (!e) throw new ZipError(`${path}: «${name}» is not in the zip`, "ENOENT");
     const bad = unsupportedReason(e); if (bad) throw new ZipError(`«${e.name}» ${bad}`);
     if (e.usize > maxBytes || e.csize > maxBytes) throw new ZipError(`«${e.name}» is ${e.usize} bytes, above the limit of ${maxBytes} for reading into memory`);
@@ -436,6 +441,10 @@ export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalByt
   let declared = 0;
   for (const e of entries) {
     const unsafe = unsafeNameReason(e.name.replace(/\/+$/, "") || (e.name ? "/" : "")); if (unsafe) { problems.push(`«${e.name}»: ${unsafe}`); continue; }
+    if (e.modeDir) { problems.push(`«${e.name}»: has the folder mode but no trailing slash (Python and unzip would write a file, so it is refused)`); continue; } // ZIP-020 (D136)
+    // ZIP-022: a name is counted BEFORE the symlink/special skip, so `[file a, symlink a]` is a duplicate too (unzip would write the symlink, Python the last entry).
+    const k0 = e.isDir ? "" : pathSegs(e.name).join("/");
+    if (k0) { if (seen.has(k0)) problems.push(`«${e.name}»: duplicate name in the zip`); seen.add(k0); }
     if (e.isSymlink || e.isSpecial) { skipped.push({ name: e.name, reason: e.isSymlink ? "symlink (never created)" : "special file" }); continue; }
     const segs = pathSegs(e.name);
     if (!segs.length) { skipped.push({ name: e.name, reason: "the destination folder itself (never written to)" }); continue; }
@@ -443,7 +452,7 @@ export const extractZip = async (zipPath, dest, { overwrite = false, maxTotalByt
     for (let i = 1; i < segs.length; i++) { const d = segs.slice(0, i).join("/"); if (!dirKeys.has(d)) { dirKeys.add(d); noteName(groups, d, `${d}/`, false); } }
     const key = segs.join("/");
     if (e.isDir) { dirKeys.add(key); noteName(groups, key, `${key}/`, true); }
-    else { const bad = unsupportedReason(e); if (bad) problems.push(`«${e.name}» ${bad}`); if (seen.has(key)) problems.push(`«${e.name}»: duplicate name in the zip`); seen.add(key); declared += e.usize; noteName(groups, key, key, true); }
+    else { const bad = unsupportedReason(e); if (bad) problems.push(`«${e.name}» ${bad}`); declared += e.usize; noteName(groups, key, key, true); }
   }
   for (const k of seen) if (dirKeys.has(k)) problems.push(`«${k}»: is a file and a folder at the same time`);
   if (declared > maxTotalBytes) problems.push(`total declared size ${declared} bytes, above the limit of ${maxTotalBytes}`);
@@ -984,6 +993,12 @@ export const runCli = async (argv, { out = process.stdout, err = process.stderr 
 };
 const isMain = () => { try { return !!process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); } catch { return false; } }; // realpath: an installed bin is a symlink in node_modules/.bin (round 74)
 if (isMain()) {
-  for (const s of [process.stdout, process.stderr]) s.on("error", (e) => { if (e.code === "EPIPE" || e.code === "EOF") process.exit(1); throw e; }); // the reader closed the pipe (`ls | head`): stop quietly, not with a stack trace (A-1); Windows says EOF on Node 18 and 20
+  // The reader closed the pipe (`ls | head`): stop quietly, not with a stack trace (A-1); Windows says EOF on Node 18 and 20. G-C5 ZIP-016 (D135): any OTHER error of stdout or stderr
+  // (ENOSPC on a full disk, EIO...) used to be thrown from this handler, an uncaught exception with a stack trace. Now it ends with exit 1 too, with one short line on stderr when
+  // it is stdout that failed (stderr cannot tell about its own failure). A stdout that was CLOSED (`>&-`) is not an error for Node, it is reopened on /dev/null: nothing to catch there.
+  for (const s of [process.stdout, process.stderr]) s.on("error", (e) => {
+    if (e.code !== "EPIPE" && e.code !== "EOF" && s === process.stdout) { try { process.stderr.write(`chicla-zip: cannot write the output (${typeof e.code === "string" ? e.code : "error"})\n`); } catch { /* nowhere to say it */ } }
+    process.exit(1);
+  });
   process.exitCode = await runCli(process.argv.slice(2));
 }

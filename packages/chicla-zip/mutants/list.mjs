@@ -32,7 +32,7 @@ export const extract = [
     replace: "if (false) { problems.push(" },
   { id: "AUDIT-1-V2", file: "src/zipkit.mjs", tests: ["test/extract.test.mjs"],
     why: "extractZip refuses a duplicate name in the zip",
-    find: "if (seen.has(key)) problems.push(",
+    find: "if (seen.has(k0)) problems.push(",
     replace: "if (false) problems.push(" },
   { id: "AUDIT-1-V3", file: "src/zipkit.mjs", tests: ["test/extract.test.mjs"],
     why: "extractZip refuses a name that is a file and a folder at once",
@@ -109,7 +109,8 @@ export const extract2 = [
     why: "merging into an existing destination refuses a file/folder clash",
     find: "else if (lstatSync(a).isDirectory() || st.isDirectory()) throw",
     replace: "else if (false) throw" },
-  { id: "C5.3b-A13", file: "src/zipkit.mjs", tests: ["test/extract.test.mjs"],
+  { id: "C5.3b-A13", file: "src/zipkit.mjs", tests: ["test/extract.test.mjs", "test/audit-zip018.test.mjs"],
+    survives: "second line of defence since C15.22 (ZIP-018): the extraction loop already refuses an existing target without overwrite with the same EEXIST before the merge plan is built, and mergeMove looks at each target again (C15.14), so without this check the end state and the error are the same; test/audit-zip018.test.mjs pins the refusal and that nothing moved",
     why: "merging into an existing destination does not replace a file without overwrite",
     find: "else if (!overwrite) throw new ZipError(`«${name}»: already exists in ${dst}",
     replace: "else if (false) throw new ZipError(`«${name}»: already exists in ${dst}" },
@@ -426,7 +427,7 @@ const extract3 = (() => {
   { id: "M2-coll-two", file: F, tests: [COL, X], why: "collisions: a group needs two or more spellings",
     find: "const collisions = [...groups.values()].filter((g) => g.real && g.names.size > 1)", replace: "const collisions = [...groups.values()].filter((g) => g.real && g.names.size > 0)" },
   { id: "M2-coll-files", file: F, tests: [COL], why: "collisions: files are noted",
-    find: "seen.add(key); declared += e.usize; noteName(groups, key, key, true);", replace: "seen.add(key); declared += e.usize;", onlyOn: LINUX },
+    find: "declared += e.usize; noteName(groups, key, key, true);", replace: "declared += e.usize;", onlyOn: LINUX },
   { id: "M2-coll-folders", file: F, tests: [COL], why: "collisions: explicit folder entries are noted",
     find: "dirKeys.add(key); noteName(groups, key, `${key}/`, true);", replace: "dirKeys.add(key);" },
   { id: "M2-coll-case", file: F, tests: [COL], why: "collisions: names that differ only in case are one group",
@@ -551,8 +552,8 @@ const cli4 = (() => {
   { id: "M4-extract-overwrite", file: F, tests: [C], why: "extract --overwrite is passed on", find: 'overwrite: !!flags["--overwrite"], ...(mb', replace: "overwrite: false, ...(mb" },
   { id: "M4-max-bytes-passed", file: F, tests: [C, A3], why: "extract --max-bytes is passed on", find: "...(mb !== undefined ? { maxTotalBytes: Number(mb) } : {})", replace: "...{}" },
   { id: "M4-extract-collisions-line", file: F, tests: [G, C], why: "extract reports equivalent names", find: "for (const c of r.collisions) out.write(`! equivalent names (NFC/case) in the zip", replace: "for (const c of []) out.write(`! equivalent names (NFC/case) in the zip", onlyOn: LINUX },
-  { id: "M4-epipe", file: F, tests: [A3], why: "a closed pipe ends the process quietly (A-1)", find: 'if (e.code === "EPIPE" || e.code === "EOF") process.exit(1); throw e;', replace: "throw e;" },
-  { id: "M14-eof-pipe", file: F, tests: [A3], why: "Windows reports a closed pipe as EOF on Node 18 and 20: also quiet (C14.3 d)", find: 'e.code === "EPIPE" || e.code === "EOF"', replace: 'e.code === "EPIPE"' },
+  { id: "M4-epipe", file: F, tests: [A3], why: "a closed pipe ends the process quietly (A-1)", find: 'e.code !== "EPIPE" && e.code !== "EOF" && s === process.stdout', replace: 's === process.stdout' }, // round 203: the handler was rewritten (ZIP-016); the anchor follows it, the promise is the same: EPIPE is not reported
+  { id: "M14-eof-pipe", file: F, tests: [A3], why: "Windows reports a closed pipe as EOF on Node 18 and 20: also quiet (C14.3 d)", find: 'e.code !== "EPIPE" && e.code !== "EOF"', replace: 'e.code !== "EPIPE"' }, // round 203: anchor follows the rewritten handler (ZIP-016)
   ];
 })();
 
@@ -572,7 +573,7 @@ const reader5 = (() => {
       find: "if (total * 46 > cdSize) throw", replace: "if (false) throw" },
     { id: "C5.1-local-signature", file: F, tests: [Z], why: "a local header without its signature is refused",
       find: "if (h.readUInt32LE(0) !== 0x04034b50) throw", replace: "if (false) throw" },
-    { id: "C5.1-central-bounds", file: F, tests: [Z], why: "a central entry whose name, extra and comment run past the directory is refused",
+    { id: "C5.1-central-bounds", file: F, tests: [Z, "test/audit-zip018.test.mjs"], survives: "second line of defence since C15.22 (ZIP-018): an entry that runs past the directory leaves the position beyond its end, so the check that the directory has no bytes left over (or the next entry's signature check) raises the same ZipError; test/audit-zip018.test.mjs pins the refusal", why: "a central entry whose name, extra and comment run past the directory is refused",
       find: "if (pos + 46 + nl + xl + cl > cd.length) throw", replace: "if (false) throw" },
     { id: "C5.1-data-past-end", file: F, tests: [Z], survives: "readAt raises the same ZipError when the data is cut, so this check is a second line of defence",
       why: "the data of an entry that runs past the end of the file is refused",
@@ -778,18 +779,63 @@ const layout188 = (() => {
   ];
 })();
 
-// Round 189 / C15.17: a trailing end record found by SIZE (Python and unzip ignore the offset field) is a second directory.
-const sizeFake189 = (() => {
-  const F = "src/zipkit.mjs", T = ["test/trailing-size-fake.test.mjs"];
+// Round 203 / C15.20 / ZIP-016 (D135): an output error of stdout or stderr other than a closed pipe ends with exit 1 and one short line, it is not thrown.
+const stdout203 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/cli-stdout-error.test.mjs"];
+  const COND = 'e.code !== "EPIPE" && e.code !== "EOF" && s === process.stdout';
   return [
-    { id: "R189-after-check-off", file: F, tests: T, why: "a record after the chosen one whose size leads to a central header is refused",
-      find: "if (e <= f.e) continue;", replace: "continue;" },
-    { id: "R189-before-too", file: F, tests: T, why: "a record BEFORE the chosen one (a stored zip inside an entry) is still ignored",
-      find: "if (e <= f.e) continue;", replace: "if (e === f.e) continue;" },
-    { id: "R189-signature-ignored", file: F, tests: T, why: "only a size that leads to a central header signature counts",
-      find: "readAt(fd, at, 4).readUInt32LE(0) === 0x02014b50) throw", replace: "true) throw" },
-    { id: "R189-code", file: F, tests: T, why: "the refusal carries the code EAMBIGUOUS",
-      find: "describes another central directory`, \"EAMBIGUOUS\"); }", replace: "describes another central directory`); }" },
+    { id: "R203-no-line", file: F, tests: T, why: "when stdout fails one short line says so on stderr", onlyOn: ["linux"],
+      find: `if (${COND}) {`, replace: "if (false) {" },
+    { id: "R203-throws-again", file: F, tests: T, why: "an output error that is not a closed pipe is not thrown through (the old behaviour)", onlyOn: ["linux"],
+      find: "    process.exit(1);\n  });", replace: '    if (e.code === "EPIPE" || e.code === "EOF") process.exit(1); else throw e;\n  });' },
+    { id: "R203-exit-0", file: F, tests: T, why: "the exit code of an output error is 1", onlyOn: ["linux"],
+      find: "    process.exit(1);\n  });", replace: "    process.exit(0);\n  });" },
+    { id: "R203-pipe-noisy", file: F, tests: T, why: "a closed pipe stays quiet",
+      find: `if (${COND}) {`, replace: 'if (s === process.stdout) {' },
+    { id: "R203-stderr-says", file: F, tests: T, why: "a failing stderr is not asked to report its own failure", onlyOn: ["linux"],
+      find: `if (${COND}) {`, replace: 'if (e.code !== "EPIPE" && e.code !== "EOF") {',
+      survives: "a write to a stderr that already failed fails again inside the try and is swallowed, then the same exit(1) follows: the difference cannot be seen from outside" },
+  ];
+})();
+
+// Round 202 / C15.19 / ZIP-014 (D135): `read` refuses a name that matches more than one entry (Python takes the last, a plain find() the first).
+const dup202 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/read-duplicate.test.mjs"];
+  return [
+    { id: "R202-first-wins", file: F, tests: T, why: "two entries with one name are refused, the first is not returned silently",
+      find: "if (hits.length > 1) throw", replace: "if (false) throw" },
+    { id: "R202-three-needed", file: F, tests: T, why: "TWO entries with one name are already ambiguous",
+      find: "if (hits.length > 1) throw", replace: "if (hits.length > 2) throw" },
+    { id: "R202-nfc-always", file: F, tests: T, why: "the exact spelling wins: another spelling (NFD against NFC) does not make a single exact match ambiguous",
+      find: "if (!hits.length) hits = entries.filter((x) => !x.isDir && sameName(x.name, name));", replace: "hits = entries.filter((x) => !x.isDir && sameName(x.name, name));" },
+    { id: "R202-no-nfc-fallback", file: F, tests: T, why: "two spellings that only normalise to the same name are looked at too",
+      find: "if (!hits.length) hits = entries.filter((x) => !x.isDir && sameName(x.name, name));", replace: "" },
+    { id: "R202-folder-counts", file: F, tests: T, why: "a folder entry of the same name is not a match",
+      find: "let hits = entries.filter((x) => !x.isDir && x.name === name);", replace: "let hits = entries.filter((x) => x.name === name);" },
+    { id: "R202-code", file: F, tests: T, why: "the refusal carries the code EAMBIGUOUS",
+      find: "(a duplicate name)`, \"EAMBIGUOUS\")", replace: "(a duplicate name)`, \"EZIP\")" },
+  ];
+})();
+
+// Round 200 / C15.18 / ZIP-015 (D135): the end record chosen must be the LAST of the tail (Python and unzip take the last one). It replaces the round 189
+// rule of C15.17 (a record after the chosen one counted only when its size led to a central header): that is now one case of the general rule, so the R189-* mutants
+// of the deleted loop are gone and these judge the line that took its place.
+const last200 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/eocd-last-record.test.mjs", "test/eocd-ambiguity.test.mjs", "test/trailing-size-fake.test.mjs"];
+  const L = "if (f.e !== cands[0]) throw";
+  return [
+    { id: "R200-last-check-off", file: F, tests: T, why: "a record after the chosen one is refused",
+      find: L, replace: "if (false) throw" },
+    { id: "R200-before-too", file: F, tests: T, why: "a record BEFORE the chosen one (a stored zip inside an entry) is still ignored: only the ones after it count",
+      find: L, replace: "if (f.e !== cands[cands.length - 1]) throw" },
+    { id: "R200-empty-excepted", file: F, tests: T, why: "an EMPTY trailing record is refused too (PoC A of the report: Python sees an empty archive)",
+      find: L, replace: "if (f.e !== cands[0] && tail.readUInt16LE(cands[0] + 10) !== 0) throw" },
+    { id: "R200-unparsable-excepted", file: F, tests: T, why: "a trailing record that does not parse for chicla (a disk number) is refused too (PoC B of the report)",
+      find: L, replace: "if (f.e !== cands[0] && tail.readUInt16LE(cands[0] + 4) === 0) throw" },
+    { id: "R200-near-only", file: F, tests: T, why: "the whole tail is looked at, not only a record close behind the chosen one",
+      find: L, replace: "if (f.e !== cands[0] && cands[0] - f.e < 64) throw" },
+    { id: "R200-code", file: F, tests: T, why: "the refusal carries the code EAMBIGUOUS",
+      find: "(the readers would take the last one)`, \"EAMBIGUOUS\")", replace: "(the readers would take the last one)`)" },
   ];
 })();
 
@@ -876,4 +922,45 @@ const recheck195 = (() => {
   ];
 })();
 
-export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14, ...win145, ...eocd170, ...local171, ...overlap172, ...central174, ...eocd187, ...layout188, ...sizeFake189, ...hand190, ...clash191, ...span192, ...tmpmode193, ...recheck195];
+// Round 207 / C15.24 / ZIP-020 (D136): a folder is decided by the NAME only; a folder-mode entry without a slash is a file for `read` and refused by extraction.
+const dirname207 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/dir-by-name.test.mjs"];
+  return [
+    { id: "R207-mode-is-dir", file: F, tests: T, why: "the folder mode no longer makes an entry a folder (read sees it, a duplicate is EAMBIGUOUS)",
+      find: 'isDir: name.endsWith("/"), modeDir:', replace: 'isDir: name.endsWith("/") || type === 0o040000, modeDir:' },
+    { id: "R207-no-refusal", file: F, tests: T, why: "extraction refuses a folder-mode entry without a slash",
+      find: "if (e.modeDir) { problems.push(", replace: "if (false) { problems.push(" },
+    { id: "R207-slash-needed", file: F, tests: T, why: "a name with a slash stays a folder whatever its mode (it is not a modeDir)",
+      find: 'modeDir: type === 0o040000 && !name.endsWith("/")', replace: "modeDir: type === 0o040000" },
+  ];
+})();
+
+// Round 208 / C15.25 / ZIP-019 (D136): the zip64 record the locator points at must end exactly where the locator starts.
+const locator208 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/zip64-locator-fit.test.mjs"], X = "endsAt + 12 + u64(z, 4) !== loc";
+  return [
+    { id: "R208-no-check", file: F, tests: T, why: "a zip64 record that does not end at its locator is accepted again (ZIP-019)",
+      find: "if (" + X + ") throw new ZipError(", replace: "if (false) throw new ZipError(" },
+    { id: "R208-fixed-size", file: F, tests: T, why: "the size field counts: extensible data that it covers is allowed, so the size is not fixed at 44",
+      find: X, replace: "endsAt + 56 !== loc" },
+    { id: "R208-off-by-one", file: F, tests: T, why: "the record must end exactly at the locator, one byte of difference is a refusal",
+      find: X, replace: "endsAt + 13 + u64(z, 4) !== loc" },
+    { id: "R208-reach-only", file: F, tests: T, why: "a record that stops SHORT of its locator (a gap) is refused too, not only one that reaches past it",
+      find: X, replace: "endsAt + 12 + u64(z, 4) > loc" },
+    { id: "R208-gap-only", file: F, tests: T, why: "a size field that reaches PAST the locator is refused too, not only a gap",
+      find: X, replace: "endsAt + 12 + u64(z, 4) < loc" },
+  ];
+})();
+
+// Round 210 / C15.27 / ZIP-022: a duplicate name counts before the symlink/special skip.
+const dupskip210 = (() => {
+  const F = "src/zipkit.mjs", T = ["test/dup-skipped.test.mjs"];
+  return [
+    { id: "R210-no-dup-check", file: F, tests: T, why: "a duplicate name with a symlink or special entry is accepted again (ZIP-022)",
+      find: "if (k0) { if (seen.has(k0)) problems.push(", replace: "if (k0) { if (false) problems.push(" },
+    { id: "R210-dup-after-skip", file: F, tests: T, why: "the name is counted only for entries that are not skipped (the old order)",
+      find: 'const k0 = e.isDir ? "" : pathSegs(e.name).join("/");', replace: 'const k0 = e.isDir || e.isSymlink || e.isSpecial ? "" : pathSegs(e.name).join("/");' },
+  ];
+})();
+
+export default [...writer, ...extract, ...extract2, ...writer2, ...writer3, ...extract3, ...cli4, ...reader5, ...win14, ...win145, ...eocd170, ...local171, ...overlap172, ...central174, ...eocd187, ...layout188, ...last200, ...dup202, ...stdout203, ...hand190, ...clash191, ...span192, ...tmpmode193, ...recheck195, ...dirname207, ...locator208, ...dupskip210];
