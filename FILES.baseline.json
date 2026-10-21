@@ -1,7 +1,7 @@
 {
  "format": "chicla-baseline-v1",
- "created": "2026-10-21T08:44:21.591Z",
- "seal": "da48b3162e0ddd23aceeca87d294c7ee57fe14eb0f192a8e7996d1d80a53f51a",
+ "created": "2026-10-21T09:03:48.778Z",
+ "seal": "9ee5b38db979105a6af01288c080f1596ce90b5ed0f1a5e3f2a6ae2acbdf0505",
  "files": [
   {
    "path": ".gitattributes",
@@ -20,13 +20,13 @@
   },
   {
    "path": "CHANGELOG.md",
-   "size": 298471,
-   "sha256": "ff5f59101c5069b8e075daa1c6b28f275d246ad9eb2578a18288fc71745f4dff"
+   "size": 299714,
+   "sha256": "1cc0ebde0ea98f15be3aea47beb314a3c05937860c239e59c8f827f363b3983e"
   },
   {
-   "path": "CHICLA_PROJECT_STATUS-222.md",
-   "size": 149759,
-   "sha256": "b012832b01dcc0098a583b5b414b82ae2c7e2118040acc43fb64782470dde94e"
+   "path": "CHICLA_PROJECT_STATUS-223.md",
+   "size": 150145,
+   "sha256": "ff1489f1cb1a82c403fbeb5b51925fa6580a87fbc32537e3d87f42b1a16f85f7"
   },
   {
    "path": "CLAUDE.md",
@@ -41,7 +41,7 @@
   {
    "path": "FILES.manifest",
    "size": 11517,
-   "sha256": "2cc346cf40ddab26e7a76c3ed161b592b777fe7006726955e7e0bf767e6a52ba"
+   "sha256": "fa325e775c5fb70f4b0306207058e90cc1e4473bc88e6c3cc743ba9834116c23"
   },
   {
    "path": "LICENSE",
@@ -131,7 +131,7 @@
   {
    "path": "package.json",
    "size": 541,
-   "sha256": "07daa64d4ce42e7b8a6fe6e3c568ff8a741e2a40734402580f123d8a5b0d028b"
+   "sha256": "8057ec4bdc1f48812c34714a7e9091f74e0f5ea258deabcfa9d35c87ebc5311d"
   },
   {
    "path": "packages/chicla-kit/LICENSE",
@@ -775,8 +775,8 @@
   },
   {
    "path": "packages/chicla-zip/test/zip64-locator-fit.test.mjs",
-   "size": 6575,
-   "sha256": "8b1ee275983906db370b55f131cc4ade235c594a8e477acd4ab9bcdecdeddf6c"
+   "size": 6699,
+   "sha256": "3311b714c63097b530fd3e59674453f5c55d10e03e607479e3c3f040d305c65c"
   },
   {
    "path": "packages/chicla-zip/test/zip64.test.mjs",
@@ -1126,7 +1126,7 @@
   {
    "path": "version.mjs",
    "size": 531,
-   "sha256": "6bf84d6145a70b59c0af126557be17ca22dd8c00e2d1cb0c8aafe4e0dd37c5a3"
+   "sha256": "3588b246eb63026ac458340f9bbea6d777b45ac4a4fbac4f7da1fb1eb649fcbf"
   }
  ]
 }

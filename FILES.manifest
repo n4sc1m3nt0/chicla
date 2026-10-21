@@ -2,11 +2,11 @@
 .gitattributes	44424052	367
 .github/workflows/ci.yml	72813154	4036
 .gitignore	1b52e6b9	47
-CHANGELOG.md	bf2eaa91	298471
-CHICLA_PROJECT_STATUS-222.md	aac9b262	149759
+CHANGELOG.md	1295a1c6	299714
+CHICLA_PROJECT_STATUS-223.md	1215cbb0	150145
 CLAUDE.md	e4f9a4f6	8485
 CONTRIBUTING.md	816ec6e1	1896
-FILES.baseline.json	b20953a7	35508
+FILES.baseline.json	43f406be	35509
 LICENSE	1ea3b7b0	10174
 README.md	528048e7	10780
 ROADMAP.md	47f59a7f	146475
@@ -24,7 +24,7 @@ docs/state-file.md	94ef876f	5916
 docs/zip-handling.md	4ee06488	28560
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	84e32ba5	541
+package.json	18f7614d	541
 packages/chicla-kit/LICENSE	1ea3b7b0	10174
 packages/chicla-kit/README.md	523f8af0	6106
 packages/chicla-kit/package.json	e4592d26	547
@@ -153,7 +153,7 @@ packages/chicla-zip/test/write-path-conflict.test.mjs	9ce8d3b3	5273
 packages/chicla-zip/test/write-stream.test.mjs	9b34bd92	22143
 packages/chicla-zip/test/write-ut.test.mjs	e26f3370	13812
 packages/chicla-zip/test/write.test.mjs	f2516e40	16882
-packages/chicla-zip/test/zip64-locator-fit.test.mjs	1315378f	6575
+packages/chicla-zip/test/zip64-locator-fit.test.mjs	58b3d00a	6699
 packages/chicla-zip/test/zip64.test.mjs	300a3cba	7581
 packages/chicla-zip/test/zipfab.mjs	30173e73	5560
 packages/chicla-zip/test/zipraw.mjs	4403f6e1	2360
@@ -223,4 +223,4 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	f2fb97dc	531
+version.mjs	e7472492	531

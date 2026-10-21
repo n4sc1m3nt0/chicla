@@ -1,5 +1,11 @@
-<!-- CHANGELOG_FINGERPRINT: seq=222 file=CHICLA_PROJECT_STATUS-222.md app_sha256_12=065d37032ef1 changelog_sha256_12=ee9137ac1827 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=223 file=CHICLA_PROJECT_STATUS-223.md app_sha256_12=065d37032ef1 changelog_sha256_12=a1cd4917a49f (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 219 — the last Windows red: a test left a zip handle open, test only (v0.0.222)
+
+- Task (Rodrigo sent `logs_107239612420.zip`, the CI of the round 218 tree). Everything green except `chicla-zip` on Windows Node 18 and 20, 1 red each (Node 22: 0 red, 816 tests, 777 pass, 39 skipped; `chicla-kit` 231 of 231 on the three; Ubuntu 1376 pass, macOS 1364 pass, bench ratio 1.4x, `pack` and `pack-kit` green). The red is the same `ENOTEMPTY` in the `after` hook of `zip64-locator-fit.test.mjs`, now after about 0.9 s of retries: the retries of round 218 were not enough because the cause is not a flake. The test «ZIP-019: a normal zip64 archive… is read» called `openZip(p)` and never closed the handle; on Windows an open file keeps its folder from being removed. Now `openZip(p).close()`. `openZip` itself closes its descriptor when it refuses a zip (read in `zipkit.mjs`), and no other test has a bare `openZip(…);`.
+- Files: `packages/chicla-zip/test/zip64-locator-fit.test.mjs` only (9 of 9 on Linux). No source changed, `zipkit.mjs` sha256 still `89478bbe…`, the pin did not move.
+- NOT seen: Windows (the next CI log shows it), Node 18 and 20 locally, `npm run smoke`, mutants. Whole `npm test` is reported in the reply.
 
 ## Round 218 — the Windows cleanup and path patterns fixed in every test, tests only (v0.0.221)
 

@@ -48,7 +48,7 @@ const twoRecords = () => {
 test('ZIP-019: a normal zip64 archive (the record ends at its locator) is read', () => {
   const p = put(one());
   assert.deepEqual(names(p), ['good.txt']);
-  openZip(p);
+  openZip(p).close(); // the handle must be closed: on Windows an open file keeps the folder from being removed (ENOTEMPTY, CI round 217)
 });
 
 test('ZIP-019: the fixture of a normal zip64 archive is read the same by Python', { skip: !havePython }, () => {
