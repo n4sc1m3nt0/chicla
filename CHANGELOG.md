@@ -1,5 +1,14 @@
-<!-- CHANGELOG_FINGERPRINT: seq=233 file=CHICLA_PROJECT_STATUS-233.md app_sha256_12=065d37032ef1 changelog_sha256_12=dd1e677b2ea5 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=234 file=CHICLA_PROJECT_STATUS-234.md app_sha256_12=065d37032ef1 changelog_sha256_12=442d889b98bf (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
+
+## Round 230 — the release recorded (v0.0.233)
+
+- Task (Rodrigo published both 0.1.0 packages and closed G-C6, then pasted `npm view`, sha256, tag and release output for Claude to check). Docs and one test only. Test first (3 red).
+- Seen by Claude: `npm view` 0.1.0 for both; sha256 of `npm pack chicla-kit@0.1.0` = the checked file; tags `chicla-zip-v0.1.0` and `chicla-kit-v0.1.0` on origin; both releases listed. NOT seen: the same sha256 comparison for `chicla-zip`.
+- `README.md`, `packages/chicla-zip/README.md`, `packages/chicla-kit/README.md` (status line and the C13.5 sentence) and `SECURITY.md` (supported versions) no longer say pre-release or not published; `docs/release.md`: `npm publish ./dist/x.tgz` (npm reads `dist/x.tgz` as a GitHub shorthand, `EALLOWGIT`) and a «Published (round 230)» paragraph. `test/release-docs.test.mjs`: the kit README test now expects «`0.1.0`, published on npm», the runbook pin has `./`, and a new test fails if any of the four documents says the release is pending.
+- Found and fixed: after round 229 the root README still said the kit was `0.0.0` and not releasable.
+- Files: those, the status file, this CHANGELOG, `package.json` version. No source, nothing pinned touched.
+- NOT run by Claude: Node 18 and 20, `npm run smoke`, `npm run mutants`, CI; `npm publish`, tags and releases were Rodrigo's.
 
 ## Round 229 — `chicla-kit` 0.1.0 (v0.0.232)
 

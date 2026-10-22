@@ -4,7 +4,7 @@ Project memory for coding agents that survives sessions, accounts and usage limi
 
 An agent forgets everything between sessions. Chicla makes the repository itself the memory: a status file, fingerprints that prove the files belong together, a verified delivery zip, and an emergency dump that can restore the work when a session is cut off.
 
-> **Status: pre-release.** `chicla-zip` is at `0.1.0` in this repository and ready to release, but it is **not published yet**: npm only holds the `0.0.0` placeholders, and publishing is the owner's step ([`docs/release.md`](docs/release.md)). `chicla-kit` is at `0.0.0` and not releasable yet. The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). Only the owner publishes; the licence is decided (Apache-2.0).
+> **Status: released.** `chicla-zip` and `chicla-kit` are published on npm at `0.1.0` (tags `chicla-zip-v0.1.0` and `chicla-kit-v0.1.0`, each with a GitHub release; the owner published them on 2026-10-22). The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). Only the owner publishes; the licence is decided (Apache-2.0).
 
 ## What is in here
 

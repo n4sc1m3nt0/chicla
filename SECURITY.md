@@ -6,8 +6,8 @@ Chicla has two packages with different security surfaces: `chicla-zip` reads zip
 
 | Package | Supported |
 | --- | --- |
-| `chicla-zip` | the latest `0.1.x` once it is published; before that, the code on `main` |
-| `chicla-kit` | none yet: it is pre-release and has not been published |
+| `chicla-zip` | the latest `0.1.x` |
+| `chicla-kit` | the latest `0.1.x` |
 
 Only the latest release of each package is fixed. This is a side project run by one person: reports are read and answered on a best-effort basis, with no fixed deadline.
 

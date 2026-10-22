@@ -4,7 +4,9 @@ Only Rodrigo publishes (login and two-factor authentication): the AI never runs 
 
 The tag name is proposed in D116: one tag per package, `chicla-zip-v0.1.0` and later `chicla-kit-v0.1.0`, because the two packages are versioned apart (D4). If D116 is changed, change the tag in steps 5 and 6 only.
 
-## Where the release stands (round 216)
+## Where the release stands (round 230)
+
+**Published (round 230):** Rodrigo published `chicla-zip` 0.1.0 and `chicla-kit` 0.1.0 on 2026-10-22 and closed G-C6. Claude saw (pasted by him): `npm view` says `0.1.0` for both; the sha256 of `npm pack chicla-kit@0.1.0` equals the checked `.sha256` file (`44046aea…9410`); the tags `chicla-zip-v0.1.0` and `chicla-kit-v0.1.0` exist on `origin` (same commit `ddad586b`); both GitHub releases are listed. Not seen by Claude: the same comparison for `chicla-zip` (its published sha256 is `14eb0ae3…4795`). One lesson for the next release: write the file as `./dist/x.tgz`, because npm reads `dist/x.tgz` as a GitHub shorthand and stops with `EALLOWGIT`. The list below is what stood between the tree and the tag; every item is done.
 
 What is still between the tree and the tag, in order. Claude keeps this list true; Rodrigo marks the gates.
 
@@ -57,7 +59,7 @@ Known limits to carry in the release notes (all in `SECURITY.md` or `docs/zip-ha
    ```
    npm login            # browser or one-time password; the account that owns the placeholder
    npm whoami           # must be the owner of chicla-zip
-   npm publish dist/chicla-zip-0.1.0.tgz --access public     # npm asks for the two-factor code (or add --otp=<code>)
+   npm publish ./dist/chicla-zip-0.1.0.tgz --access public     # npm asks for the two-factor code (or add --otp=<code>)
    ```
    A published version cannot be published again, so do this last, and only when steps 3 and 4 passed.
 9. **Check what npm serves.**
@@ -118,7 +120,7 @@ The tag is `chicla-kit-v0.1.0` (D116). Same rules as above: the AI never runs `n
 7. **Publish to npm.** The file you checked is the file you publish.
    ```
    npm whoami                                               # the account that owns the chicla-kit name (npm view chicla-kit shows the owner; a free name is created by the first publish)
-   npm publish dist/chicla-kit-0.1.0.tgz --access public    # npm asks for the two-factor code (or add --otp=<code>)
+   npm publish ./dist/chicla-kit-0.1.0.tgz --access public    # npm asks for the two-factor code (or add --otp=<code>)
    ```
    A published version cannot be published again: last, and only when steps 3 and 4 passed.
 8. **Check what npm serves.**

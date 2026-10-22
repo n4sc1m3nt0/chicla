@@ -33,7 +33,8 @@ test('chicla-kit README documents every subcommand of the CLI and the exit codes
   assert.ok(names.length >= 6, 'the CORES table was not parsed');
   for (const n of names) assert.ok(readme.includes('chicla ' + n), `the README does not document «chicla ${n}»`);
   assert.match(readme, /Exit codes/);
-  assert.match(readme, /not released|pre-release/i, 'the README must not claim a release that does not exist');
+  assert.match(readme, /`0\.1\.0`, published on npm/, 'round 230: the kit is published at 0.1.0 and its README says so');
+  assert.doesNotMatch(readme, /not published yet|pre-release|cannot be installed alone/i, 'no stale pre-release wording');
 });
 
 test('docs/release.md: the G-C6 runbook has the steps that only Rodrigo can do, and never says the AI publishes', () => {
@@ -57,7 +58,7 @@ const kitSection = () => { const s = read('docs/release.md'); const i = s.indexO
 
 test('docs/release.md: the chicla-kit runbook has its own tag, artifact, tarball, checks and the npm steps, and chicla-zip goes out first', () => {
   const k = kitSection();
-  for (const part of ['chicla-kit-v0.1.0', 'chicla-kit-tarball', 'pack-kit', 'chicla-kit-0.1.0.tgz', 'sha256sum -c', 'tar -tzf', 'npm whoami', 'npm publish dist/chicla-kit-0.1.0.tgz', 'gh release create chicla-kit-v0.1.0', 'npm view chicla-kit version', 'pack-release.mjs packages/chicla-kit', 'two-factor', 'bump-round --verify', 'chicla update', '`0.0.0`']) assert.ok(k.includes(part), `missing in the kit section: ${part}`);
+  for (const part of ['chicla-kit-v0.1.0', 'chicla-kit-tarball', 'pack-kit', 'chicla-kit-0.1.0.tgz', 'sha256sum -c', 'tar -tzf', 'npm whoami', 'npm publish ./dist/chicla-kit-0.1.0.tgz', 'gh release create chicla-kit-v0.1.0', 'npm view chicla-kit version', 'pack-release.mjs packages/chicla-kit', 'two-factor', 'bump-round --verify', 'chicla update', '`0.0.0`']) assert.ok(k.includes(part), `missing in the kit section: ${part}`);
   assert.match(k, /\*\*`chicla-zip` goes out first\*\*/);
   assert.ok(k.indexOf('chicla-zip` 0.1.0 is published') > 0 && k.indexOf('chicla-zip` 0.1.0 is published') < k.indexOf('### Steps'), 'the zip comes before the kit steps');
   assert.match(k, /AI never runs `npm publish`/);
@@ -72,4 +73,15 @@ test('docs/release.md: every `chicla` command and script the kit runbook names e
   for (const c of new Set([...k.matchAll(/npx --no-install chicla (\S+)/g)].map((m) => m[1]))) assert.ok(c === '--help' || help.includes(`  ${c} `), `the runbook runs «chicla ${c}», which the help does not list`);
   assert.ok(existsSync(join(root, 'scripts/pack-release.mjs')));
   assert.match(k, /unrelated `chicla` placeholder/);
+});
+
+test('round 230: after the publication of both 0.1.0 packages no document still says they are unpublished', () => {
+  const stale = /not published (to npm )?yet|ready to release|pre-release|not releasable|none yet|has not been published/i;
+  for (const f of ['README.md', 'packages/chicla-zip/README.md', 'packages/chicla-kit/README.md', 'SECURITY.md']) assert.doesNotMatch(read(f), stale, `${f} still says the release is pending`);
+  assert.match(read('README.md'), /published on npm at `0\.1\.0`/);
+  assert.match(read('packages/chicla-zip/README.md'), /`0\.1\.0`, published on npm/);
+  assert.match(read('SECURITY.md'), /\| `chicla-kit` \| the latest `0\.1\.x`/);
+  const rel = read('docs/release.md');
+  assert.ok(!/npm publish dist\//.test(rel), 'npm reads «dist/x.tgz» as a GitHub shorthand and refuses it (EALLOWGIT): the runbook says «./dist/x.tgz»');
+  assert.ok(rel.includes('npm publish ./dist/chicla-zip-0.1.0.tgz') && rel.includes('Published (round 230)'));
 });
