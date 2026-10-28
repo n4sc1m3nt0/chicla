@@ -347,13 +347,12 @@ ${errors.length ? `\n## Errors while generating this report (the zip was created
     } else symlinkSync(WORK, join(stage, "work"));
     mkdirSync(join(stage, "RECOVER")); for (const [name, data] of Object.entries(toolData)) writeFileSync(join(stage, name), data);
     if (includeOutputs) symlinkSync(OUTDIR, join(stage, "outputs"));
-    const tmpZip = join(tmpdir(), zipName);
-    rmSync(tmpZip, { force: true });
+    const tmpZip = join(stage, zipName); // inside this run's own mkdtemp folder: the name has one-second resolution, so a shared tmpdir() name let two dumps in the same second delete each other's archive (members are listed explicitly, so it is never packed into itself)
     const members = ["RECOVERY_MARKER.json", "RECOVERY_REPORT.md", "RECOVER", "work", ...(includeOutputs ? ["outputs"] : [])];
     let r = spawnSync("zip", ["-qr", tmpZip, ...members, "-x", ...EX, ...HOME_EX], { cwd: stage, stdio: ["ignore", "ignore", "pipe"], encoding: "utf8" }); relay(r);
     if (r.status !== 0 && r.status !== 18) { // 18 = some unreadable files; the zip exists anyway
       finalName = zipName.replace(/\.zip$/, ".tar.gz"); // fallback: tar.gz (follows symlinks), in case `zip` does not exist
-      const tmpTar = join(tmpdir(), finalName);
+      const tmpTar = join(stage, finalName);
       r = spawnSync("tar", ["-czhf", tmpTar, ...EX.filter((x) => !x.startsWith("*.")).map((x) => `--exclude=${x.replace(/^\*\//, "").replace(/\/\*$/, "")}`), "--exclude=*.zip", "--exclude=*.pyc", `--exclude=*.${ci("pem")}`, "--exclude=*.tsbuildinfo", "--exclude=.DS_Store", "--exclude=.env", "--exclude=.env.*", ...homeDots.map((n) => `--exclude=work/${n.replace(/[*?[\]]/g, "?")}`), "-C", stage, ...members], { stdio: ["ignore", "ignore", "pipe"], encoding: "utf8", env: { ...process.env, COPYFILE_DISABLE: "1" } }); relay(r); // COPYFILE_DISABLE: macOS bsdtar would add an AppleDouble «._name» member for every file or folder with extended attributes
       if (r.status !== 0) { rmSync(stage, { recursive: true, force: true }); return fail("EDUMP_FAILED", "✗ neither the chicla-zip writer, zip nor tar worked — dump NOT created."); }
       copyFileSync(tmpTar, join(OUTDIR, finalName)); rmSync(tmpTar, { force: true });

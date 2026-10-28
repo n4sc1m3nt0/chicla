@@ -1,7 +1,15 @@
-<!-- CHANGELOG_FINGERPRINT: seq=279 file=CHICLA_PROJECT_STATUS-279.md app_sha256_12=065d37032ef1 changelog_sha256_12=b3ce0a44cca8 (bump-round.mjs: app hash unchanged, changelog hash recomputed; docs only: G-C14 marked done by Rodrigo; ROADMAP C18.2 row fixed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=280 file=CHICLA_PROJECT_STATUS-280.md app_sha256_12=065d37032ef1 changelog_sha256_12=897e9ae4bcc2 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now., `CHANGELOG-archive-rounds-220-230.md`, `CHANGELOG-archive-rounds-231-241.md`, `CHANGELOG-archive-rounds-242-253.md`, `CHANGELOG-archive-rounds-254-263.md`
+
+## Round 275 — emergency-dump: the zip/tar fallback no longer shares a temp name between processes (v0.0.279)
+
+- Task (Rodrigo: the CI of the round 274 tree, `logs_110353174996.zip`; `test (ubuntu-latest, 18)` red once, green on his re-run). Test 1319 (`emergency-dump (tar path)…`, `dump-secret-content.test.mjs`) failed with `ENOENT … copyfile '/tmp/chicla-EMERGENCY-afterRoundunknown-…150744.tar.gz'`; the other 11 jobs were green. Cause: the fallback built its archive at `tmpdir()/<name>`, a name with one-second resolution that every process shares; `node --test` runs files in parallel, and two dumps in the same second removed each other's archive (the zip path also did `rmSync(tmpZip)` before creating it). Not a Node 18 problem.
+- Test first: `test/emergency-dump-concurrent.test.mjs` (2, zip and tar): 8 dumps at once, same second, one shared `TMPDIR`, the chicla-zip writer broken so each takes the external path; all must exit 0 with one archive each and leave nothing in the shared `TMPDIR`. Red 3 of 3 before (the same ENOENT), green 3 of 3 after.
+- Fix, one source file: `packages/chicla-kit/src/emergency-dump.mjs` builds `tmpZip` and `tmpTar` inside the run's own `mkdtemp` stage (removed at the end) and no longer deletes a shared name; the members are listed explicitly, so the archive is never packed into itself. The pin did not move.
+- Run by Claude (Node 22, Linux, 2 cores): the whole `npm test` after `bump-round`: 1656 tests, 1654 pass, 0 fail, 2 skipped (624 s); `check-build` and the whole `npm run smoke` green; kit mutants `K-DMP-04` to `K-DMP-09` (the fallback entries) one by one, all RED. The first whole run had 2 red (`plan-a1-docs`, `plan-a2-docs`: they require «A-2 … closed» and `D-270a` in the live «Next up», and the rolling archive had moved that clause out); the sentence is back in the round 275 clause, `--refresh`, the whole suite again green. Those two tests break whenever that clause rotates out: reported, not changed.
+- NOT run by Claude: the CI, Node 18 and 20 (the failing job's version), macOS, Windows, the other 3 kit mutant entries of `emergency-dump.mjs` (`K-DMP-01` to `-03`, the `allow` release, not touched), the zip list, the whole kit list.
 
 ## Round 274 — C20.7: `npm run mutants` passes its baseline with no TMPDIR trick (v0.0.278)
 

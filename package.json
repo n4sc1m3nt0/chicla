@@ -1,7 +1,7 @@
 {
   "name": "chicla",
   "private": true,
-  "version": "0.0.278",
+  "version": "0.0.279",
   "type": "module",
   "workspaces": ["packages/*"],
   "engines": { "node": ">=18" },

@@ -8,11 +8,11 @@ CHANGELOG-archive-rounds-220-230.md	122be9ab	15455
 CHANGELOG-archive-rounds-231-241.md	53f1115f	19930
 CHANGELOG-archive-rounds-242-253.md	6309f809	19156
 CHANGELOG-archive-rounds-254-263.md	b3a8c7c8	17515
-CHANGELOG.md	8d397860	17502
-CHICLA_PROJECT_STATUS-279.md	acf55965	46002
+CHANGELOG.md	2f76f06a	19656
+CHICLA_PROJECT_STATUS-280.md	835ec093	46274
 CLAUDE.md	ee50c915	6578
 CONTRIBUTING.md	17331dd2	2343
-FILES.baseline.json	9915474f	54314
+FILES.baseline.json	1c0510ce	54314
 LICENSE	1ea3b7b0	10174
 README.md	66e0f166	10844
 ROADMAP.md	70bd0195	177071
@@ -59,6 +59,7 @@ docs/status-archive-done-261-261.md	cb66bba5	1422
 docs/status-archive-done-262-262.md	5bfe9383	1024
 docs/status-archive-done-263-263.md	63bf2653	1656
 docs/status-archive-done-264-264.md	3902feeb	1300
+docs/status-archive-done-265-265.md	1c94c318	1410
 docs/status-archive-previous-123-233.md	6d7605af	35356
 docs/status-archive-previous-233b-234.md	e885b55d	1374
 docs/status-archive-previous-235-243.md	8c0a2551	3860
@@ -87,6 +88,7 @@ docs/status-archive-previous-265-265.md	3c8787c3	922
 docs/status-archive-previous-266-266.md	1cfe6123	727
 docs/status-archive-previous-267-267.md	f41e73e1	709
 docs/status-archive-previous-268-268.md	68a9e541	786
+docs/status-archive-previous-269-269.md	1c199f54	708
 docs/status-archive-rolling-135-246.md	5f87068d	21508
 docs/status-archive-rolling-247-253.md	df871027	5092
 docs/status-archive-rolling-254-259.md	852ce075	4262
@@ -97,10 +99,11 @@ docs/status-archive-rolling-268-268.md	8e8fccbb	1294
 docs/status-archive-rolling-269-269.md	99c31e6e	1342
 docs/status-archive-rolling-270-270.md	60eb829d	1759
 docs/status-archive-rolling-271-271.md	a848ee9a	1323
+docs/status-archive-rolling-272-272.md	905db823	1368
 docs/zip-handling.md	4ee06488	28560
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	e579f622	744
+package.json	517b4395	744
 packages/chicla-kit/LICENSE	1ea3b7b0	10174
 packages/chicla-kit/README.md	d8a81e66	6421
 packages/chicla-kit/mutants/list.mjs	1b534f1c	27321
@@ -110,7 +113,7 @@ packages/chicla-kit/src/bump-round.mjs	4849d744	17872
 packages/chicla-kit/src/check-build.mjs	c2ba103f	3493
 packages/chicla-kit/src/check-manifest.mjs	9f271442	11479
 packages/chicla-kit/src/cli.mjs	23ec5d7a	15829
-packages/chicla-kit/src/emergency-dump.mjs	40023b87	34085
+packages/chicla-kit/src/emergency-dump.mjs	d166015e	34273
 packages/chicla-kit/src/init.mjs	eb2e695c	4886
 packages/chicla-kit/src/integrity.mjs	b852e6fa	7448
 packages/chicla-kit/src/make-delivery.mjs	cf1270f9	8375
@@ -289,6 +292,7 @@ test/dump-project-only.test.mjs	48dcd97d	8278
 test/dump-secret-content.test.mjs	1f03967b	17201
 test/dump-sentence.test.mjs	e895f073	3063
 test/emergency-collisions.test.mjs	2d329d0b	3423
+test/emergency-dump-concurrent.test.mjs	893f6c81	3708
 test/emergency-dump-nozip.test.mjs	8549aebd	7163
 test/emergency-fallback.test.mjs	acae02bb	11107
 test/emergency-home-dotfiles.test.mjs	5c614e0d	9828
@@ -343,4 +347,4 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-version.mjs	8ff16ce2	597
+version.mjs	e442b450	531
