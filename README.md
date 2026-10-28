@@ -4,7 +4,7 @@ Project memory for coding agents that survives sessions, accounts and usage limi
 
 An agent forgets everything between sessions. Chicla makes the repository itself the memory: a status file, fingerprints that prove the files belong together, a verified delivery zip, and an emergency dump that can restore the work when a session is cut off.
 
-> **Status: released.** `chicla-zip` and `chicla-kit` are published on npm at `0.1.0` (tags `chicla-zip-v0.1.0` and `chicla-kit-v0.1.0`, each with a GitHub release; the owner published them on 2026-10-22). The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). Only the owner publishes; the licence is decided (Apache-2.0).
+> **Status: released.** `chicla-zip` and `chicla-kit` are published on npm at `0.1.0` (tags `chicla-zip-v0.1.0` and `chicla-kit-v0.1.0`, each with a GitHub release; the owner published them on 2026-10-22). The tree is at `0.1.1` for both (round 276: `chicla-zip` changes its README only, `chicla-kit` carries the fixes of rounds 231 to 275); the runbook is in [`docs/release.md`](docs/release.md) and only the owner publishes it. The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). Only the owner publishes; the licence is decided (Apache-2.0).
 
 ## What is in here
 
@@ -12,7 +12,7 @@ Chicla has two pieces, in `packages/`:
 
 | Package | What it is | State |
 | --- | --- | --- |
-| [`chicla-zip`](packages/chicla-zip/README.md) | Read, verify, safely extract, **write** and repair zips, with correct UTF-8 names in every reader. | Library and CLI built and tested; `0.1.0` ready, not yet published (waits for G-C5 and G-C6) |
+| [`chicla-zip`](packages/chicla-zip/README.md) | Read, verify, safely extract, **write** and repair zips, with correct UTF-8 names in every reader. | Library and CLI built and tested; published on npm (`0.1.0`; `0.1.1` prepared, README only) |
 | `chicla-kit` | The workflow: state file, fingerprints, "never leaves" policy, manifest, verified delivery, `/dump` and recovery. Ships the `chicla` command. | Six subcommands built; the cores are being moved from `scripts/` into the package, one slice at a time (`check-build` and `check-manifest` are done) |
 
 The kit depends on `chicla-zip` only through its public API.

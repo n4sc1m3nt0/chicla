@@ -4,6 +4,27 @@ Only Rodrigo publishes (login and two-factor authentication): the AI never runs 
 
 The tag name is proposed in D116: one tag per package, `chicla-zip-v0.1.0` and later `chicla-kit-v0.1.0`, because the two packages are versioned apart (D4). If D116 is changed, change the tag in steps 5 and 6 only.
 
+## Releasing 0.1.1 (round 276, D146)
+
+Both packages are at `0.1.1` in the tree; `0.1.0` of each is on npm since round 230. What is new, measured against the published tarballs: **`chicla-zip` 0.1.1 is a README only release** (`src/zipkit.mjs` is byte-identical to 0.1.0; the npm page still says «not published yet»), and **`chicla-kit` 0.1.1** carries the fixes of rounds 231 to 275 in nine sources (the one that matters most: two `emergency-dump` runs in the same second no longer delete each other's archive). The kit keeps `"chicla-zip": "^0.1.0"`, so it works with either zip version. Only Rodrigo publishes: the AI never runs `npm publish`, `git tag` or `gh release create`. Publish `chicla-zip` first, then `chicla-kit`; the same steps twice. Tags: `chicla-zip-v0.1.1` and `chicla-kit-v0.1.1`.
+
+1. **Push** the delivery (copy it over the clone, `git rm` any old `CHICLA_PROJECT_STATUS-*.md` the check lists) and wait for CI: all 12 jobs green, `pack` and `pack-kit` included.
+2. **Download** `chicla-zip-tarball` and `chicla-kit-tarball` from **Artifacts** into `dist/`.
+3. **Check** each one (`cd dist`): `sha256sum -c chicla-zip-0.1.1.tgz.sha256` and `sha256sum -c chicla-kit-0.1.1.tgz.sha256` (macOS: `shasum -a 256 -c`), then `tar -tzf chicla-zip-0.1.1.tgz` and `tar -tzf chicla-kit-0.1.1.tgz` list only the shipped files.
+4. **Try it in an empty folder:** `npm init -y && npm install /path/to/dist/chicla-zip-0.1.1.tgz`, then the same for the kit and `npx --no-install chicla --help`, `npx --no-install chicla init` in a new folder, `npx --no-install chicla bump-round --verify`.
+5. **Tag and release**, `chicla-zip` first, then the kit:
+   ```
+   git tag -a chicla-zip-v0.1.1 -m "chicla-zip 0.1.1" && git push origin chicla-zip-v0.1.1
+   node scripts/pack-release.mjs packages/chicla-zip --out dist2 > notes-zip.md      # its sha256 must equal the one in dist/; if not, stop
+   gh release create chicla-zip-v0.1.1 dist/chicla-zip-0.1.1.tgz dist/chicla-zip-0.1.1.tgz.sha256 --title "chicla-zip 0.1.1" --notes-file notes-zip.md
+   git tag -a chicla-kit-v0.1.1 -m "chicla-kit 0.1.1" && git push origin chicla-kit-v0.1.1
+   node scripts/pack-release.mjs packages/chicla-kit --out dist3 > notes-kit.md      # same rule
+   gh release create chicla-kit-v0.1.1 dist/chicla-kit-0.1.1.tgz dist/chicla-kit-0.1.1.tgz.sha256 --title "chicla-kit 0.1.1" --notes-file notes-kit.md
+   ```
+6. **Publish** (login and two-factor, irreversible; write `./dist/`, never `dist/`, or npm stops with `EALLOWGIT`): `npm whoami`, then `npm publish ./dist/chicla-zip-0.1.1.tgz --access public`, check it (step 7), and only then `npm publish ./dist/chicla-kit-0.1.1.tgz --access public`; npm asks for the two-factor code (or add `--otp=<code>`).
+7. **Check what npm serves:** `npm view chicla-zip version` and `npm view chicla-kit version` say `0.1.1`; `npm pack chicla-zip chicla-kit --pack-destination .` in a scratch folder gives files whose `sha256sum` equal the `.sha256` lines; `npm install chicla-kit` in an empty folder and `npx --no-install chicla --help` work. If a hash differs, tell Claude before using the package.
+8. **Record it:** tell Claude «chicla-zip 0.1.1 and chicla-kit 0.1.1 published» with the tags. Rodrigo marks any gate; the AI never does.
+
 ## Where the release stands (round 230)
 
 **Published (round 230):** Rodrigo published `chicla-zip` 0.1.0 and `chicla-kit` 0.1.0 on 2026-10-22 and closed G-C6. Claude saw (pasted by him): `npm view` says `0.1.0` for both; the sha256 of `npm pack chicla-kit@0.1.0` equals the checked `.sha256` file (`44046aea…9410`); the tags `chicla-zip-v0.1.0` and `chicla-kit-v0.1.0` exist on `origin` (same commit `ddad586b`); both GitHub releases are listed. Not seen by Claude: the same comparison for `chicla-zip` (its published sha256 is `14eb0ae3…4795`). One lesson for the next release: write the file as `./dist/x.tgz`, because npm reads `dist/x.tgz` as a GitHub shorthand and stops with `EALLOWGIT`. The list below is what stood between the tree and the tag; every item is done.

@@ -1,7 +1,14 @@
-<!-- CHANGELOG_FINGERPRINT: seq=280 file=CHICLA_PROJECT_STATUS-280.md app_sha256_12=065d37032ef1 changelog_sha256_12=897e9ae4bcc2 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=281 file=CHICLA_PROJECT_STATUS-281.md app_sha256_12=065d37032ef1 changelog_sha256_12=34041d1484b2 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 276: release 0.1.1) -->
 # Changelog
 
 Archived rounds (nothing deleted): `CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now., `CHANGELOG-archive-rounds-220-230.md`, `CHANGELOG-archive-rounds-231-241.md`, `CHANGELOG-archive-rounds-242-253.md`, `CHANGELOG-archive-rounds-254-263.md`
+
+## Round 276 — release 0.1.1 of chicla-zip and chicla-kit prepared (v0.0.280)
+
+- Task (Rodrigo: «faz o passo 1. quero os dois»; D146). Compared with the published 0.1.0 tarballs (`npm pack`): `chicla-zip` `src/zipkit.mjs` is byte-identical, only its README differs; `chicla-kit` has 9 changed sources and a new README, templates identical.
+- Test first: the version tests (`package.test`, `layout`, `pack-release`, `cli-check-manifest`, `release-docs`) expect `0.1.1`; two new tests in `test/release-docs.test.mjs` hold the section «Releasing 0.1.1» (both tags, both tarballs, zip published before the kit, the AI never publishes) and the root README. 12 red first, green after.
+- Change: `"version": "0.1.1"` in both `package.json`, the status line of both READMEs, the root README (it also said `chicla-zip` was not yet published), `docs/release.md` section «Releasing 0.1.1», ROADMAP D146. The kit keeps `"chicla-zip": "^0.1.0"`. No source file, the pin did not move. Housekeeping (item 6): `--status`, `--snapshot`, `--rolling`, verbatim.
+- NOT run by Claude: the CI, Node 18 and 20, macOS, Windows, `npm publish` and the steps after it (Rodrigo's); the mutant lists (no source changed).
 
 ## Round 275 — emergency-dump: the zip/tar fallback no longer shares a temp name between processes (v0.0.279)
 

@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 266-266
+
+Moved out of `CHICLA_PROJECT_STATUS-280.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 266 (2026-10-28; Rodrigo: «aceito tudo. avança»). C20.1 (D-265a, AUDIT-7 F-1): `parseBumpArgs` in the kit core `bump-round.mjs` (called by the thin `scripts/bump-round.mjs`, which a test holds to 24 lines) validates the arguments before anything is written: an unknown option, a stray word, `--note` with no text (or followed by an option) and `--verify` combined with another mode exit 2 with a usage text and change nothing; `--help` and `-h` print it and exit 0; the known forms and the default bump are unchanged. `test/bump-round-options.test.mjs` (4, 2 red first: it runs the script in a copy of the tree and compares the whole tree before and after), a case in `scripts/smoke-test-bump-round.mjs`, kit list `K-BMP-14` to `-17` (4, all red, run one by one; the wrapper's exit codes are held by the test and the smoke case). Two source files, the pin did not move. Not run by Claude: the CI, Node 18 and 20, the 348 mutants of the zip list, macOS, Windows.

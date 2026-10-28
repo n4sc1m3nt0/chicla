@@ -177,7 +177,7 @@ test('cli --help exits 0 and lists the subcommands on stdout', async () => {
 test('the real process: bin entry in package.json, shebang, exit status and --json through `node src/cli.mjs`', () => {
   const pkg = JSON.parse(readFileSync(join(ROOT, 'packages/chicla-kit/package.json'), 'utf8'));
   assert.equal(pkg.bin?.chicla, 'src/cli.mjs');
-  assert.equal(pkg.version, '0.1.0', 'the kit version changes only at its releases (0.1.0 since round 229)');
+  assert.equal(pkg.version, '0.1.1', 'the kit version changes only at its releases (0.1.1 since round 276)');
   assert.ok(readFileSync(CLI, 'utf8').startsWith('#!/usr/bin/env node\n'));
   const T = project();
   try {

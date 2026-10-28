@@ -36,7 +36,7 @@ for (const name of ['chicla-zip', 'chicla-kit']) {
     const dir = `packages/${name}`;
     const pkg = json(`${dir}/package.json`);
     assert.equal(pkg.name, name);
-    assert.equal(pkg.version, '0.1.0'); // chicla-zip is at its release version since round 163, the kit since round 229; neither is published until Rodrigo does it
+    assert.equal(pkg.version, '0.1.1'); // both packages are at 0.1.1 since round 276 (0.1.0 was published in round 230); Rodrigo publishes
     assert.equal(pkg.type, 'module');
     assert.equal(pkg.engines.node, '>=18');
     assert.deepEqual(pkg.dependencies, name === 'chicla-kit' ? { 'chicla-zip': '^0.1.0' } : undefined); // C13.5: the kit reaches chicla-zip by name, the only dependency, and it is ours (D3)

@@ -33,7 +33,7 @@ test('chicla-kit README documents every subcommand of the CLI and the exit codes
   assert.ok(names.length >= 6, 'the CORES table was not parsed');
   for (const n of names) assert.ok(readme.includes('chicla ' + n), `the README does not document «chicla ${n}»`);
   assert.match(readme, /Exit codes/);
-  assert.match(readme, /`0\.1\.0`, published on npm/, 'round 230: the kit is published at 0.1.0 and its README says so');
+  assert.match(readme, /`0\.1\.1`, published on npm/, 'round 276: the kit README names the release it ships with');
   assert.doesNotMatch(readme, /not published yet|pre-release|cannot be installed alone/i, 'no stale pre-release wording');
 });
 
@@ -79,7 +79,7 @@ test('round 230: after the publication of both 0.1.0 packages no document still 
   const stale = /not published (to npm )?yet|ready to release|pre-release|not releasable|none yet|has not been published/i;
   for (const f of ['README.md', 'packages/chicla-zip/README.md', 'packages/chicla-kit/README.md', 'SECURITY.md']) assert.doesNotMatch(read(f), stale, `${f} still says the release is pending`);
   assert.match(read('README.md'), /published on npm at `0\.1\.0`/);
-  assert.match(read('packages/chicla-zip/README.md'), /`0\.1\.0`, published on npm/);
+  assert.match(read('packages/chicla-zip/README.md'), /`0\.1\.1`, published on npm/);
   assert.match(read('SECURITY.md'), /\| `chicla-kit` \| the latest `0\.1\.x`/);
   const rel = read('docs/release.md');
   assert.ok(!/npm publish dist\//.test(rel), 'npm reads «dist/x.tgz» as a GitHub shorthand and refuses it (EALLOWGIT): the runbook says «./dist/x.tgz»');
@@ -97,4 +97,23 @@ test('round 231: the agent matrix says it was read on the vendors\' own pages (G
   assert.match(readme, /Cline and Antigravity[^.]*not (re-)?checked/i, 'the two agents nobody checked on a vendor page stay marked as such');
   const road = read('ROADMAP.md');
   for (const g of ['G-C4', 'G-C10', 'G-C13', 'G-C15']) assert.match(road.split('\n').find((l) => l.startsWith(`| ${g} · `)), /FECHADO por Rodrigo, 2026-10-22/, `${g} in ROADMAP §9`);
+});
+
+// Round 276: the 0.1.1 release of both packages. The runbook section sits BEFORE the 0.1.0 history, the AI never publishes.
+test('round 276: docs/release.md has the 0.1.1 runbook, zip first, kit second, with the AI never publishing', () => {
+  const s = read('docs/release.md');
+  const i = s.indexOf('## Releasing 0.1.1'), j = s.indexOf('## Where the release stands (round 230)');
+  assert.ok(i > 0 && i < j, 'the 0.1.1 section must come before the 0.1.0 history');
+  const sec = s.slice(i, j);
+  for (const part of ['chicla-zip-v0.1.1', 'chicla-kit-v0.1.1', 'chicla-zip-0.1.1.tgz', 'chicla-kit-0.1.1.tgz', 'npm publish ./dist/chicla-zip-0.1.1.tgz', 'npm publish ./dist/chicla-kit-0.1.1.tgz', 'gh release create chicla-zip-v0.1.1', 'gh release create chicla-kit-v0.1.1', 'sha256sum -c', 'npm view chicla-zip version', 'npm view chicla-kit version', 'two-factor', 'npx --no-install chicla']) assert.ok(sec.includes(part), `missing in the 0.1.1 section: ${part}`);
+  assert.ok(sec.indexOf('npm publish ./dist/chicla-zip-0.1.1.tgz') < sec.indexOf('npm publish ./dist/chicla-kit-0.1.1.tgz'), 'chicla-zip is published first');
+  assert.match(sec, /AI never runs `npm publish`/);
+  assert.match(sec, /README only/i, 'it says what is in chicla-zip 0.1.1');
+  assert.match(sec, /emergency-dump/, 'it says what is in chicla-kit 0.1.1');
+});
+
+test('round 276: the root README states both releases and no longer says chicla-zip is unpublished', () => {
+  const r = read('README.md');
+  assert.match(r, /`0\.1\.1`/);
+  assert.doesNotMatch(r, /not yet published|ready, not yet/i);
 });
