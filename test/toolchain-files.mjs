@@ -66,9 +66,12 @@ export const pinnedFile = (root, name) => join(root, pinnedPath(name));
 export const importPinned = (name, root = ROOT) => import(pathToFileURL(pinnedFile(root, name)).href);
 
 // What a fake project needs to run each wrapper (the wrapper, its core in the kit, and the pinned files the core reads).
+// C17.1: `integrity.mjs` (the shared LF rule and status-file regex) is a sibling that check-manifest and bump-round import; it is not pinned.
+export const INTEGRITY = 'packages/chicla-kit/src/integrity.mjs';
 const WRAP = (name, ...pinned) => [`scripts/${name}.mjs`, `packages/chicla-kit/src/${name}.mjs`, ...pinned.map(pinnedPath)];
 export const CHECK_BUILD_COPY = WRAP('check-build');
-export const CHECK_MANIFEST_COPY = WRAP('check-manifest', 'manifest', 'policy');
+export const CHECK_MANIFEST_COPY = [...WRAP('check-manifest', 'manifest', 'policy'), INTEGRITY];
+export const BUMP_ROUND_COPY = ['scripts/bump-round.mjs', 'packages/chicla-kit/src/bump-round.mjs', INTEGRITY];
 export const VERIFY_DELIVERY_COPY = ['scripts/verify-delivery-zip.mjs', 'packages/chicla-kit/src/verify-delivery.mjs', ...['baseline', 'manifest', 'policy'].map(pinnedPath)];
 
 /** The import specifier a source file (project-relative path) uses to reach `target` (project-relative path), e.g. specFrom(core, PINNED.manifest). */

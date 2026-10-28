@@ -42,7 +42,7 @@ test('C5.5b: CI has a separate `pack` job on Linux and one Node version', () => 
 
 test('C5.5b: the pack job runs scripts/pack-release.mjs on chicla-zip and uploads the output, and never publishes', () => {
   assert.match(pack, /node scripts\/pack-release\.mjs packages\/chicla-zip --out [^\n]+/);
-  assert.match(pack, /actions\/upload-artifact@v4/);
+  assert.match(pack, /actions\/upload-artifact@[0-9a-f]{40}/);
   assert.doesNotMatch(ci, /npm publish/);
 });
 
@@ -151,6 +151,29 @@ test('C13.5: CI has a `pack-kit` job on Linux and Node 22 that packs chicla-kit,
   assert.match(packKit, /node-version:\s*22/);
   assert.match(packKit, /node scripts\/pack-release\.mjs packages\/chicla-kit --out [^\n]+/);
   assert.match(packKit, /name:\s*chicla-kit-tarball/);
-  assert.match(packKit, /actions\/upload-artifact@v4/);
+  assert.match(packKit, /actions\/upload-artifact@[0-9a-f]{40}/);
   assert.doesNotMatch(packKit, /secrets\.|npm publish|continue-on-error/);
+});
+
+// C16.2 (round 235, AUDIT-4 S-3 and S-4): the workflow token is read-only and every action is pinned to a commit.
+test('C16.2: ci.yml has a top-level `permissions:` of `contents: read` and no job widens it', () => {
+  const head = ci.split(/^jobs:/m)[0];
+  assert.match(head, /^permissions:\s*\n  contents:\s*read\s*$/m, 'top-level `permissions: contents: read` missing');
+  assert.doesNotMatch(ci, /(write|write-all)\b/, 'no permission may be widened (the artifact upload does not need it)');
+});
+
+test('C16.2: every `uses:` in ci.yml is pinned to a 40-hex commit SHA with the tag in a comment', () => {
+  const uses = ci.split('\n').filter((l) => /^\s*(-\s+)?uses:/.test(l));
+  assert.ok(uses.length >= 10, `expected the workflow's actions, found ${uses.length}`);
+  for (const l of uses) {
+    assert.match(l, /uses:\s*[\w.-]+\/[\w.-]+@[0-9a-f]{40}\s+#\s*v\d+(\.\d+)*\s*$/, `not pinned to a SHA with a tag comment: ${l.trim()}`);
+  }
+});
+
+test('C16.2: .github/dependabot.yml updates `github-actions` from the repository root', () => {
+  const d = readFileSync(join(root, '.github/dependabot.yml'), 'utf8');
+  assert.match(d, /^version:\s*2\s*$/m);
+  assert.match(d, /package-ecosystem:\s*["']?github-actions["']?\s*$/m);
+  assert.match(d, /directory:\s*["']?\/["']?\s*$/m);
+  assert.match(d, /interval:\s*["']?(weekly|monthly)["']?\s*$/m);
 });

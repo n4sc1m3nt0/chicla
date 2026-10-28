@@ -1,6 +1,6 @@
-// C12.5: the agent matrix. An agent enters only when the file it reads was confirmed in a source (2026-10-17: a third-party survey of each tool's
-// documentation, NOT the vendors' own pages, so gate G-C15 is Rodrigo's). `default: true` = `chicla init` writes the file for everybody; the others are
-// added by `chicla init --agent <name>`. Cursor, Cline and Antigravity read AGENTS.md as well, so they need no entry of their own.
+// C12.5: the agent matrix. An agent enters only when the file it reads was confirmed in a source. Round 167 used a survey; on 2026-10-22 (round 231, gate G-C15, closed
+// by Rodrigo) the four entries and Cursor and Windsurf were read on the vendors' own pages (code.claude.com, learn.chatgpt.com, geminicli.com, docs.github.com, cursor.com, docs.devin.ai).
+// `default: true` = `chicla init` writes the file for everybody; the others are added by `chicla init --agent <name>`. Cursor and Windsurf read AGENTS.md as well, so they need no entry of their own.
 export const AGENTS = {
   claude: { file: "CLAUDE.md", template: "CLAUDE.md", default: true },
   codex: { file: "AGENTS.md", template: "AGENTS.md", default: true },

@@ -230,3 +230,27 @@ test('highlights: the active tab is in blue letters, each key of the footer in w
     for (const l of on) { assert.ok(!/\u001b(?!\[[0-9;]*m)/.test(l), `broken escape: ${JSON.stringify(l)}`); assert.ok(!BG.test(l), `no background colour: ${JSON.stringify(l)}`); }
   }
 });
+
+// C18.7 (round 255, AUDIT-5 F-4): panel.mjs line 123, `else return;`: a key the panel does not know neither redraws nor moves.
+test('a key the panel does not know (a letter, an up arrow, a space) draws nothing and keeps the page; the next →, ← still work from that page', async () => {
+  const { W, P } = world({ zips: [['chicla-round2-2026-01-02.zip', 2000]] });
+  try {
+    const r = await launch(P);
+    r.clear(); r.stdin.send('\u001b[C'); assert.match(screen(r.out), /G-C2/, 'page 2 (gates)');
+    for (const k of ['x', '\u001b[A', ' ', 'Z']) { r.clear(); r.stdin.send(k); assert.equal(r.out, '', `no redraw for ${JSON.stringify(k)}`); }
+    r.clear(); r.stdin.send('\u001b[C'); assert.match(screen(r.out), /D7/, 'still on page 2: the next → shows page 3');
+    r.stdin.send('q'); assert.equal(await settled(r.p), 0);
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
+});
+
+test('r reads the project again: a status file edited while the panel is open shows after r, and not before (K-PNL-02)', async () => {
+  const { W, P } = world();
+  try {
+    const r = await launch(P);
+    assert.match(screen(r.out), /v1\.2\.3/);
+    writeFileSync(join(P, 'CHICLA_PROJECT_STATUS-7.md'), STATUS.replace('v1.2.3', 'v9.9.9'));
+    r.clear(); r.stdin.send('\u001b[C'); r.stdin.send('\u001b[D'); assert.match(screen(r.out), /v1\.2\.3/, 'not read again without r');
+    r.clear(); r.stdin.send('r'); assert.match(screen(r.out), /v9\.9\.9/, 'read again after r');
+    r.stdin.send('q'); assert.equal(await settled(r.p), 0);
+  } finally { rmSync(W, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
+});

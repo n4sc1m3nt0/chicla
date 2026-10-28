@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 244-244
+
+Moved out of `CHICLA_PROJECT_STATUS-258.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 244 (2026-10-26; Rodrigo: «avança»). C17.2 (D140): `integrity.mjs` got the `TOOLCHAIN` map (out of `bump-round`), `PIN_RE`, `FP`, `PARA`, `checkPin`, `checkState` and `checkIntegrity` (pure; the caller passes `sha256`); `bump-round --verify` is one call to it (the same nine rows, same order); `verify-delivery` calls it on the zip with its own reader and a failing row is a problem `EINTEGRITY_LF`, `_PIN`, `_FINGERPRINT` or `_STATE` (the experiment of the plan §2 now ends in a rejected zip; a zip without `version.mjs` skips the fingerprint rows, D-242c). `core-integrity-state.test.mjs` (21, 17 red first), 16 hand mutants red, the four `pinned-*-move` tests and `policy.test.mjs` read the map from `integrity.mjs`. Three source files, the pin did not move. Run: the whole `npm test` before the closing docs (1512, 1 fail fixed in `policy.test.mjs`), `test:fast` and `smoke` after the bump, Node 22 on Linux. Not run by Claude: the CI, Node 18/20, mutants (package list), macOS, Windows.

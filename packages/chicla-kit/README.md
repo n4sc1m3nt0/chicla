@@ -36,7 +36,7 @@ Exit codes: `0` ok · `1` the check failed (for `dump`: no dump was made; for `r
 
 ## What it does not do
 
-It does not publish anything, does not merge your local edits into a template (`update` shows the diff and replaces whole files only), and does not support Windows. Fingerprints, CRC32 and the toolchain digest are integrity checks, not authenticity.
+It does not publish anything, does not merge your local edits into a template (`update` shows the diff and replaces whole files only), and does not support Windows. Fingerprints, CRC32 and the toolchain digest are integrity checks, not authenticity (the rules about the project's own state are in `docs/integrity.md` of the repository).
 
 Licence: Apache-2.0.
 
@@ -51,4 +51,4 @@ Licence: Apache-2.0.
 | `gemini` | `GEMINI.md` | added by the flag |
 | `copilot` | `.github/copilot-instructions.md` | added by the flag; the folder `.github/` is created if missing |
 
-Only agents whose file was confirmed enter this table (read on 2026-10-17 in a third-party survey of the tools' documentation, not on the vendors' pages: gate G-C15 is Rodrigo's). Cursor, Cline and Antigravity also read `AGENTS.md`, so they need no entry; Windsurf and Continue are not confirmed and are not in the table.
+Only agents whose file was confirmed enter this table (first read in a survey on 2026-10-17, then re-read on the vendors' own pages on 2026-10-22: gate G-C15, closed by the owner). Cursor and Windsurf (now Devin Desktop) read `AGENTS.md` on their vendors' own pages, so they need no entry. Cline and Antigravity are said to read it too, but that was not checked on their pages; Continue is not confirmed and is not in the table.

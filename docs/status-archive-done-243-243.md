@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 243-243
+
+Moved out of `CHICLA_PROJECT_STATUS-257.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 243 (2026-10-26; Rodrigo: «sim» ×4 to D-242a to D-242d, then «avança»). C17.1 (D140): new `packages/chicla-kit/src/integrity.mjs` (pure, no import, not in `RECOVER/`): `STATUS_FILE_RE`, `LF_FILES` and `checkLf(view, {skip})`; `bump-round --verify` uses it (the CLAUDE.md row as before, last; another file of the list prints a row only when it fails, so the nine rows of the real project are unchanged) and `check-manifest` stops with `EINTEGRITY_LF` on CRLF in check and `--write` mode (the manifest and the baseline are skipped on a write); `test/toolchain-files.mjs` gets `INTEGRITY` and `BUMP_ROUND_COPY`. `core-integrity.test.mjs` (13, red first), 10 hand mutants red, two import tests and four copied-scripts filters updated. Three source files (one new), the pin did not move. Run: the whole `npm test` (1491, 0 fail) and `npm run smoke` (green), Node 22 on Linux. Not run by Claude: the CI, Node 18/20, mutants (package list), macOS, Windows.

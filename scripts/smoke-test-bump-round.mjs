@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { CHECK_MANIFEST_COPY, copyFiles, importPinned } from "../test/toolchain-files.mjs";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -151,6 +151,14 @@ try {
     const r = run(proj({ extraStatus: true }));
     assert.equal(r.status, 1);
     assert.match(r.stderr, /exactly 1 CHICLA_PROJECT_STATUS/);
+  });
+
+  t("C20.1: an unknown option (--verfy) exits 2 and renames nothing; --help exits 0 and renames nothing", () => {
+    const p = proj(), before = readdirSync(p.root).sort().join();
+    assert.equal(run(p, "--verfy").status, 2);
+    const h = run(p, "--help");
+    assert.equal(h.status, 0);
+    assert.equal(readdirSync(p.root).sort().join(), before);
   });
 
   console.log(`✓ bump-round: ${passed} checks passed`);

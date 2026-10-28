@@ -95,7 +95,7 @@ const project = (files, polText) => {
   if (polText !== undefined) writeFileSync(join(d, 'chicla.policy.json'), polText);
   return d;
 };
-const manifestOf = (d) => readFileSync(join(d, 'FILES.manifest'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#')).map((l) => l.split('\t')[0]).filter((x) => !x.startsWith('scripts/') && !x.startsWith('packages/chicla-kit/src/pinned/') && x !== 'packages/chicla-kit/src/check-manifest.mjs').sort(); // the copied scripts are not the project under test
+const manifestOf = (d) => readFileSync(join(d, 'FILES.manifest'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#')).map((l) => l.split('\t')[0]).filter((x) => !x.startsWith('scripts/') && !x.startsWith('packages/chicla-kit/src/pinned/') && x !== 'packages/chicla-kit/src/check-manifest.mjs' && x !== 'packages/chicla-kit/src/integrity.mjs').sort(); // the copied scripts are not the project under test
 const FILES = { 'package.json': '{}', 'a.txt': 'a', 'secrets/k.key': 'K', 'x/scratch/s.txt': 's', 'x/keep.txt': 'k', 'dist/o.js': 'o', '.env': 'S=1' };
 
 test('check-manifest --write: without a policy file the list is the built-in one', () => {

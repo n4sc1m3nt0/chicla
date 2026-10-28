@@ -1,0 +1,8 @@
+# C16.2 (AUDIT-4 S-4): the actions in ci.yml are pinned to commit SHAs (tag in a comment);
+# Dependabot proposes the newer SHA as a pull request, and Rodrigo reads it before merging.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

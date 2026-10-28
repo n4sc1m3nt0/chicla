@@ -31,7 +31,7 @@
 // tsbuildinfo, npm caches, .zip files (deliveries already made), .env / .env.* secrets (not the
 // .example/.sample ones) and — W3, the same rules as W2 — .venv/,
 // __pycache__/ and *.pyc (no project-specific folder: D64).
-// C6.3 slice b2 (D73, D76): a file whose CONTENT looks like a secret (private-key header, AWS access key id, GitHub ghp_ / github_pat_, npm npm_) stays out too,
+// C6.3 slice b2 (D73, D76): a file whose CONTENT looks like a secret (private-key header, AWS access key id, GitHub ghp_ / github_pat_, npm npm_, and since C16.5 Slack, Stripe, Google, Anthropic and OpenAI keys) stays out too,
 // in the stream, the external zip and the tar path; the marker (`secretsHeld`), the report and the console name the file and the KIND, never the match.
 // Project root = folder with package.json + FILES.manifest. Known limit: in the tar.gz fallback
 // (only if `zip` does not exist) the .env.example/.sample files are not put back.
@@ -76,6 +76,13 @@ const DETECTORS = [
   ["AWS access key", /(?<![A-Za-z0-9])AKIA[0-9A-Z]{16}(?![A-Za-z0-9])/],
   ["GitHub token", /(?<![A-Za-z0-9])(?:ghp_[A-Za-z0-9]{36}(?![A-Za-z0-9])|github_pat_[A-Za-z0-9_]{22,})/],
   ["npm token", /(?<![A-Za-z0-9])npm_[A-Za-z0-9]{36}(?![A-Za-z0-9])/],
+  // C16.5 (round 239, S-5): five more kinds. Each is anchored (no letter, digit, `_` or `-` just before) and sized, and the ones that could look like prose or a CSS name also need a digit (and an
+  // uppercase letter for `sk-`) within the first 60 characters; the look-aheads are bounded, so a hostile file of 1 MiB cannot make the scan slow. Stripe test keys and publishable keys are not secrets.
+  ["Slack token", /(?<![A-Za-z0-9])xox[baprs]-(?=[A-Za-z-]{0,60}[0-9])[0-9A-Za-z-]{24,}/],
+  ["Stripe key", /(?<![A-Za-z0-9_])[sr]k_live_[A-Za-z0-9]{24,}/],
+  ["Google API key", /(?<![A-Za-z0-9_-])AIza[0-9A-Za-z_-]{35}(?![0-9A-Za-z_-])/],
+  ["Anthropic API key", /(?<![A-Za-z0-9_-])sk-ant-[A-Za-z0-9_-]{32,}/],
+  ["OpenAI API key", /(?<![A-Za-z0-9_-])sk-(?!ant-)(?=[A-Za-z0-9_-]{0,60}[0-9])(?=[A-Za-z0-9_-]{0,60}[A-Z])[A-Za-z0-9_-]{40,}/],
 ];
 const scanKind = (path, size) => {
   if (size === 0 || size > SCAN_LIMIT) return null;

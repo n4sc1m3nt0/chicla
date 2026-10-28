@@ -17,8 +17,8 @@ Seven parts are required. Each heading or label counts only when it starts a lin
 | `## Instructions` | The process rules: how to cold-start, the short commands, the closing kit, delivery, honesty, task size. It is the single source of the process; `CLAUDE.md` holds the product and working rules. The text after the words `## Instructions` is free (this project adds a note there). | The owner and the agent, by hand. |
 | `**Current version:**` | One paragraph: the app version and, in brackets, the rounds that led to it. | By hand, every round (the version is also in the app file). |
 | `**Fingerprint:**` | The paragraph with the triple (`seq` and two hashes), ending `before doing anything else.` Exactly one. | `bump-round`, never by hand. See `fingerprint.md`. |
-| `**Last updated (round N):**` | The newest entry: the date and at most two sentences on what the round did. Older entries may follow as `**Previous (round M):**`; they are history and are never deleted. | By hand, every round. |
-| `## Snapshot` | What is done, as dated one-liners. The plan is the roadmap; this is the record. | By hand. |
+| `**Last updated (round N):**` | The newest entry: the date and at most two sentences on what the round did. Older entries may follow as `**Previous (round M):**` (the oldest are moved verbatim to `docs/status-archive-previous-<lo>-<hi>.md` by `archive-changelog.mjs --status`); they are history and are never deleted. | By hand, every round. |
+| `## Snapshot` | What is done, as dated one-liners. The plan is the roadmap; this is the record. The older lines are moved verbatim to `docs/status-archive-done-<lo>-<hi>.md` by `archive-changelog.mjs --snapshot`, leaving one «Archived» line last. | By hand. |
 | `## Next up` | The open decisions (each with a suggestion) and the next task. | By hand. |
 | `## Gates` | A table of the steps only the owner can do (a review, a release, a run on another machine): what, and its state. The agent never marks one done. | By hand; the owner closes them. |
 

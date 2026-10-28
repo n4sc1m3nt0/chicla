@@ -1,0 +1,25 @@
+# Status file archive — rolling paragraphs, rounds 247-253
+
+Moved out of `CHICLA_PROJECT_STATUS-260.md` verbatim by `scripts/archive-changelog.mjs --rolling`. Nothing was edited or deleted.
+Each line is one clause or entry, newest first; put them after the ones kept in the file, joined with «; » («Current version») or one space («Open decisions»), and the paragraph is rebuilt.
+Find a round with `grep -n "round 12" docs/status-archive-rolling-*.md`.
+
+## Current version clauses
+
+- round 253: C18.4, coverage measured, 12 + 2 hand mutants and 4 new tests for the lines the report cannot see, tests only, the pin did not move
+- round 252: C18.5, four tests kill the four survivors of the kit list, tests only, the pin did not move
+- round 251: C18.3, `packages/chicla-kit/mutants/list.mjs` (41 mutants of `integrity.mjs`) and `npm run mutants:kit`, no source file, the pin did not move
+- round 250: C18.2, `archive-changelog.mjs --rolling`, the two paragraphs that grew by hand archived (10.8 KB and 11.8 KB to 0.6 KB and 1.4 KB), one source file, the pin did not move
+- round 249: C18.1, the history archived again (status file 64 KB to 56 KB, CHANGELOG 46 KB to 31 KB), item 20 refreshed, docs and one test, no source, the pin did not move
+- round 248: AUDIT-5, `docs/audits/AUDIT-5.md`, D141 and milestone M18 proposed, docs and one test, no source, the pin did not move
+- round 247: C17.4, `docs/integrity.md` and `test/integrity-docs.test.mjs`, docs and one test, M17 complete, the pin did not move
+
+## Open decisions entries
+
+- (round 253: **D-253a PROPOSED**: two cards found by C18.4, **C18.6** (`make-delivery.mjs` throws `ERR_FS_EISDIR` when `out` is a folder; one source file, test first) and **C18.7** (a core test for `EDUMP_FAILED` and `panel.mjs` line 123; tests only). Claude's suggestion: yes to both, C18.6 first (it is a defect on the delivery path). **Next task: C18.6 once Rodrigo answers.** A-2 stays «depois». **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-256.md` (and the older ones if not done).)
+- (round 252: none open; D-251a and the `--pkg .` call CONFIRMED (Rodrigo, 2026-10-26: «sim a todas»). **Next task: C18.4** (coverage of the root `test/` and the kit suite, then tests or written reasons for the uncovered lines of `emergency-dump.mjs`, `policy.mjs`, `recovery-report.mjs`; tests only, about 8 minutes of coverage on one core). A-2 stays «depois». **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-255.md` (and the older ones if not done).)
+- (round 251: **D-251a PROPOSED**: the kit list found four real test gaps in `integrity.mjs` (the CHANGELOG's own hash leg, two «Fingerprint:» paragraphs, line 3 without the word `STATUS_FILE_FINGERPRINT`, a non-default `appFile`); card **C18.5** (tests only, the pin does not move) kills them. Claude's suggestion: yes, and do it before C18.4 (small, and the list then has no survivor). Also a call made on delegation: the card said `--pkg`, the list runs with `--pkg .` because the kit tests need the project root; Claude suggests keeping it. Next task: C18.5 if Rodrigo says yes, else C18.4. A-2 stays «depois». **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-254.md` (and the older ones if not done).)
+- (round 250: none open. One call made on delegation: the card says to run `--rolling` for real in this round, so it was (keep 3, the default); Claude suggests keeping it, Rodrigo confirms. **Next task: C18.3** (a repeatable mutant list for the kit, first slice `integrity.mjs`; no source, the pin does not move), then C18.4. A-2 stays «depois». **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-254.md` (and the older ones if not done).)
+- (round 249: none open; D-248a to D-248d CONFIRMED (Rodrigo, 2026-10-26: «sim a todas»). **Next task: C18.2** (an `archive-changelog.mjs` option for the two paragraphs that grow by hand; one source file, the pin does not move), then C18.3 and C18.4. A-2 stays «depois». **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-253.md` (and the older ones if not done).)
+- (round 248: **D141 PROPOSED**, four cards of M18 (AUDIT-5): **D-248a** C18.1 archive the history and refresh item 20; **D-248b** C18.2 archive option for the two paragraphs that grow by hand; **D-248c** C18.3 repeatable kit mutants, first slice `integrity.mjs`; **D-248d** C18.4 name the untested lines of dump, policy and recovery. Claude's suggestion: yes to all four, in that order. **No next task is scheduled until Rodrigo answers.** A-2 stays «depois». **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-252.md` after pushing the new one (and the older ones if not done).)
+- (round 247: none open. M17 is complete; **no next task is scheduled**. Claude's suggestion for the next one: the `audit` after M17 (item 2: `docs/audits/AUDIT-5.md`, promised vs. what exists), A-2 stays «depois». **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-251.md` (and the older ones if not done).)

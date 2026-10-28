@@ -19,12 +19,14 @@
 //      name without the UTF-8 flag (bit 11) is EUTF8_FLAG, in the delivery only (--against uploads are never held to it);
 //   5c. FILES.baseline.json (C9.6) is present, parses, its seal holds, and it matches the zip's own files
 //      (same list, size and sha256 of each); codes EBASELINE_MISSING / _PARSE / _FORMAT / _SEAL / _MISMATCH;
+//   5d. (C17.2, D140) the shared rules of integrity.mjs, read by this script's own reader: CRLF in an instruction or state file (EINTEGRITY_LF), a toolchain pin that does not match the five files (_PIN),
+//      a stale three-way fingerprint (_FINGERPRINT), not exactly one status file (_STATE); a rule whose file is not in the zip is skipped;
 //   6. with --against: any file of the previous zip is not in this zip
 //      (deliberate removals must be approved with --allow-removed <path>).
 //
 // C11.1 slice 3a: the work is `verifyDelivery({ zip, against, allowRemoved, root })`, which never prints, exits or throws.
-// C11.1 slice 5d (D84, D87): this is the CORE, in the kit package. It imports only `node:` modules and the three PINNED files (src/pinned/baseline.mjs, manifest.mjs and
-// policy.mjs, by relative path: they stay where they are until the last slice) and has no entry point. `scripts/verify-delivery-zip.mjs` is a thin wrapper
+// C11.1 slice 5d (D84, D87): this is the CORE, in the kit package. It imports only `node:` modules, the three PINNED files (src/pinned/baseline.mjs, manifest.mjs and
+// policy.mjs, by relative path: they stay where they are until the last slice) and its sibling `integrity.mjs` (C17.2) and has no entry point. `scripts/verify-delivery-zip.mjs` is a thin wrapper
 // (flags, print, exit) and `chicla verify-delivery` imports the same code.
 // `root` is the project whose chicla.policy.json (C6.1) adds to the never-leaves rules.
 import { inflateRawSync } from "node:zlib";
@@ -34,8 +36,9 @@ import { resolve } from "node:path";
 import { BASELINE_FILE, parseBaseline } from "./pinned/baseline.mjs";
 import { neverShipReason as neverShip, loadPolicy, policyAllows, detectSecret } from "./pinned/policy.mjs";
 import { parseManifest, leaf } from "./pinned/manifest.mjs";
+import { STATUS_FILE_RE, checkIntegrity } from "./integrity.mjs";
 
-const JUNK = /(^|\/)(node_modules|\.next|\.git|__MACOSX)\/|(^|\/)\.DS_Store$|tsconfig\.tsbuildinfo$/;
+const JUNK = /(^|\/)(node_modules|\.next|\.git|__MACOSX)\/|(^|\/)\.DS_Store$|\.tsbuildinfo$/;
 // Names are read from the zip's central directory, in Node, and NOT from `unzip -Z1`: macOS `unzip` writes every
 // non-ASCII byte as `?`, which made a name like "relatório – ação 日本語.pdf" look lost (round 1p).
 // Names: Unicode Path extra field (0x7075, with CRC) > UTF-8 flag (bit 11) > valid UTF-8 > latin1.
@@ -211,9 +214,12 @@ export function verifyDelivery({ zip, against = [], allowRemoved = [], root } = 
     }
 
     for (const must of ["CLAUDE.md", "CHANGELOG.md"]) if (!set.has(must)) problems.push(`${must} is missing from the zip.`);
-    const status = files.filter((f) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f));
-    if (status.length !== 1) problems.push(`there must be exactly 1 CHICLA_PROJECT_STATUS-N.md in the root (found ${status.length}).`);
-    else if (set.has("CHANGELOG.md")) {
+    // C17.2 (D140, D-242b): the state, pin and LF rules are the shared ones (integrity.mjs), read through THIS script's own reader of the zip (C8.2), never through the code that wrote it.
+    // A rule whose file is not in the zip is skipped (D-242c); a failing row becomes a problem that starts with EINTEGRITY_<ID>. The --against uploads are never held to them.
+    const view = { names: files, read: (f) => { try { return bytesOf(zip, f); } catch { return null; } } }; // an unreadable entry is already EZIP_DATA above
+    for (const r of checkIntegrity(view, { sha256: (b) => createHash("sha256").update(b).digest("hex") })) if (!r.ok) problems.push(`EINTEGRITY_${r.id.toUpperCase()}: ${r.label}${r.file ? ` [${r.file}]` : ""}`);
+    const status = files.filter((f) => STATUS_FILE_RE.test(f));
+    if (status.length === 1 && set.has("CHANGELOG.md")) {
       const n = status[0].match(/-(\d+)\.md$/)[1];
       let first = ""; try { first = read(zip, "CHANGELOG.md").split("\n", 1)[0]; } catch { /* reported as EZIP_DATA above */ }
       const m = first.match(/seq=(\d+)/);
@@ -225,7 +231,7 @@ export function verifyDelivery({ zip, against = [], allowRemoved = [], root } = 
       const prevFiles = listUnwrapped(prev), prevSet = new Set(prevFiles);
       for (const f of prevFiles) if (!JUNK.test(f) && !neverShipReason(f) && !set.has(f)) leftAll.add(f);
       const lost = prevFiles.filter((f) => !JUNK.test(f) && !neverShipReason(f) && !set.has(f) && !allowSet.has(f));
-      const real = lost.filter((f) => !/^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f));
+      const real = lost.filter((f) => !STATUS_FILE_RE.test(f));
       if (real.length) problems.push(`${real.length} file(s) that existed in ${leaf(prev)} and are NO LONGER in this zip: ${real.slice(0, 15).join(", ")}${real.length > 15 ? " …" : ""}`);
       else say("out", `✓ nothing lost vs ${leaf(prev)}`);
     }

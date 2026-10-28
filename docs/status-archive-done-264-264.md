@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 264-264
+
+Moved out of `CHICLA_PROJECT_STATUS-278.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 264 (2026-10-27; Rodrigo: «avança»). C19.7 (D-263a): `packages/chicla-kit/test/core-verify-delivery-gaps.test.mjs` (12, green on the code, red against each mutant): `*.tsbuildinfo` junk (`K-VER-02`), the wrapper folder (`-04`), the same name twice is no collision (`-05`), a wrong-crc Unicode Path field is not trusted (`-06`), the «outside FILES.manifest», «in the baseline, not in the zip», «no CHANGELOG.md» and status-number-vs-seq lines (`-11` to `-14`), `--against` with several top folders (`-20`) and with `__MACOSX/` (`-21`), the lines of `renderVerifyDelivery` (`-24`); the zips are built by hand with `zipfab.mjs`, no Python. The 11 entries run once: 11 red; `K-VER-25` stays `survives`, explained as equivalent by code (checked: both answer EZIP_UNREADABLE). One list test added. Tests and data only, the pin did not move; M19 is complete. Not run by Claude: the CI, Node 18/20, `npm run smoke`, the whole `npm run mutants:kit` in one pass, the 348 mutants of the zip list, macOS, Windows.

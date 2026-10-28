@@ -52,7 +52,7 @@ test('the core imports only `node:` modules and the three pinned files (by relat
   const src = read(CORE);
   const specs = [...src.matchAll(/^import\s+(?:[^;]*?\bfrom\s+)?"([^"]+)"/gm)].map((m) => m[1]); // `import x from "y"` and the bare `import "y"`
   assert.ok(specs.length > 0);
-  for (const s of specs) assert.ok(s.startsWith('node:') || PINNED.includes(s), `import ${s}`);
+  for (const s of specs) assert.ok(s.startsWith('node:') || PINNED.includes(s) || s === "./integrity.mjs", `import ${s}`);
   for (const s of PINNED) assert.ok(specs.includes(s), `imports ${s}`);
   assert.equal([...src.matchAll(/^import\b/gm)].length, specs.length, 'every import statement was read');
   assert.doesNotMatch(src, /\bimport\s*\(|\brequire\s*\(/, 'no dynamic import or require');

@@ -1,0 +1,144 @@
+# Status file archive — rolling paragraphs, rounds 135-246
+
+Moved out of `CHICLA_PROJECT_STATUS-254.md` verbatim by `scripts/archive-changelog.mjs --rolling`. Nothing was edited or deleted.
+Each line is one clause or entry, newest first; put them after the ones kept in the file, joined with «; » («Current version») or one space («Open decisions»), and the paragraph is rebuilt.
+Find a round with `grep -n "round 12" docs/status-archive-rolling-*.md`.
+
+## Current version clauses
+
+- round 246: D-245a, every `*.tsbuildinfo` is junk for `check-manifest` and `verify-delivery`, two source lines, the pin did not move
+- round 245: C17.3, one corpus of names ties `check-manifest` and `verify-delivery` to `policy.mjs`, one test file, no source, the pin did not move
+- round 244: C17.2, the `TOOLCHAIN` map and the pin, state and fingerprint rules in `integrity.mjs`, called by `bump-round --verify` and `verify-delivery` (`EINTEGRITY_*`); three source files edited, the pin did not move
+- round 243: C17.1, `integrity.mjs` with the LF rule and the one status-file regex, called by `bump-round --verify` and `check-manifest`; D-242a to D-242d confirmed; one new source file and two edited, the pin did not move
+- round 242: the A-1 plan, `docs/plan-a1-integrity.md`, D140 and milestone M17 (C17.1 to C17.4), docs and one test, no source, the pin did not move
+- round 241: C16.7, `archive-changelog.mjs --snapshot`, the Snapshot archived; M16 complete; the pin did not move
+- round 240: C16.6, `check-manifest` one read per file, `test:fast` / `test:slow`; the pin did not move
+- round 239: C16.5, five more secret kinds (nine in all) in `policy.mjs` and the dump's copy; the pin moved
+- round 238: C16.4, `archive-changelog.mjs --status`, the CHANGELOG and the status blocks archived verbatim; one source file, the pin did not move
+- round 237: the chat reply layout of round 227 reverted (item 21 and the `CLAUDE.md` «Layout» sentence), the panel kept; docs and one test, the pin did not move
+- round 236: C16.3, process docs: one bounded wait for long commands, stale numbers fixed, `CLAUDE.md` points to the status block, `big-cm.log` moved to `bench/`; docs and one test, the pin did not move
+- round 235: C16.2, the CI token is read-only and the actions are pinned to commit SHAs, plus `dependabot.yml`; no source, the pin did not move
+- round 234: C16.1, `recovery` refuses a `.tar.gz` and falls back to a fresh `mkdtemp` folder, the pin moved
+- round 233b: `docs/audits/AUDIT-4.md` and the plan M16 (C16.1 to C16.6), docs and one test only
+- round 233: `check-manifest` clean error for a missing root, `recovery` default folder portable, `bump-round --verify` refuses CRLF in `CLAUDE.md`, the pin moved
+- round 232: ROADMAP §9 aligned with the Gates table of this file (G-C6, G-C9, G-C13, G-C3 rows, cards C5.5 and C13.4), docs and one test only
+- round 231: G-C4, G-C9, G-C10, G-C13 and G-C15 closed by Rodrigo, the agent matrix re-read on the vendors' own pages, comments and docs only
+- round 230: the release recorded, G-C6 closed by Rodrigo, stale pre-release wording removed from the READMEs and `SECURITY.md`, `./` in the `npm publish` of the runbook, docs and one test
+- round 229: `chicla-kit` set to `0.1.0` and its README status line, the release round Rodrigo asked for, no source
+- round 228: the Decisions page of the panel laid out by rounds, newest in full, older ones one line, to-dos as bullets, `panel.mjs` plus a test
+- round 227: reply format for open decisions, status item 21 and `CLAUDE.md` rule 6, docs only
+- round 226: panel highlights corrected, blue and white letters instead of backgrounds, `panel.mjs` and `ui.mjs` plus tests
+- round 225: panel highlights, blue active tab and white footer keys, `panel.mjs` and `ui.mjs` plus tests
+- round 224: panel polish, alternate screen, coloured gate states, labelled Status page, `panel.mjs` and `ui.mjs` plus tests
+- round 223: G-C12 closed, panel polish scheduled, docs only
+- round 222: recovery rehearsal and G-C11 closed, docs only
+- round 221: the dump leaves out every top-level dot entry of `work/` (the credentials leak), `emergency-dump.mjs` and one test
+- round 220: the CI of the round 219 tree read, 12 of 12 green, docs only
+- round 219: the last Windows red, a test left a zip handle open, test only
+- round 218: the Windows cleanup and path patterns fixed in every test, tests only
+- round 217: two Windows test reds fixed, test files only
+- round 216: G-C5 recorded as closed by Rodrigo, docs only
+- round 215: release notes and the `chicla-zip` README list the known limits, docs only
+- round 214: two stale mutant anchors updated, `mutants/list.mjs` only
+- round 213: the sixth review verified, ZIP-024 test updated, ZIP-025 and ZIP-026 documented, no source change
+- round 212: docs only, `docs/release.md` item 4 corrected, `chicla-zip` already says 0.1.0
+- round 211: docs only, the release state in `docs/release.md`, ZIP-023 in `SECURITY.md`
+- round 210: C15.28, ZIP-022, a duplicate name with a symlink or special entry is refused by `extractZip`, in `zipkit.mjs`, the pin moved
+- round 209: C15.26, ZIP-021, the end-record search window documented, docs and comments only
+- round 208: C15.25, ZIP-019, the zip64 record must end at its locator, in `zipkit.mjs`
+- round 207: C15.24, ZIP-020, a folder is decided by the name only, in `zipkit.mjs`
+- round 206: the fourth review verified, D136, cards C15.24 to C15.27, docs only
+- round 205: C15.22, ZIP-018, two mutants judged and stale numbers fixed, no source change
+- round 204: C15.21, ZIP-017, docs only, the parent folders left by a failed extraction into a new destination are documented and pinned
+- round 203: C15.20, ZIP-016, an output error of the CLI ends with exit 1 and no stack trace, in `zipkit.mjs`
+- round 202: C15.19, ZIP-014, `read` and `cat` refuse a duplicate name, in `zipkit.mjs`
+- round 201: C15.18, ZIP-015, the end record chosen must be the last of the tail, in `readCentral`
+- round 200: the third security review verified, ZIP-015 blocks the release, D135 and cards C15.18 to C15.23, docs only
+- round 199: the CI of the round 198 tree read, all green, docs only
+- round 198: the 5 red tests of the round 197 CI fixed, test files only
+- round 197: C15.14 slice c, the docs sentence about the re-check in `SECURITY.md` and `docs/zip-handling.md`, docs and tests only, C15.14 closed
+- round 196: C15.14 slice b, the mutants `R195-*` of the re-check in `mergeMove`, in `mutants/list.mjs` only
+- round 195: C15.14 slice a, `mergeMove` re-checks the target before each move, in `zipkit.mjs`
+- round 194: C15.13, the concurrent-writer limit documented and pinned, docs and tests only
+- round 193: C15.11, the temp folder stays 0700 until after the final rename, in `zipkit.mjs`
+- round 192: C15.9, the layout check uses the real span, in `zipkit.mjs`
+- round 191: C15.10, the writers refuse a path that is a file and a folder, in `zipkit.mjs`
+- round 190: C15.12, tests and the mutant list only
+- round 189: C15.17, a trailing end record found by size, in `readCentral`
+- round 188: C15.8, ZIP-007 and ZIP-008 in `readCentral` and `parseEntries`
+- round 187: C15.7, ZIP-005, ZIP-006 and ZIP-009 in `readCentral`, D133 and D134 confirmed
+- round 186: ROADMAP only, the second security review verified: D133, D134 and cards C15.7 to C15.16
+- round 185: the two `.gitkeep` of the kit removed, tarball test +1
+- round 184: the `chicla-kit` runbook in `docs/release.md`, docs and a test only
+- round 183: C11.3, `chicla update` (`src/update.mjs`): compares the instruction files with the templates, writes only what `--apply <file>` names
+- round 182: C10.6, the `chicla init` status template gets the cold-start order and command, template and test only
+- round 181: C10.5, `docs/state-file.md` and the `EBUMP_STATUS` check of `bump-round`
+- round 180: C10.4, `docs/fingerprint.md` and its test, docs and tests only, plus the order of work to the npm release (D130)
+- round 179: D129, `COPYFILE_DISABLE=1` for the dump tar
+- round 178: the last Mac reds, tests only
+- round 177: tar-path tests on a Mac
+- round 176: diagnostics only
+- round 175: npm 12 `pack --json` object shape
+- round 174: C15.6, `MAX_CENTRAL` lowered to 64 MiB, `ECENTRAL`
+- round 173: C15.4, the central directory memory measured, docs and a bench only
+- round 172: G-C5 §5.2, `checkLayout` refuses overlapping entries, `EOVERLAP`
+- round 171: G-C5 ZIP-002, `dataStart` compares the local header with the central directory
+- round 170: G-C5 ZIP-001, `readCentral` picks the end record whose directory ends at it, `EAMBIGUOUS`
+- round 169: CI and mutants triage, `onlyOn`, the Windows Node 18 fuzz cleanup
+- round 168: docs only, the whole `npm test` and `npm run smoke` seen green on round 167
+- round 167: C12.5 and C12.6, the agent matrix and `chicla init --agent`
+- round 166: C13.5 kit packaging, `chicla-kit` reaches `chicla-zip` by name
+- round 165: C12.7 `chicla init` generates the state files
+- round 164: C12.1 `chicla init`, D116 and D118 closed, the round 163 out-of-scope findings fixed
+- round 163: release prep, `chicla-zip` 0.1.0, SECURITY.md, CONTRIBUTING.md, kit README, `docs/release.md`, Cedar removed from the ROADMAP
+- round 162: D102, the `git rm` line of the delivery check
+- round 161: M14 D115, the `windows` job blocks
+- round 160: docs only, D114 and D115 confirmed
+- round 159: M14 C14.5 slice (b), the Windows support statement for `chicla-zip`, docs only
+- round 158: M14 C14.7 slice 2, `leaf`, the last part of a path on Windows
+- round 157: M14 C14.7 slice 1, the dump on Windows and the python probe of the kit tests
+- round 156: M14 D112, `.gitattributes`, every checkout LF
+- round 155: M14 C14.6, the `chicla-kit` suite in the `windows` job
+- round 154: M14 C14.5 slice a, `--windows-names` and the Windows warning in `test`
+- round 153: docs and one skip reason, C14.3 closed, C14.5 split, C14.6 opened
+- round 152: M14 C14.3 slice d, a closed pipe is also EOF on Windows Node 18/20
+- round 151: M14 C14.3 slice b, cleanup with bounded retries and closed handles
+- round 150: M14 C14.3 slice a, `openZip` of a directory is EISDIR
+- round 149: `unzip -t` verdict and probe name
+- round 148: Windows probe diagnostics
+- round 147: Windows zipinfo probe
+- round 146: CI job timeouts and reader timeouts
+- round 145: Windows test portability
+- round 144: `.idea/` in `.gitignore`
+- round 143: G-C13 findings, `fsync` on a writable handle
+- round 142: M14 C14.4, the `windows` CI job
+- round 141: M14 C14.2, the extractor and the writers apply the Windows name checks
+- round 140: M14 C14.1, the pure Windows name functions
+- round 139: C11.5 slice c, the read-only panel
+- round 138: C11.5 slice b, the CLI paints the ✓ ✗ ⚠ marks on a terminal
+- round 137: docs only, the status file cleaned of a duplicated block
+- round 136: C11.5 slice a, the pure drawing module `packages/chicla-kit/src/ui.mjs`, not wired yet
+- round 135 made the CLI import its cores from `src/`
+
+## Open decisions entries
+
+- (round 246: none open; D-245a CONFIRMED and done. **Next task: C17.4.** **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-250.md` (and the older ones if not done).)
+- (round 245: **D-245a PROPOSED**: `*.tsbuildinfo` files other than `tsconfig.tsbuildinfo` ship through `check-manifest` and `verify-delivery` but are junk for `isJunkName`; Claude's suggestion: yes, a small card where both tools follow `isJunkName` (their own lists, no pin move), before C17.4. **No next task is scheduled until Rodrigo answers.** **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-249.md` (and the older ones if not done).)
+- (round 244: none open. **Next task: C17.3** (tests that tie the name rules of `check-manifest` and `verify-delivery` to `policy.mjs`; tests only, a divergence found would be a new card because the pin would move), then C17.4; A-2 stays «depois». **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-248.md` (and the older ones if not done).)
+- (round 243: none open; D-242a to D-242d CONFIRMED (Rodrigo, 2026-10-26). **Next task: C17.2** (state and pin rules into `integrity.mjs`; `verify-delivery` calls them: CRLF, a wrong pin and a stale fingerprint stop a delivery; the `TOOLCHAIN` map moves, so the `pinned-*-move` tests are updated first). A-2 stays «depois». **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-247.md` (and the older ones if not done).)
+- (round 242: **D-242a to D-242d PROPOSED**, each with Claude's suggestion «yes» (`docs/plan-a1-integrity.md` §6): (a) the shape, one pure unpinned `integrity.mjs`, each tool with its own reader; (b) `verify-delivery` rejects CRLF, a wrong pin and a stale fingerprint; (c) an absent file skips its rule, a missing required file only warns in `check-manifest`; (d) C17.1 to C17.4 in that order, C17.1 next. D138: A-1 is planned, A-2 stays «depois». **No next task is scheduled until Rodrigo answers.** **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-246.md` (and the older ones if not done).)
+- (round 241: **D138 is DUE** (Rodrigo: «depois» = after C16.6, which is done): A-1 (one integrity check called by `check-manifest`, `verify-delivery` and `bump-round --verify`) and A-2 (fewer pinned modules or a pin generated at build time). Claude's suggestion: a PLAN round first for A-1 only (docs, no code, like D-234b), and A-2 stays «depois». **No next task is scheduled until Rodrigo answers.** **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-245.md` (and `big-cm.log`, `-240`, `-241`, `-242`, `-243`, `-244` if not done).)
+- (round 240: none open. **Next task: C16.7** (D139: archive the old «Done» lines of the Snapshot, keep the last 10). D138 stays «depois». **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-244.md` (and `big-cm.log`, `-240`, `-241`, `-242`, `-243` if not done).)
+- (round 239: none open. D139 CONFIRMED (C16.7 planned, after C16.6); the note for C16.6 confirmed; D138 stays «depois». **Next task: C16.6.** **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-243.md` (and `big-cm.log`, `-240`, `-241`, `-242` if not done); the pin moved, so the next real `/dump` is the first to carry the new `RECOVER/`: if its start line refuses, send the line.)
+- (round 238: **D139 PROPOSED**: the Snapshot of this file is now 100 KB (195 «Done» lines); archive the old ones the same way (new card C16.7, keep the last 10), not scheduled until Rodrigo says. D138 stays «depois». **Next task: C16.5.** **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-242.md` (and `big-cm.log`, `CHICLA_PROJECT_STATUS-240.md`, `-241.md` if not done).)
+- (round 237: none open; Rodrigo confirmed D138 «depois», D-236a, D-236b and C16.4. **Next task: C16.4.** **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-241.md` and `git rm -- big-cm.log` (if not done); the Dependabot pull requests are optional.)
+- (round 236: none new; D138 stays PROPOSED, «depois» (after C16.6). **Next task: C16.4.** **Rodrigo's to do:** push and read the CI (still the first run with the pinned actions and the read-only token); `git rm -- CHICLA_PROJECT_STATUS-240.md` and `git rm -- big-cm.log` (the file moved to `packages/chicla-zip/bench/big-cm.log`); accept or ignore the first Dependabot pull requests.)
+- (round 235: none new; D138 stays PROPOSED, «depois» (after C16.6). **Next task: C16.3.** **Rodrigo's to do:** push and read the CI (the first run with the pinned actions and the read-only token: if any job fails on permissions or on an action, send the log); `git rm -- CHICLA_PROJECT_STATUS-239.md`; accept or ignore the first Dependabot pull requests.)
+- (round 234: D138 stays PROPOSED, «depois» (after C16.6); D-235a confirmed (C16.1). **Next task: C16.2.** **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-237.md`; G-C11 style check of the pin: repeat `/dump` and «recovery mode» once on a real dump (the pin moved, as in rounds 132 to 158).)
+- (round 233b: D137 confirmed (D-234a, D-234b, D-234c). **New, proposed:** D138, a different approach (one integrity check; fewer pinned modules), not scheduled until C16.1 to C16.6 are done. **Next task: C16.1** (recovery hardening, AUDIT-4 §6); it edits a pinned file, so the pin moves. **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-236.md`.)
+- (round 232: none new; D-231a confirmed. **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-235.md`; next task he named: the open Windows gates, G-C8 (real Windows machine: suites, `/dump`, recovery, `init`, panel; paste the output) and the exFAT/FAT part of G-C3.)
+- (round 231: none new. **Rodrigo's to do:** push and read the CI; `git rm -- CHICLA_PROJECT_STATUS-234.md`; next, the Windows gate G-C8: run the suites on a real Windows machine (Node 18, 20 or 22) and the kit's `/dump`, recovery, `init` and panel there, then paste the output; Claude then records it and decides with him whether `chicla-kit` may be declared for Windows.)
+- (round 230: none new. **Rodrigo's to do:** push this round and read the CI (the `pack` and `windows` jobs also settle G-C10 and G-C13, which only he marks); decide on G-C4 (Windows statement), G-C8 and G-C15 (agent files on each vendor's page); `git rm -- CHICLA_PROJECT_STATUS-233.md`. Claude suggests no further release task; next work is whatever he names.)
+- (round 229: none new; the kit version round is Rodrigo's call (D130). **Rodrigo's to do:** push, wait for CI green, then follow `docs/release.md`: `chicla-zip` steps 1 to 9 first, then the `chicla-kit` section; only he publishes; close G-C6 when done; not a gate for Claude.)
+- (round 228: none new; the panel page is Rodrigo's request, no call made; **Rodrigo's to do:** run `node packages/chicla-kit/src/cli.mjs` on a real terminal, press Tab twice to reach Decisions and say if the layout reads well (older rounds are shortened on purpose; the full text stays in this file); not a gate.)
+- (round 227: none new; the layout of this part of the replies is Rodrigo's request, no call made; **Rodrigo's to do** as in round 226 below.) (Round 226: none new; the colours are a fix of round 225, no call made. **Rodrigo's to do:** run `node packages/chicla-kit/src/cli.mjs` again on a real terminal and check the blue letters of the active tab and the white letters of the footer keys; if `94` is too light or `97` looks wrong, Claude suggests `34` and `37`; not a gate.) (Round 225: none new; the colours are a fix of round 224, no call made. **Rodrigo's to do:** run `node packages/chicla-kit/src/cli.mjs` again on a real terminal and check the blue active tab and the white footer keys; if the white bold of the tab looks wrong, Claude suggests `37` instead of `97`; not a gate.) (Round 224: none new; the panel polish is done before the kit version round, as Claude suggested. **Rodrigo's to do:** run `node packages/chicla-kit/src/cli.mjs` in the project folder on a real terminal (no install needed; `NO_COLOR` or a pipe stays plain), check the colours and that nothing stays in the scrollback after `q`; not a gate.) (Round 223: none new; G-C12 closed by Rodrigo, panel polish is a later round, his call on timing: before the kit version round or after the release; Claude suggests before, since the kit is not published yet.) (Round 222: none new; G-C11 repeated and closed by Rodrigo.) One call made on delegation in round 221: the dump skips EVERY dot entry at the top of `work/` (not a longer name list, which already failed once); Claude suggests keeping it, Rodrigo confirms. **Rodrigo's to do:** treat the tokens in the round 220 dump zip as exposed (end that session, do not share the zip); run the missing checks (see `docs/release.md`); `git rm -- CHICLA_PROJECT_STATUS-223.md` after pushing; push and read the CI again (Windows must show 0 red). Suggested next task: the `0.1.0` release round (`docs/release.md`). (Earlier text: none new; Rodrigo confirmed the sixth narrow review (C15.28, round 211). **Rodrigo's to do:** send the round 210 zip and the diff of `zipkit.mjs` (round 209 `a894b2ba…` against round 210 `89478bba…`) to the reviewer, run the missing checks (see `docs/release.md`), `git rm -- CHICLA_PROJECT_STATUS-213.md`. (Earlier, kept: the fifth review (C15.27) is received; ZIP-022 was fixed in round 210 although «no fix touches `zipkit.mjs` after it», so Claude suggests a short sixth narrow review of that one hunk (C15.28) before `/dump` and 0.1; Rodrigo confirms. (Earlier text, kept: D136 is confirmed (round 206).) **Task (done, see round 210): C15.27**, the fifth narrow review (D136), on the final tree: it is a gate for Rodrigo (the reviewer gets the diff of `zipkit.mjs` for C15.24 and C15.25, the old PoCs plus `poc_loc2` and the two mode-folder shapes, and the suite on Node 18, 20 and 22, saying which were really run); no fix touches `zipkit.mjs` after it. Then `/dump` and «recovery mode» (G-C11, due after the LAST fix; the pin moved in rounds 201, 202, 203, 207 and 208, not in 209), the gates and `docs/release.md`. Nothing is published until both packages are ready (Rodrigo, 2026-10-16). C15.26 (ZIP-021) is done in round 209. **Rodrigo's to do:** send the round 209 zip to the reviewer for C15.27 (with the Node 18 suite result if you have it); push and send the CI logs when convenient; keep this status file for the next account.)

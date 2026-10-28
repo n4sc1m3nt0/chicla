@@ -1,0 +1,7 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 251-252
+
+Moved out of `CHICLA_PROJECT_STATUS-266.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 252 (2026-10-26; Rodrigo: «sim a todas as decisões. avança»). C18.5 (D-251a): four tests at the end of `packages/chicla-kit/test/core-integrity-state.test.mjs` (25 now) for `K-INT-33`, `-36`, `-37`, `-41`; their `survives` removed; `npm run mutants:kit` whole: 41 mutants, 40 red, 1 equivalent explained, none survives. Tests only, the pin did not move. Not run by Claude: the CI, Node 18/20, the 348 mutants of the zip list, macOS, Windows.
+- Done: round 251 (2026-10-26; Rodrigo: «avança»). C18.3 (D-248c, AUDIT-5 F-3): `packages/chicla-kit/mutants/list.mjs`, 41 hand mutants of `integrity.mjs` reconstructed from its guarantees (the 26 of rounds 243 and 244 existed only as counts), run with `npm run mutants:kit` (`scripts/mutants.mjs --pkg . --list …`: the kit tests read the project root, so the whole tree is copied, not the package alone as the card said); one pass: 36 red, 1 equivalent explained (`K-INT-19`), 4 survivors that are real test gaps (`K-INT-33`, `-36`, `-37`, `-41`) marked `survives` and proposed as C18.5; `test/mutants-kit-list.test.mjs` (7, 3 red first). No source file, the pin did not move. Not run by Claude: the CI, Node 18/20, the 348 mutants of the zip list, macOS, Windows.

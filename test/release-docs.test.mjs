@@ -85,3 +85,16 @@ test('round 230: after the publication of both 0.1.0 packages no document still 
   assert.ok(!/npm publish dist\//.test(rel), 'npm reads «dist/x.tgz» as a GitHub shorthand and refuses it (EALLOWGIT): the runbook says «./dist/x.tgz»');
   assert.ok(rel.includes('npm publish ./dist/chicla-zip-0.1.0.tgz') && rel.includes('Published (round 230)'));
 });
+
+test('round 231: the agent matrix says it was read on the vendors\' own pages (G-C15 closed) and keeps what was not checked apart', () => {
+  const src = read('packages/chicla-kit/src/agents.mjs'), readme = read('packages/chicla-kit/README.md');
+  for (const [name, text] of [['agents.mjs', src], ['kit README', readme]]) {
+    assert.doesNotMatch(text, /third-party survey/i, `${name} still says the matrix comes from a third-party survey`);
+    assert.match(text, /vendors' own pages/, `${name} must say the vendors' own pages were read`);
+    assert.match(text, /2026-10-22/, `${name} must carry the date of the check`);
+    assert.match(text, /Windsurf/, `${name} must say Windsurf reads AGENTS.md`);
+  }
+  assert.match(readme, /Cline and Antigravity[^.]*not (re-)?checked/i, 'the two agents nobody checked on a vendor page stay marked as such');
+  const road = read('ROADMAP.md');
+  for (const g of ['G-C4', 'G-C10', 'G-C13', 'G-C15']) assert.match(road.split('\n').find((l) => l.startsWith(`| ${g} · `)), /FECHADO por Rodrigo, 2026-10-22/, `${g} in ROADMAP §9`);
+});

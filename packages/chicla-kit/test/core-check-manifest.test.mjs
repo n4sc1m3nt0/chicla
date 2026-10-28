@@ -34,13 +34,13 @@ test('the core is in the kit package: it exports checkManifest and renderCheckMa
   assert.equal(r.status, 0, r.stderr); assert.equal(r.stdout.trim(), 'function function'); assert.equal(r.stderr, '');
 });
 
-test('the core imports only `node:` modules and the two pinned files (by relative path), and has no entry point (it never prints or exits)', () => {
+test('the core imports only `node:` modules, the two pinned files (by relative path) and its sibling `./integrity.mjs` (C17.1), and has no entry point (it never prints or exits)', () => {
   const src = read(CORE);
   const specs = [...src.matchAll(/^import\s+(?:[^;]*?\bfrom\s+)?"([^"]+)"/gm)].map((m) => m[1]); // `import x from "y"` and the bare `import "y"` (D87 (2), round 123)
   assert.equal([...src.matchAll(/^import\b/gm)].length, specs.length, 'every import statement was read');
   assert.doesNotMatch(src, /\bimport\s*\(|\brequire\s*\(/, 'no dynamic import or require');
   assert.ok(specs.length > 0);
-  for (const s of specs) assert.ok(s.startsWith('node:') || s === pinnedSpec(CORE, 'manifest') || s === pinnedSpec(CORE, 'policy'), `import ${s}`);
+  for (const s of specs) assert.ok(s.startsWith('node:') || s === pinnedSpec(CORE, 'manifest') || s === pinnedSpec(CORE, 'policy') || s === './integrity.mjs', `import ${s}`);
   assert.ok(specs.includes(pinnedSpec(CORE, 'manifest')) && specs.includes(pinnedSpec(CORE, 'policy')));
   assert.doesNotMatch(src, /process\.(exit|exitCode|stdout|stderr|argv)/);
 });

@@ -58,3 +58,15 @@ Who names these files by path today: the four cores in `packages/chicla-kit/src/
 ## 7. Noticed, not fixed
 
 After 6c the kit still needs `packages/chicla-zip` (the zip writer is loaded by relative path in `make-delivery` and in the dump). Publishing `chicla-kit` alone would need it as a dependency of the kit (an own package, not a third-party one, so D3 may not even apply) or a copy. That is a separate decision for when C11.1 closes; it is not proposed here.
+
+## 8. What an edit of a pinned file costs
+
+Added in round 272 (C21.2; plan `docs/plan-a2-pins.md`, D138 part 2, D144). Sections 1 to 7 are the design of the moves of rounds 127 to 133; this one says what it costs to change a pinned file today, measured in round 270 on a copy of the tree: one comment line in a pinned file plus `bump-round --refresh` turned one test red of 1632 (the `pinned-*-move` test of that file, which froze its bytes), and `zipkit.mjs` turned none. Those four tests no longer freeze bytes (C21.1, round 271), so the steps are these and no others:
+
+1. **Edit** the file: `baseline`, `manifest`, `policy` or `recovery-report` in `packages/chicla-kit/src/pinned/`, or `zipkit.mjs` in `packages/chicla-zip/src/`.
+2. **`node scripts/bump-round.mjs`** (the closing kit, item 13): it writes the new digest into `CLAUDE.md` and regenerates `FILES.manifest`. The digest lives in `CLAUDE.md` and nowhere else (`test/pinned-cost-docs.test.mjs` holds it, history in the CHANGELOG files and the status archives excepted), so there is no second copy to update.
+3. **`node scripts/bump-round.mjs --verify`**: green. It recomputes the digest from the five files and compares it with `CLAUDE.md`; the shell start line of item 17 does the same before it runs anything from a dump.
+4. **The whole `npm test`**, once, as in every round. The `pinned-*-move` tests keep only what is structural (the helper path, the shim is gone, the exports, the two `TOOLCHAIN` maps, the cores import the pinned file) and `test/pinned-edit-follow-ups.test.mjs` proves, on a copy and for each of the five files, that one edit followed by `bump-round --refresh` leaves the tests that read the pinned files green.
+5. **The gate, Rodrigo's:** after a round that moved the pin, repeat `/dump` and «recovery mode» once on a real dump (G-C11 did it after the move of round 133). The AI never marks it done and it is not automated: it is the one check that the recovery path still works when everything else is broken (D7).
+
+What an edit does NOT cost any more: a frozen sha256 or a chain of reverse patches to edit by hand. What it never costs: a change to the five names of `RECOVER/`, to the start line of item 17 or to the definition of the digest. Fewer pinned modules was considered and rejected (plan §3): the kit cores import the three libraries on their own, and the five names are what every old dump carries.

@@ -9,7 +9,7 @@
 // it imports only baseline.mjs, manifest.mjs, policy.mjs and zipkit.mjs, so it still runs alone, copied into a dump (D82 (2)).
 //
 // It does, in this order, without changing anything in the original dump:
-//   1. extracts the dump to <out> (default /home/claude/recovered; if it exists, appends -2, -3 …);
+//   1. extracts the dump to <out> (default /home/claude/recovered where /home/claude exists, else a fresh <temp>/chicla-recovered-XXXXXX; if /home/claude/recovered exists, appends -2, -3 …);
 //   2. confirms it is a dump (RECOVERY_MARKER.json) and that it was not corrupted on the way (sha256 of each file);
 //   3. compares the project root with --baseline (the last good delivery zip); without it, with the FILES.baseline.json
 //      the last delivery carried inside the dump (C9.6: no zip needed; refused if it was cut or edited); without
@@ -22,7 +22,7 @@
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { BASELINE_FILE, parseBaseline } from "./baseline.mjs";
@@ -31,6 +31,18 @@ import { SKIP_NAMES, PYTHON_DIRS, isJunkName, NO_POLICY, loadPolicy, policySkips
 // C9.4b: zips are read by chicla-zip, never by the external unzip tool. In RECOVER/ it sits beside this file (zipkit.mjs); in the tree it is under packages/.
 const zipkitUrl = existsSync(fileURLToPath(new URL("./zipkit.mjs", import.meta.url))) ? new URL("./zipkit.mjs", import.meta.url) : new URL("../../../chicla-zip/src/zipkit.mjs", import.meta.url);
 const { extractZip } = await import(zipkitUrl.href);
+
+/**
+ * Where `recovery` extracts when `--out` is not given: { base: "/home/claude/recovered", fresh: false } where /home/claude exists on a POSIX system (the sessions this was
+ * written for; `-2`, `-3` are appended if it exists), else { base: <temp>/chicla-recovered-, fresh: true }: a FRESH mkdtemp folder made from that prefix, never a fixed name
+ * another user could have created first (AUDIT-4 S-2). On Windows /home/claude/x is C:\\home\\claude\\x and on macOS it cannot be created. Inputs are injectable for tests.
+ */
+export function recoveryOutPlan({ platform = process.platform, exists = existsSync, tmp = tmpdir() } = {}) {
+  return platform !== "win32" && exists("/home/claude") ? { base: "/home/claude/recovered", fresh: false } : { base: join(tmp, "chicla-recovered-"), fresh: true };
+}
+
+// The first two bytes of the file are 1f 8b: a gzip stream (a .tar.gz under another name). A file that cannot be read is not gzip here: the extraction reports it.
+function isGzip(f) { let fd; try { fd = openSync(resolve(f), "r"); const b = Buffer.alloc(2); return readSync(fd, b, 0, 2, 0) === 2 && b[0] === 0x1f && b[1] === 0x8b; } catch { return false; } finally { if (fd !== undefined) try { closeSync(fd); } catch { /* nothing to do */ } } }
 
 const USAGE = "usage: recovery-report.mjs <dump.zip> [--baseline <delivery-zip>] [--out <dir>] [--toolchain-digest <hex> [--trust-toolchain]]";
 
@@ -64,7 +76,7 @@ function hashTree(root, policy = NO_POLICY) {
 const HERE = resolve(fileURLToPath(new URL(".", import.meta.url)));
 
 /**
- * Recovers an emergency dump: extracts it to `out` (default /home/claude/recovered, then -2, -3 ...), checks it, compares it with `baseline` (a delivery zip), the
+ * Recovers an emergency dump: extracts it to `out` (default: see `recoveryOutPlan`, then -2, -3 ...), checks it, compares it with `baseline` (a delivery zip), the
  * baseline the dump carries, or FILES.manifest, and writes <out>/RECOVERY_DIFF.md. Never prints, exits or throws; the text is in `messages`.
  * Returns { ok, code, out, root, report, note, afterRound, against, changedInTransit, modified, added, removed, held, problems, collisions, guards, messages }; `code` is null,
  * EUSAGE (no dump given), EHASH_TOOLCHAIN (run from a RECOVER/ folder whose files do not hash to `toolchainDigest`, unless `trustToolchain`; NOTHING was run), ERECOVERY_EXTRACT,
@@ -99,13 +111,16 @@ async function recover(o, put) {
     }
   }
   const baselineZip = o.baseline;
-  let out = resolve(o.out ?? "/home/claude/recovered");
-  for (let n = 2; existsSync(out); n++) out = resolve(o.out ?? "/home/claude/recovered") + `-${n}`;
+  // C16.1 (AUDIT-4 S-1, D-234c): a tar archive is never handed to the system `tar` (a zip is hostile input, and so is this). Refused by name and by the gzip magic, before anything is created.
+  if (/\.(tar\.gz|tgz|tar)$/i.test(zip) || isGzip(zip)) return fail("ERECOVERY_FORMAT", `✗ ERECOVERY_FORMAT: ${zip} is a tar archive, not a zip. recovery reads zips only (the dump's tar.gz is its last fallback): extract it by hand into an empty folder and work from there.`);
+  const plan = o.out === undefined ? recoveryOutPlan(o._env) : null; // `_env` is for tests, not API
+  let out;
+  if (plan?.fresh) out = mkdtempSync(plan.base); // private (0700) and unique
+  else { const base = resolve(o.out ?? plan.base); out = base; for (let n = 2; existsSync(out); n++) out = base + `-${n}`; }
 
   // 1. Extract
   mkdirSync(out, { recursive: true });
-  if (zip.endsWith(".tar.gz")) { const r = sh("tar", ["-xzf", resolve(zip), "-C", out]); if (r.status !== 0 && r.status !== 1) { return fail("ERECOVERY_EXTRACT", `✗ could not extract ${zip}:\n${r.stderr}`); } }
-  else { try { await extractZip(resolve(zip), out); } catch (e) { return fail("ERECOVERY_EXTRACT", `✗ could not extract ${zip}: ${e.code ?? "EZIP"}: ${e.message}`); } }
+  try { await extractZip(resolve(zip), out); } catch (e) { return fail("ERECOVERY_EXTRACT", `✗ could not extract ${zip}: ${e.code ?? "EZIP"}: ${e.message}`); }
 
   // 2. Marker
   const markerPath = join(out, "RECOVERY_MARKER.json");

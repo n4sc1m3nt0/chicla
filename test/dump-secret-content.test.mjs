@@ -148,6 +148,12 @@ const TIE = {
   'n-ghp35': j('ghp_', 'a'.repeat(35)), 'n-ghx': j('ghx_', 'a'.repeat(36)), 'n-pat10': j('github_pat_', 'A'.repeat(10)), 'n-ghpglued': j('x', 'ghp_', 'a'.repeat(36)),
   'n-npm35': j('npm_', 'c'.repeat(35)), 'n-npm37': j('npm_', 'c'.repeat(37)), 'n-npmglued': j('xnpm_', 'c'.repeat(36)),
   'n-prose1': 'AKIA is the prefix of an AWS key id', 'n-prose2': 'a token starts with ghp_ and npm_ in the docs', 'n-empty': '',
+  // C16.5 (round 239): the five new kinds, positive and negative, must get the same verdict in the dump's own copy
+  'p-slack': j('xox', 'b-', '123456789012-1234567890123-AbCdEfGhIjKlMnOpQrStUvWx'), 'p-stripe': j('sk_', 'live_', 'a1B2c3D4'.repeat(3)), 'p-stripe-r': j('rk_', 'live_', 'a1B2c3D4'.repeat(3)),
+  'p-google': j('AIza', 'Sy', 'A1b2C3d4'.repeat(4), '_'), 'p-ant': j('sk-', 'ant-', 'api03-', 'aB1_'.repeat(8)), 'p-oai': j('sk-', 'aB3dE5gH7j'.repeat(5)), 'p-oai-proj': j('sk-', 'proj-', 'aB1_-d'.repeat(20)),
+  'n-slack-doc': j('xox', 'b-', 'your-token-here'), 'n-slack-x': j('xox', 'b-', 'x'.repeat(40)), 'n-stripe-test': j('sk_', 'test_', 'a1B2c3D4'.repeat(3)), 'n-stripe-23': j('sk_', 'live_', 'a'.repeat(23)),
+  'n-google-34': j('AIza', 'Sy', 'A1b2C3d4'.repeat(4)), 'n-google-36': j('AIza', 'Sy', 'A1b2C3d4'.repeat(4), '_x'), 'n-ant-31': j('sk-', 'ant-', 'a'.repeat(31)),
+  'n-oai-nodigit': j('sk-', 'aBcDeFgHiJ'.repeat(5)), 'n-oai-noupper': j('sk-', 'a1b2c3d4e5'.repeat(5)), 'n-oai-css': 'sk-fading-circle-loader-spinner-animation-keyframes-wrapper', 'n-oai-glued': j('ri', 'sk-', 'aB3dE5gH7j'.repeat(5)),
   'l-exact': pad(1048576, AWS), 'l-over': pad(1048577, AWS),
   'l-nul-first': Buffer.concat([Buffer.from([0]), buf(AWS)]), 'l-nul-last': Buffer.concat([buf(AWS), Buffer.from([0])]),
   'l-ctrl': Buffer.concat([buf(`${AWS}\n`), Buffer.alloc(10, 0x20), Buffer.from([0x7f])]),

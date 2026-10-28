@@ -71,5 +71,5 @@ test('C6.1 slice b: recovery-report keeps no private copy of the rules, and the 
   assert.match(rr, /from "\.\/policy\.mjs"/, 'recovery-report imports the policy');
   assert.doesNotMatch(rr, /const (JUNK_DIRS|isJunk|isPrivate)\b/, 'no rule of its own');
   assert.match(read('packages/chicla-kit/src/emergency-dump.mjs'), new RegExp(`"RECOVER/policy\\.mjs": "${esc(PINNED.policy)}"`), 'the dump carries policy.mjs in RECOVER/');
-  assert.match(read('packages/chicla-kit/src/bump-round.mjs'), new RegExp(`"policy\\.mjs": "${esc(PINNED.policy)}"`), 'the pin covers policy.mjs'); // C11.1 5c: the pin map lives in the bump-round core
+  assert.match(read('packages/chicla-kit/src/integrity.mjs'), new RegExp(`"policy\\.mjs": "${esc(PINNED.policy)}"`), 'the pin covers policy.mjs'); // C17.2: the pin map lives in integrity.mjs (was the bump-round core)
 });

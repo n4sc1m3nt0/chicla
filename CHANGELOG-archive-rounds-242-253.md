@@ -1,0 +1,95 @@
+# Changelog archive — rounds 242-253
+
+Moved out of `CHANGELOG.md` verbatim by `scripts/archive-changelog.mjs`. Nothing was edited or deleted;
+this file has no fingerprint and is not part of the fingerprint triple. Find an entry with
+`grep -n "^## Round 12" CHANGELOG-archive-*.md`.
+
+## Round 253 — C18.4: coverage measured, the uncovered lines named or tested (v0.0.257)
+
+- Task (Rodrigo: «avança»; C18.4, AUDIT-5 F-4, tests only). Measured first: the whole `npm test` with `--experimental-test-coverage` over the kit sources, one run (figures in `docs/audits/AUDIT-5.md` F-4): `policy.mjs` 100 % lines; uncovered: `emergency-dump.mjs` 191-195 and 336-367, `recovery-report.mjs` 105-112, `manifest.mjs` 59-60, `make-delivery.mjs` 88-90, `panel.mjs` 123.
+- Reasons, line by line. 191-195 (the `allow` release), 336-367 (the external zip/tar fallback), 105-112 (the toolchain digest check): REACHED, but the tests start the tool with a clean `env`, so NODE_V8_COVERAGE is lost; proof by 12 hand mutants in `packages/chicla-kit/mutants/list.mjs` (`K-DMP-01` to `-09`, `K-REC-01` to `-03`): all red once the tests below were added. 59-60 (the JS crc32 of a Node without `zlib.crc32`): new `test/manifest-crc-fallback.test.mjs` (2; the child syncs the ESM exports, else the native one would still be used), `K-MAN-01`, `-02` red. 88-90: unreachable by the usual input and it hides a REAL DEFECT: `out` = an existing folder makes `makeDelivery` throw `ERR_FS_EISDIR` (the catch calls `rmSync` on the folder again); the CLI ends in a stack trace. Not fixed (outside the task): card C18.6. 123: outside the three files, reported, card C18.7.
+- Four of the new mutants survived the old tests (`K-DMP-06`, `-07`, `-08`, `-09`): three new tests in `test/emergency-fallback.test.mjs` (7 now: `.env.example` put back, `--project-only`, stale hashes reset) kill `-07` to `-09`; `-06` (the code `EDUMP_FAILED` exists only in the core's result) is `survives` with the reason, card C18.7. Whole kit list not rerun: the 41 of `integrity.mjs` did not change, the 14 new ones were each run alone.
+- No source file, the pin did not move. NOT run by Claude: the CI, Node 18 and 20 (so the crc32 test ran on Node 22 only), the mutants of the zip list (348), macOS, Windows.
+
+## Round 252 — C18.5: tests that kill the four survivors of the kit list (v0.0.256)
+
+- Task (Rodrigo: «sim a todas as decisões. avança»: D-251a and `--pkg .` confirmed; C18.5, tests only). Four tests added to `packages/chicla-kit/test/core-integrity-state.test.mjs` (21 to 25): the CHANGELOG's or the app line's own `changelog_sha256_12` wrong alone fails row 7 alone, and the app hash row 6 alone (`K-INT-33`); two «Fingerprint:» paragraphs are one failing row (`K-INT-36`); line 3 or line 1 without their own word fails (`K-INT-37`); another `appFile` name gets its seven ok rows (`K-INT-41`).
+- Red first, against the mutants: the four survived before; the `survives` of the four removed from `packages/chicla-kit/mutants/list.mjs` and the whole list run (`npm run mutants:kit`, detached): 41 mutants, 40 RED, 1 equivalent explained (`K-INT-19`), none survives. No source file; the pin did not move.
+- Also the limits of `test/audit5-archive.test.mjs`: `--status` 1 block (246) to `docs/status-archive-previous-246-246.md`, `--snapshot` 1 line (242) to `docs/status-archive-done-242-242.md`, verbatim, nothing deleted. That archived the only mention of `docs/plan-a1-integrity.md` that `test/plan-a1-docs.test.mjs` looks for in the status file, so the Map (item 4) now names it.
+- NOT run by Claude: the mutants of the zip list (348), the CI, Node 18 and 20, macOS, Windows.
+
+## Round 251 — C18.3: a repeatable mutant list for the kit, first slice `integrity.mjs` (v0.0.255)
+
+- Task (Rodrigo: «avança»; C18.3, AUDIT-5 F-3, D-248c). Test first: `test/mutants-kit-list.test.mjs` (7, 3 red first: the list exists with at least 26 entries on `integrity.mjs`; the shape `mutants.mjs` reads, unique ids; every `find` once in its file and the test files exist; every mutated file parses; each exported rule has a mutant inside it; the `mutants:kit` script; the kit does not publish the list).
+- New `packages/chicla-kit/mutants/list.mjs` (41 entries, ids `K-INT-01` to `K-INT-41`) and the root script `npm run mutants:kit` = `scripts/mutants.mjs --pkg . --list packages/chicla-kit/mutants/list.mjs`. NOT the card's plain `--pkg`: the kit tests read the project root (`../../..`), so a copy of the package alone breaks them; the whole tree is copied. No source file, no change to `mutants.mjs`.
+- The 26 mutants of rounds 243 and 244 existed only as counts in this file, so the list is reconstructed from the module's guarantees, not copied.
+- Run (detached, one pass): 41 mutants, 36 RED, 1 equivalent explained (`K-INT-19`, the map is already sorted), 4 survivors that are real test gaps (`K-INT-33`, `-36`, `-37`, `-41`), listed with `survives` and proposed as C18.5 / D-251a; the four rerun alone: as listed. The pin did not move.
+- Also, because the new entries passed the limits that `test/audit5-archive.test.mjs` holds: `archive-changelog.mjs` run for real, defaults: 12 rounds (231 to 241) to `CHANGELOG-archive-rounds-231-241.md`, `--status` 1 block (245) to `docs/status-archive-previous-245-245.md`, `--snapshot` 1 line (241) to `docs/status-archive-done-241-241.md`; verbatim, nothing deleted. The CHANGELOG run was meant as a dry run: `--help` is not an option of the script and ran it for real (noticed, not fixed: outside the task).
+- NOT run by Claude: the mutants of the zip list (348), the CI, Node 18 and 20, macOS, Windows.
+
+## Round 250 — C18.2: `archive-changelog.mjs --rolling`, the two paragraphs that grew by hand archived (v0.0.254)
+
+- Task (Rodrigo: «avança»; C18.2, AUDIT-5 F-2, D-248b). Test first: `test/archive-rolling.test.mjs` (7, all red first: the keep value, verbatim rebuild, the rest of the file untouched, nothing to archive, `--dry-run`, a second batch with one pointer, refusals, the real file's paragraph sizes).
+- `scripts/archive-changelog.mjs` (the only source file): `--rolling [--keep-clauses N]`, default 3, cuts «Current version» at «; round » and «Open decisions» at depth-0 «(round » groups, writes `docs/status-archive-rolling-<lo>-<hi>.md`, checks kept + moved = original before writing. A case added to `scripts/smoke-test-archive-changelog.mjs`; item 6 of the status file names the option.
+- Run for real: 113 clauses and 20 entries (rounds 135 to 246) to `docs/status-archive-rolling-135-246.md`; the two paragraphs 10 810 and 11 781 bytes to 546 and 1 446; an independent script rebuilt the original byte for byte. Seven hand mutants (keep off by one, overwrite allowed, `--dry-run` writes, pointer replaced, nested split, second Open-decisions pointer, no keep validation) all red.
+- Also `--status --keep-previous 4` (round 244) and `--snapshot --keep-done 9` (round 240) before this round's own entries. The pin did not move. Nothing deleted.
+- NOT run by Claude: the CI, Node 18 and 20, the kit mutants, macOS, Windows.
+
+## Round 249 — C18.1: the history archived again, item 20 refreshed (v0.0.253)
+
+- Task (Rodrigo: «sim a todas» to D-248a to D-248d; C18.1, AUDIT-5 F-1 and F-5). Test first: `test/audit5-archive.test.mjs` (4, 3 red first: at most 5 «Previous» blocks, at most 10 «Done» lines, at most 21 CHANGELOG rounds, the archive files named, item 20 with the timings).
+- `archive-changelog.mjs --status --keep-previous 4` (8 blocks, rounds 235 to 243, to `docs/status-archive-previous-235-243.md`), `--snapshot --keep-done 9` (8 lines, rounds 229 to 238, to `docs/status-archive-done-229-238.md`) and `--keep 19` (11 rounds, 220 to 230, to `CHANGELOG-archive-rounds-220-230.md`), each after a dry run. The status file went from 63 936 to 56 284 bytes, the CHANGELOG from 45 919 to 30 788 (before this entry). Checked apart from the scripts: every section of the old CHANGELOG (30) and every «Previous» block and «Done» line of the old status file (29) is byte for byte in the live file or an archive, none lost. Item 20 now says 213 s for 1472 tests (`test:fast`) and 477 s for 1530 (`npm test`), measured on 2026-10-26.
+- No source, the pin did not move. Nothing deleted.
+- Run: the whole `npm test` after `bump-round` (see the closing reply). NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), mutants (the package list), macOS, Windows.
+
+## Round 248 — AUDIT-5 after M16 and M17: `docs/audits/AUDIT-5.md`, D141, milestone M18 (v0.0.252)
+
+- Task (Rodrigo: «avança», then «sim» to the audit Claude suggested). Test first: `test/audit5-docs.test.mjs` (6, all red first: the sections, one plan block per card with its four fields, every finding names its measurement, «nothing was fixed», D141 and M18 in the ROADMAP, the status file).
+- `docs/audits/AUDIT-5.md` (new), ROADMAP D141 and M18 (C18.1 to C18.4, all proposed), a row in `docs/README.md`. Findings, all measured: F-1 archives overdue (status file 62 150 B, 11 «Previous» blocks, 15 Snapshot lines, 29 CHANGELOG rounds); F-2 two status paragraphs grow by hand (10.5 KB and 10.8 KB); F-3 about 110 hand mutants of rounds 238 to 245 are not in a repeatable list; F-4 kit coverage floor: `emergency-dump.mjs` 86 %, `policy.mjs` 86 %, `recovery-report.mjs` 92 % lines; F-5 item 20 timing stale (213 s, 1472 tests). No new security finding. Nothing was fixed. No source, the pin did not move.
+- Run: `npm run test:fast` before the docs (1472, 0 fail, 213 s), the kit suite with coverage (296, 0 fail), the whole `npm test` after `bump-round` (see the closing reply). NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), mutants (the package list), macOS, Windows, coverage of the root `test/`.
+
+## Round 247 — C17.4: `docs/integrity.md`, the docs held to the code; M17 complete (v0.0.251)
+
+- Task («avança»; C17.4, D140). Test first: `test/integrity-docs.test.mjs` (7, all red first: the page exists and is listed; it names every export, every rule id and `EINTEGRITY_` code, every file of `LF_FILES` and `TOOLCHAIN`, the three callers (each must import the module), the design limits; pointers).
+- `docs/integrity.md` (new), rows or pointers in `docs/README.md`, `docs/fingerprint.md`, `docs/manifest.md`, the kit README and the Map (item 4) of the status file. No source, the pin did not move.
+- Hand mutant: remove an export, a code or a caller's import and a test goes red (checked by the test's own shape, not run as a separate mutant list).
+- Run: `check-build`, the whole `npm test` after `bump-round` (see the closing reply). NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), mutants (the package list), macOS, Windows.
+
+## Round 246 — D-245a: both tools follow `isJunkName` for every `*.tsbuildinfo` (v0.0.250)
+
+- Task (Rodrigo: «sim» to D-245a; a small card between C17.3 and C17.4). Test first: `name-rules-differential.test.mjs` got `KNOWN_DIFF` emptied; 2 of its 5 went red (`app.tsbuildinfo` shipped by both tools).
+- `check-manifest.mjs`: the walk skips any name ending `.tsbuildinfo` (`SKIP_FILES` loses the exact `tsconfig.tsbuildinfo`). `verify-delivery.mjs`: `JUNK` ends `\.tsbuildinfo$`. Two source files, 2 changed lines of code; `policy.mjs` untouched, the pin did not move.
+- Hand mutant: put either tool back to the exact name, the test goes red (it was red before the fix). Not run: other mutants.
+- Run: `check-build`, the whole `npm test` and `npm run smoke` after `bump-round` (see the closing reply). NOT run by Claude: the CI, Node 18 and 20, mutants (the package list), macOS, Windows.
+
+## Round 245 — C17.3: one corpus of names ties `check-manifest` and `verify-delivery` to `policy.mjs`, tests only (v0.0.249)
+
+- Task («avança», no decision waiting; C17.3, D140). Test only: `packages/chicla-kit/test/name-rules-differential.test.mjs` (5). One corpus of 46 names (`.env*`, keys, `.ssh`, Python artefacts, `node_modules`, `.git`, `.DS_Store`, `*.tsbuildinfo`, a policy `names` entry at any depth and `paths` entries from the root, near-misses such as `.envrc`, `distribution.txt`, `docs/private-not/`). The oracle is written from the exports of `policy.mjs` (`neverShipReason`, `isJunkName`, `SKIP_NAMES`); `check-manifest` is run with `--write` on one project holding every name and the manifest is read back; `verify-delivery` is run on one tiny zip per name.
+- Result: both tools follow the policy on every name but one. `app.tsbuildinfo` (any `*.tsbuildinfo` other than the exact `tsconfig.tsbuildinfo`): `isJunkName` (what `recovery-report` ignores) calls it junk, `check-manifest` (`SKIP_FILES`) and `verify-delivery` (`JUNK`) ship it. Not fixed here (a fix in `policy.mjs` moves the pin; one in a tool is a new card): it is named in `KNOWN_DIFF`, the test asserts it is still exactly that, and it is D-245a for Rodrigo.
+- 6 hand mutants (a name added to one tool's list only, the `.DS_Store` rule dropped from `verify-delivery`, `policySkips` dropped from the walk, the policy not passed to the zip check, a secret folder added to the policy): 5 red; the sixth (`.pem` changed inside `policy.mjs` itself) is explained: oracle and both tools read the same policy, so this test cannot see a change of the policy; `secret-names.test.mjs` holds it. No source, the pin did not move.
+- Run: `npm test` whole, `check-build` and `npm run smoke` (see the closing reply). NOT run by Claude: the CI, Node 18 and 20, mutants (the package list), macOS, Windows.
+
+## Round 244 — C17.2: state and pin rules in `integrity.mjs`, and `verify-delivery` calls them (v0.0.248)
+
+- Task («avança», no decision waiting: D-242a to D-242d were confirmed in round 243; C17.2, D140). Tests first: `packages/chicla-kit/test/core-integrity-state.test.mjs` (21, 17 red first: the `TOOLCHAIN` map in the module and out of `bump-round`; the module still pure, the caller passes `sha256`; a consistent fake project is all ok in the order pin, 7 fingerprint rows, lf; a pin off by one digit, a toolchain file changed, a stale CHANGELOG, each of the seven fingerprint rows failing alone, two or no status file (`state`), no `version.mjs` or no pin skips the rule; `bump-round --verify` keeps its nine rows; and a real delivery zip altered with CRLF, a wrong pin, a stale CHANGELOG, a second status file and the three together, each `EVERIFY_FAILED` with its own `EINTEGRITY_*`: the experiment of the plan §2, which passed `make-delivery-zip` before).
+- `integrity.mjs`: `TOOLCHAIN`, `PIN_RE`, `FP`, `PARA`, `tailFrom`, `lineOf`, `toolchainDigest`, `checkPin`, `checkState`, `checkIntegrity` (still no import and no I/O). `bump-round.mjs`: `verify` is one call to `checkIntegrity` over a disk view (same labels, same order, the CLAUDE.md LF row last); its copies of the map and the regexes are gone. `verify-delivery.mjs`: the same call over its own reader of the zip, a failing row is a problem starting with `EINTEGRITY_LF`, `_PIN`, `_FINGERPRINT` or `_STATE`; the `--against` zips are not held to it; the old «exactly 1 status file» problem is now the `_STATE` one.
+- Tests touched: the four `pinned-*-move` tests and `policy.test.mjs` read the map from `integrity.mjs`; the import test of `core-verify-delivery` allows `./integrity.mjs`. Docs: `docs/manifest.md` (the four codes), `docs/fingerprint.md`, ROADMAP (C17.2 done, D140 note).
+- 16 hand mutants on the three files, 15 red at once and one (the CHANGELOG leg of `file=`) caught after a test was added; the pin did not move (`--verify` ✓). Three source files, about 120 changed lines.
+- Run: the whole `npm test` before the closing docs (1512 tests, 1509 pass, 2 skipped, 1 fail, 525 s: `test/policy.test.mjs` still read the map from `bump-round.mjs`; fixed, that file 8 of 8 green); `npm run test:fast` and `npm run smoke` after `bump-round` (see the closing reply), on Node 22 on Linux. NOT run by Claude: the CI, Node 18 and 20, mutants (the package list), macOS, Windows.
+
+## Round 243 — C17.1: `integrity.mjs`, the shared LF rule and status-file regex (v0.0.247)
+
+- Task (Rodrigo: «sim» ×4 to D-242a to D-242d, then «avança»; C17.1, D140). Tests first: `packages/chicla-kit/test/core-integrity.test.mjs` (13, red first: the module is pure and unpinned; the regex; the LF list; CRLF in each file of the list, a bare CR, an absent or unreadable file, `skip`; `bump-round --verify` rows; `check-manifest` `EINTEGRITY_LF` in check and `--write`).
+- `packages/chicla-kit/src/integrity.mjs` (new, no import): `STATUS_FILE_RE`, `LF_FILES`, `checkLf`. `bump-round.mjs`: the LF check and the status regex come from it; the CLAUDE.md row is unchanged and last, another file prints a row only when it fails. `check-manifest.mjs`: `EINTEGRITY_LF` (`result.crlf`), the manifest and the baseline skipped on `--write`.
+- Tests touched: two «imports only node:» tests allow `./integrity.mjs`; `test/toolchain-files.mjs` gets `INTEGRITY` (the check-manifest copy list) and four copied-scripts filters skip it; docs: `docs/fingerprint.md` row, `docs/manifest.md` code row, ROADMAP (D140 confirmed, C17.1 done), plan §6.
+- 10 hand mutants on the three files, all red. Three source files (one new); `integrity.mjs` is outside `RECOVER/`, the pin did not move.
+- Run: the whole `npm test` (1491 tests, 1489 pass, 2 skipped, 0 fail, 500 s) and `npm run smoke` (all green), on Node 22 on Linux. NOT run by Claude: the CI, Node 18 and 20, mutants (the package list), macOS, Windows.
+
+## Round 242 — the A-1 plan: one integrity check instead of three, docs only (v0.0.246)
+
+- Task (Rodrigo: «avança para uma ronda só de plano do A-1, o A-2 fica para depois»; D138 part 1). Docs and one test only, no source. Test first: `test/plan-a1-docs.test.mjs` (8, all red first: the plan and its sections, the rules table and the experiment, the design (no I/O, independent reader, not pinned, D7), one block per card with source files (at most 3), tests first, pin and done-when, what stays out, D-242a to D-242d, ROADMAP and README, the status file).
+- `docs/plan-a1-integrity.md` (new): §2 which of 11 rules each of `check-manifest`, `verify-delivery` and `bump-round --verify` checks; experiment on a copy of the round 241 tree (CRLF in `CLAUDE.md`, the pin off by one digit, a line added to `CHANGELOG.md` after the bump): `bump-round --verify` printed 3 ✗, `check-manifest` and `make-delivery-zip` passed and built the zip. §3 design: `packages/chicla-kit/src/integrity.mjs`, pure, not pinned, each tool brings its reader. §5 cards C17.1 to C17.4. §6 D-242a to D-242d.
+- `ROADMAP.md`: D140 (proposed), D138 says A-1 is planned and A-2 waits, milestone M17 (C17.1 to C17.4, planned, not scheduled). `docs/README.md` lists the plan.
+- Files: the above, the status file, this CHANGELOG, `package.json` version. Nothing pinned touched, the pin did not move, no gate changed. A-2 not planned (Rodrigo: «depois»).
+- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke`, mutants, macOS, Windows. The experiment ran once, on Node 22, on a Linux copy; the status-regex count (nine files) and the table of §2 were read from the code, not measured by a test.
+

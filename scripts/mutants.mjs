@@ -11,8 +11,8 @@
 // tests are already red (or hang) without any mutation, which would make every red meaningless.
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -42,9 +42,15 @@ const here = (m) => !m.onlyOn || m.onlyOn.includes(process.platform);
 if (!todo.length) usage(`no mutant with id ${only}`);
 
 const T = mkdtempSync(join(tmpdir(), "chicla-mutants-"));
-const work = join(T, "pkg"), priv = join(T, "tmp");
+// C20.7 (round 274): a package inside the repo is copied to the SAME relative place below the private folder (packages/chicla-zip, not «pkg»), and the private folder gets the repo's `docs/`:
+// four tests of chicla-zip read `../../../docs/zip-handling.md`, which from `<private>/pkg/test` was the OS temp folder, outside the copy (the baseline failed on a Mac until a `docs/` was put there by hand).
+// A package outside the repo, or the whole tree (`--pkg .`, the kit list), is copied to `pkg` as before.
+const rel = relative(ROOT, pkg), inRepo = rel !== "" && !/^\.\.(?:[\\/]|$)/.test(rel) && resolve(ROOT, rel) === pkg;
+const work = join(T, inRepo ? rel : "pkg"), priv = join(T, "tmp");
 mkdirSync(priv);
+mkdirSync(dirname(work), { recursive: true });
 cpSync(pkg, work, { recursive: true, filter: (p) => !/(^|[\\/])node_modules([\\/]|$)/.test(p) });
+if (inRepo && existsSync(join(ROOT, "docs"))) cpSync(join(ROOT, "docs"), join(T, "docs"), { recursive: true });
 const runTests = (files) => spawnSync(process.execPath, ["--test", ...files], { cwd: work, encoding: "utf8", timeout, killSignal: "SIGKILL", env: { ...process.env, CHICLA_MUTANT_RUN: "1", TMPDIR: priv, TMP: priv, TEMP: priv } }); // a private TMPDIR: a mutant that leaks temp files (A1) leaks them into the folder removed at the end
 const finish = (code) => { rmSync(T, { recursive: true, force: true }); process.exit(code); };
 

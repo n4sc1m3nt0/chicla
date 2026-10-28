@@ -47,6 +47,9 @@ One line per check, in this order. The first column is how the printed label sta
 | `app=` | The `app=` field of the paragraph names `APP_FILE`. |
 | `app hash` | The app hash in all three places equals the hash of the app file as it is on disk. |
 | `CHANGELOG hash` | The changelog hash in all three places equals the hash of the CHANGELOG as it is on disk. |
+| `CLAUDE.md has LF` | `CLAUDE.md` has no CRLF line ending. It is in no hash and the pin only reads one line of it, so CRLF there would pass every other row; it is the last row, and only when `CLAUDE.md` exists. The status file, the CHANGELOG and `version.mjs` are hashed, so CRLF in them already fails the hash rows. Since round 243 (C17.1) the rule is the shared one in `packages/chicla-kit/src/integrity.mjs`, which holds one list of the files that must be LF (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, the status file, `CHANGELOG.md`, `version.mjs`, `FILES.manifest`, `FILES.baseline.json`): the `CLAUDE.md` row is always printed, and any other file of the list prints a row only when it fails. |
+
+Since round 244 (C17.2) every row above comes from `packages/chicla-kit/src/integrity.mjs` (`checkIntegrity`: the pin, the state and fingerprint rows, the LF rows, in this order; the `TOOLCHAIN` map lives there too), with the disk as the reader. `verify-delivery` calls the same rules on the zip with its own reader, so a delivery with CRLF, a pin that does not match, a stale fingerprint or two status files is refused (`EINTEGRITY_*`, see `docs/manifest.md`); a zip without `version.mjs` skips the fingerprint rows. The whole module is described in `docs/integrity.md`.
 
 A failed check prints `✗` and the result is `EBUMP_VERIFY`. A hash that no longer matches means the file was edited after the round was closed: say so, never pick one side silently. A `seq` that differs from the status file name means the three files come from different rounds (see `EBUMP_UNPAIRED`).
 

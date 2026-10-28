@@ -1,5 +1,5 @@
 // C12.5 + C12.6 (round 167): the agent matrix and `chicla init --agent <name>`. The matrix holds only the agents whose instruction file was read in a source
-// on 2026-10-17 (a third-party survey of each tool's documentation: NOT the vendors' own pages, so G-C15 is Rodrigo's). `--agent` ADDS the file of that
+// on 2026-10-17 (a survey; re-read on the vendors' own pages on 2026-10-22, G-C15 closed). `--agent` ADDS the file of that
 // agent to the default set (CLAUDE.md, AGENTS.md and the state files); it never overwrites and is all or nothing. Tests assert codes and files, never message text.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

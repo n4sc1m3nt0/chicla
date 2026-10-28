@@ -46,6 +46,8 @@ export async function makeDelivery({ out, against = [], allowRemoved = [], root 
   if (!out || out.startsWith("--")) { say("err", USAGE); result.ok = false; result.code = "EDELIVERY_USAGE"; return result; }
   const outPath = resolve(out);
   result.out = outPath;
+  // C18.6: an output path that is a folder is refused before any step runs (nothing is touched), and the catch below never calls rmSync on a folder (that threw ERR_FS_EISDIR through the CLI).
+  try { if (lstatSync(outPath).isDirectory()) return stop("EDELIVERY_ERROR", `\n✗ EDELIVERY_ERROR: ${outPath} is a folder, not a path for a zip — delivery aborted; nothing was created or changed.`); } catch { /* it does not exist yet: the usual case */ }
   // A step that fails: if the zip already exists (step 5 failed, or the verifier rejected it), it is a REJECTED zip: it is deleted so nobody delivers it by mistake.
   const stepFailed = (script, r) => {
     const hadZip = existsSync(outPath);
@@ -85,7 +87,7 @@ export async function makeDelivery({ out, against = [], allowRemoved = [], root 
     if (!v.ok) return stepFailed("verify-delivery-zip.mjs", v);
     say("out", `\n✓ delivery created and verified: ${outPath}`);
   } catch (e) {
-    if (existsSync(outPath)) rmSync(outPath);
+    try { if (!lstatSync(outPath).isDirectory()) rmSync(outPath); } catch { /* nothing to remove */ }
     return stop("EDELIVERY_ERROR", `\n✗ EDELIVERY_ERROR: ${e.code ? `${e.code}: ` : ""}${e.message} — delivery aborted; no zip was created/updated.`);
   }
   return result;

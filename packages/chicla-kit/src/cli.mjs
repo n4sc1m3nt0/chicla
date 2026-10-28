@@ -17,7 +17,7 @@
 //        (default: /mnt/user-data/outputs if it exists, else <root>/outputs). Exit 0 when a dump was created (warnings never change that), 1 when none was
 //        (EDUMP_NO_PROJECT: --project-only and no project root; EDUMP_FAILED), 2 for a usage error.
 //   chicla recovery <dump.zip> [--baseline <zip>] [--out <dir>] [--toolchain-digest <hex>] [--trust-toolchain] [--json]
-//        extracts an emergency dump (default <out>: /home/claude/recovered, then -2, -3 ...), checks it, compares it with --baseline (a delivery zip), the baseline inside the dump
+//        extracts an emergency dump (a zip: a .tar.gz is refused, ERECOVERY_FORMAT; default <out>: /home/claude/recovered where /home/claude exists, else a fresh <temp>/chicla-recovered-XXXXXX; -2, -3 ... if it exists), checks it, compares it with --baseline (a delivery zip), the baseline inside the dump
 //        or FILES.manifest, and writes <out>/RECOVERY_DIFF.md. It has no --root: relative paths come from the current folder. Exit 3 = EHASH_TOOLCHAIN, which the core only raises
 //        when it runs from a dump's RECOVER/ folder (the kit's own copy is never checked); `--toolchain-digest` and `--trust-toolchain` are for that case.
 //   chicla --help

@@ -7,7 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -97,9 +97,14 @@ for (const [mode, ok] of [['stream', true], ['zip', !!ZIP], ['tar', !!TAR && !!G
       // the chain goes on: recovery-report extracts the dump and writes its own report
       const out = join(T, 'recovered');
       const rec = spawnSync(process.execPath, [pinnedFile(ROOT, 'recovery-report'), path, '--out', out], { encoding: 'utf8', maxBuffer: 1 << 28 });
-      assert.equal(rec.status, 0, rec.stdout + rec.stderr);
       assert.ok(!(rec.stdout + rec.stderr).includes(MARK), 'the marker is not on the console of recovery-report');
-      assert.deepEqual(leaks(out), [], 'the marker is nowhere in what recovery-report extracted or wrote');
+      if (mode === 'tar') { // C16.1 (D-234c): `recovery` no longer extracts a .tar.gz (it was the system `tar` on an archive); it refuses, and extracts nothing
+        assert.equal(rec.status, 1, rec.stdout + rec.stderr);
+        assert.equal(existsSync(out), false, 'nothing was extracted');
+      } else {
+        assert.equal(rec.status, 0, rec.stdout + rec.stderr);
+        assert.deepEqual(leaks(out), [], 'the marker is nowhere in what recovery-report extracted or wrote');
+      }
     } finally { rmSync(T, { recursive: true, force: true }); }
   });
 }

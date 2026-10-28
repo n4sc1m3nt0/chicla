@@ -810,7 +810,8 @@ const dup202 = (() => {
       find: "if (!hits.length) hits = entries.filter((x) => !x.isDir && sameName(x.name, name));", replace: "hits = entries.filter((x) => !x.isDir && sameName(x.name, name));" },
     { id: "R202-no-nfc-fallback", file: F, tests: T, why: "two spellings that only normalise to the same name are looked at too",
       find: "if (!hits.length) hits = entries.filter((x) => !x.isDir && sameName(x.name, name));", replace: "" },
-    { id: "R202-folder-counts", file: F, tests: T, why: "a folder entry of the same name is not a match",
+    // Round 273 (C20.6): a folder entry counted as a match turns `read("dir/")` into an empty file; the tests that go red are in `read.test.mjs` and `open.test.mjs`, not in the duplicate-name file (the first whole run on a Mac, 2026-10-28, left it as the only survivor).
+    { id: "R202-folder-counts", file: F, tests: [...T, "test/read.test.mjs", "test/open.test.mjs"], why: "a folder entry of the same name is not a match",
       find: "let hits = entries.filter((x) => !x.isDir && x.name === name);", replace: "let hits = entries.filter((x) => x.name === name);" },
     { id: "R202-code", file: F, tests: T, why: "the refusal carries the code EAMBIGUOUS",
       find: "(a duplicate name)`, \"EAMBIGUOUS\")", replace: "(a duplicate name)`, \"EZIP\")" },

@@ -15,6 +15,7 @@ Chicla is a small project with strict rules. Read them before sending anything.
 - **One small, verifiable slice per change:** about three source files and 200 changed lines at most (tests, the manifest and docs do not count).
 - **Tests first, and watch them fail.** A test that passes before the code protects nothing.
 - Run the file you are working on with `node --test <file>`. The whole suite (`npm test`, about four minutes) runs once before you send the change; on Windows only the packages' own suites are run in CI.
+- If you change a kit source (`packages/chicla-kit/src/`), also run `npm run mutants:kit` (or one entry: `npm run mutants:kit -- --only K-INT-05 --timeout 60`): each entry of `packages/chicla-kit/mutants/list.mjs` breaks one guarantee on purpose and its test must go red. It runs with `--pkg .` because the kit tests read the project root, so it copies the whole tree; it takes minutes, so start it detached. Add an entry for a guarantee you add.
 - Dangerous behaviour (writing, extraction, recovery) must be checked by something other than the code that produced it: `unzip`, Python `zipfile`, `sha256sum`.
 - Keep changes inside the task. Report what you notice outside it.
 - Say what you did **not** run. Never claim a check you did not run.

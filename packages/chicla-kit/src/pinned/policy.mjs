@@ -102,7 +102,7 @@ export function policySkips(rel, policy = NO_POLICY) {
 export const policyAllows = (rel, policy = NO_POLICY) => policy.allow?.has(nfc(rel)) === true;
 
 // ---- the content detector (C6.3 slice b, D73) ----
-// Looks INSIDE a file for what only a secret looks like: a private-key header, an AWS access key id, a GitHub token (ghp_ or github_pat_), an npm token (npm_).
+// Looks INSIDE a file for what only a secret looks like: a private-key header, an AWS access key id, a GitHub token (ghp_ or github_pat_), an npm token (npm_), a Slack token (xox), a Stripe live key, a Google API key (AIza), an Anthropic key (sk-ant-) or an OpenAI key (sk-).
 // Built-in, never switched off by the policy file. It returns the KIND and nothing else: callers print the file name and the kind, never the match.
 // A file over SCAN_LIMIT or with a NUL byte (binary; UTF-16 too) is not scanned: a known limit, not a guarantee. The `allow` key (slice c) releases single files; the callers decide, with policyAllows().
 export const SCAN_LIMIT = 1048576; // 1 MiB
@@ -111,6 +111,13 @@ const DETECTORS = [
   ["AWS access key", /(?<![A-Za-z0-9])AKIA[0-9A-Z]{16}(?![A-Za-z0-9])/],
   ["GitHub token", /(?<![A-Za-z0-9])(?:ghp_[A-Za-z0-9]{36}(?![A-Za-z0-9])|github_pat_[A-Za-z0-9_]{22,})/],
   ["npm token", /(?<![A-Za-z0-9])npm_[A-Za-z0-9]{36}(?![A-Za-z0-9])/],
+  // C16.5 (round 239, S-5): five more kinds. Each is anchored (no letter, digit, `_` or `-` just before) and sized, and the ones that could look like prose or a CSS name also need a digit (and an
+  // uppercase letter for `sk-`) within the first 60 characters; the look-aheads are bounded, so a hostile file of 1 MiB cannot make the scan slow. Stripe test keys and publishable keys are not secrets.
+  ["Slack token", /(?<![A-Za-z0-9])xox[baprs]-(?=[A-Za-z-]{0,60}[0-9])[0-9A-Za-z-]{24,}/],
+  ["Stripe key", /(?<![A-Za-z0-9_])[sr]k_live_[A-Za-z0-9]{24,}/],
+  ["Google API key", /(?<![A-Za-z0-9_-])AIza[0-9A-Za-z_-]{35}(?![0-9A-Za-z_-])/],
+  ["Anthropic API key", /(?<![A-Za-z0-9_-])sk-ant-[A-Za-z0-9_-]{32,}/],
+  ["OpenAI API key", /(?<![A-Za-z0-9_-])sk-(?!ant-)(?=[A-Za-z0-9_-]{0,60}[0-9])(?=[A-Za-z0-9_-]{0,60}[A-Z])[A-Za-z0-9_-]{40,}/],
 ];
 export function detectSecret(buf) {
   if (buf.length === 0 || buf.length > SCAN_LIMIT || buf.includes(0)) return null;

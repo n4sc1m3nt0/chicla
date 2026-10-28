@@ -88,7 +88,7 @@ const project = (files) => {
   return d;
 };
 const run = (d, ...a) => spawnSync(process.execPath, [join(d, 'scripts/check-manifest.mjs'), ...a], { encoding: 'utf8' });
-const manifestOf = (d) => readFileSync(join(d, 'FILES.manifest'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#')).map((l) => l.split('\t')[0]).filter((x) => !x.startsWith('scripts/') && !x.startsWith('packages/chicla-kit/src/pinned/') && x !== 'packages/chicla-kit/src/check-manifest.mjs').sort();
+const manifestOf = (d) => readFileSync(join(d, 'FILES.manifest'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#')).map((l) => l.split('\t')[0]).filter((x) => !x.startsWith('scripts/') && !x.startsWith('packages/chicla-kit/src/pinned/') && x !== 'packages/chicla-kit/src/check-manifest.mjs' && x !== 'packages/chicla-kit/src/integrity.mjs').sort();
 const UNIQUE = [AWS, GHP, GHPAT, NPM].map((s) => s.slice(6)); // a stretch of each sample that must never be printed
 
 test('check-manifest --write: a file whose content looks like a secret is left out, named with its kind, never quoted; the controls stay', () => {

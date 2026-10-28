@@ -16,13 +16,13 @@
 // It reads the two pinned files, src/pinned/manifest.mjs and src/pinned/policy.mjs, by relative path (they move in the last slice).
 // C11.1 slice 1: the work is `checkManifest({ root, write })`, which never prints, exits or throws; this file never prints or exits,
 // so the kit CLI imports and runs the very same code (no child process).
-import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, existsSync, statSync, openSync, fstatSync, closeSync } from "node:fs";
 import { join, resolve, relative } from "node:path";
 import { crc32, parseManifest, serializeManifest } from "./pinned/manifest.mjs";
-import { SKIP_NAMES, PYTHON_DIRS, isSecretEnv, isSecretFileName, loadPolicy, policyAllows, policySkips, scanFile } from "./pinned/policy.mjs";
+import { SKIP_NAMES, PYTHON_DIRS, isSecretEnv, isSecretFileName, loadPolicy, policyAllows, policySkips, detectSecret, SCAN_LIMIT } from "./pinned/policy.mjs";
+import { STATUS_FILE_RE as STATUS_RE, checkLf } from "./integrity.mjs"; // C17.1: the status-file regex and the LF rule are shared (docs/plan-a1-integrity.md)
 
-const SKIP_FILES = new Set([".DS_Store", "tsconfig.tsbuildinfo", "FILES.manifest"]);
-const STATUS_RE = /^CHICLA_PROJECT_STATUS-\d+\.md$/;
+const SKIP_FILES = new Set([".DS_Store", "FILES.manifest"]); // and every `*.tsbuildinfo` (D-245a, as `isJunkName` in policy.mjs)
 const nfc = (f) => f.normalize("NFC");
 
 // W2 — what NEVER enters the manifest (and therefore never a delivery zip, which is built from the manifest): the rules live in src/pinned/policy.mjs (C6.1),
@@ -41,22 +41,44 @@ export function checkManifest({ root, write = false } = {}) {
   const result = { ok: true, code: null, mode: write ? "write" : "check", root: ROOT, messages };
   const stop = (code, text) => { say("err", text); result.ok = false; result.code = code; return result; };
 
+  // A root that is missing or is not a folder is a clean error, not an ENOENT from the walk (and `--write` must not create anything there).
+  let rootIsDir = false; try { rootIsDir = statSync(ROOT).isDirectory(); } catch { /* missing or unreadable */ }
+  if (!rootIsDir) return stop("EMANIFEST_ROOT", `\n✗ EMANIFEST_ROOT: the project folder does not exist or is not a folder: ${ROOT}`);
+
   // C6.1 d2 (D66): the optional chicla.policy.json adds to them. A policy that cannot be used stops the check and `--write` alike (failing open would leak).
   let POLICY;
   try { POLICY = loadPolicy(ROOT); } catch (e) { return stop(e.code ?? "EPOLICY", `\n✗ ${e.code ?? "EPOLICY"}: ${e.message}`); }
 
+  // C16.6 (AUDIT-4 P-2): ONE read per file. The bytes that are scanned for a secret are the bytes that are hashed for `--write`; before, the scan opened every
+  // file and `--write` read it again. A file over the scan limit is read only for `--write` (check mode has nothing to scan and nothing to hash), an `allow`ed file
+  // is not scanned. A read error is kept for `--write` (it stops there with the same error as before) and means "no secret found" for the scan, as before.
+  const sums = new Map(); // rel -> { crc32, size } | { err }; a missing entry (a file that is not a regular file) is read at write time, as before
+  function inspect(p, rel, scan) {
+    if (!write && !scan) return null;
+    let fd;
+    try {
+      fd = openSync(p, "r");
+      const st = fstatSync(fd);
+      if (!st.isFile() || (st.size > SCAN_LIMIT && !write)) return null;
+      const bytes = readFileSync(fd);
+      if (write) sums.set(rel, { crc32: crc32(bytes), size: bytes.length });
+      return scan ? detectSecret(bytes) : null;
+    } catch (err) { if (write) sums.set(rel, { err }); return null; } finally { if (fd !== undefined) try { closeSync(fd); } catch { /* nothing to do */ } }
+  }
+
   const detected = []; // C6.3 b (D73): [rel, kind] of files left out because their CONTENT looks like a secret (the kind only, never the match)
   function walk(dir, out = []) {
-    for (const name of readdirSync(dir)) {
-      if (SKIP_NAMES.has(name) || SKIP_FILES.has(name)) continue;
+    for (const ent of readdirSync(dir, { withFileTypes: true })) { // C16.6: the entry already says what it is; only a symlink needs a stat (does it point to a folder?)
+      const name = ent.name;
+      if (SKIP_NAMES.has(name) || SKIP_FILES.has(name) || name.endsWith(".tsbuildinfo")) continue;
       const p = join(dir, name);
-      const isDir = statSync(p).isDirectory();
+      const isDir = ent.isSymbolicLink() ? statSync(p).isDirectory() : ent.isDirectory();
       if (isDir && PYTHON_DIRS.has(name)) continue;
       if (!isDir && (/\.pyc$/.test(name) || isSecretEnv(name) || isSecretFileName(name))) continue; // (the .ssh and .aws folders are in SKIP_NAMES)
       const rel = relative(ROOT, p).split("\\").join("/");
       if (policySkips(rel, POLICY)) continue;
       if (isDir) { walk(p, out); continue; }
-      const kind = policyAllows(rel, POLICY) ? null : scanFile(p); // C6.3 c: an `allow`ed file is not scanned
+      const kind = inspect(p, rel, !policyAllows(rel, POLICY)); // C6.3 c: an `allow`ed file is not scanned
       if (kind) { detected.push([rel, kind]); continue; }
       out.push(rel);
     }
@@ -67,6 +89,13 @@ export function checkManifest({ root, write = false } = {}) {
   result.files = current.length;
   result.detected = detected.sort((x, y) => (x[0] < y[0] ? -1 : 1)).map(([file, kind]) => ({ file, kind }));
   if (detected.length) say("err", `⚠ ${detected.length} file(s) left out of the manifest (and so of a delivery) because their content looks like a secret (name and kind only):\n  ${detected.map(([f, k]) => `${f}  [${k}]`).join("\n  ")}`);
+
+  // C17.1 (D140): the LF rule of integrity.mjs. FILES.manifest is not in `current` (SKIP_FILES) but is one of the files that must be LF; a `--write` is about to regenerate it and the baseline, so it skips both.
+  {
+    const names = existsSync(MANIFEST) ? [...current, "FILES.manifest"] : current;
+    const bad = checkLf({ names, read: (f) => { try { return readFileSync(join(ROOT, f)); } catch { return null; } } }, { skip: write ? ["FILES.manifest", "FILES.baseline.json"] : [] }).filter((r) => !r.ok).map((r) => r.file);
+    if (bad.length) { result.crlf = bad; return stop("EINTEGRITY_LF", `\n✗ EINTEGRITY_LF: ${bad.length} file(s) have CRLF line endings, they must be LF only (see .gitattributes):\n  ${bad.join("\n  ")}`); }
+  }
 
   // C7.3 (D56): two files on disk whose names differ only in NFC/NFD. The NFC comparison below would put them under one key and a lost file
   // could hide behind its look-alike, so this stops the check and `--write` alike.
@@ -79,7 +108,14 @@ export function checkManifest({ root, write = false } = {}) {
   if (write) {
     // v2 (C7.1 slice b): path, crc32 and size read from the disk now; the sha256 stays in FILES.baseline.json (D43)
     let text;
-    try { text = serializeManifest(current.map((rel) => { const b = readFileSync(join(ROOT, rel)); return { path: rel, crc32: crc32(b), size: b.length }; })); }
+    try {
+      text = serializeManifest(current.map((rel) => {
+        let sum = sums.get(rel);
+        if (!sum) { const b = readFileSync(join(ROOT, rel)); sum = { crc32: crc32(b), size: b.length }; }
+        if (sum.err) throw sum.err;
+        return { path: rel, crc32: sum.crc32, size: sum.size };
+      }));
+    }
     catch (e) { return stop(e.code ?? "EMANIFEST", `\n✗ ${e.code ?? "EMANIFEST"}: FILES.manifest was NOT written (${e.message})`); }
     writeFileSync(MANIFEST, text);
     result.written = current.length;

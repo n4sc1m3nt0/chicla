@@ -61,7 +61,7 @@ const project = (files, polText) => {
   return d;
 };
 const cm = (d, ...a) => spawnSync(process.execPath, [join(d, 'scripts/check-manifest.mjs'), ...a], { encoding: 'utf8' });
-const manifestOf = (d) => readFileSync(join(d, 'FILES.manifest'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#')).map((l) => l.split('\t')[0]).filter((x) => !x.startsWith('scripts/') && !x.startsWith('packages/chicla-kit/src/pinned/') && x !== 'packages/chicla-kit/src/check-manifest.mjs' && x !== 'packages/chicla-kit/src/verify-delivery.mjs').sort();
+const manifestOf = (d) => readFileSync(join(d, 'FILES.manifest'), 'utf8').split('\n').filter((l) => l && !l.startsWith('#')).map((l) => l.split('\t')[0]).filter((x) => !x.startsWith('scripts/') && !x.startsWith('packages/chicla-kit/src/pinned/') && x !== 'packages/chicla-kit/src/check-manifest.mjs' && x !== 'packages/chicla-kit/src/integrity.mjs' && x !== 'packages/chicla-kit/src/verify-delivery.mjs').sort();
 const FILES = { 'package.json': '{}', 'docs/example-key.txt': `Example: ${AWS}\n`, 'other/example-key.txt': `Example: ${AWS}\n`, 'src/real.js': `const t = "${NPM}";\n`, 'a.txt': 'a' };
 
 test('check-manifest --write: an allowed file with a secret-looking content is listed, silently; every other one is still held back', () => {

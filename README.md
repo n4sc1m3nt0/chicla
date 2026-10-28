@@ -83,6 +83,7 @@ Requirements: Node 18 or later. `unzip`, `zip` and Python 3 are used only by tes
 npm test                          # the whole suite (node --test)
 npm run smoke                     # the six script smoke tests
 npm run mutants                   # break each guarantee on purpose; fails on a survivor (slow)
+npm run mutants:kit               # the same for the kit (packages/chicla-kit/mutants/list.mjs); --pkg . copies the whole tree, minutes: run it detached
 node scripts/bump-round.mjs --verify   # fingerprints agree?
 node scripts/check-manifest.mjs        # FILES.manifest matches the disk?
 node scripts/check-build.mjs           # every .mjs passes `node --check`

@@ -8,7 +8,7 @@
 //                                                             `dry` shows what would change and writes nothing; `note` is added to the fingerprint comments.
 //   renderBumpRound(result) -> { out, err }                   the text the script prints.
 //
-// It never prints, exits or throws, imports only `node:` modules and does not know where it sits: the project is always the `root` it is given. The script
+// It never prints, exits or throws, imports only `node:` modules and its sibling `integrity.mjs` (C17.1: the LF rule and the status-file regex) and does not know where it sits: the project is always the `root` it is given. The script
 // `scripts/bump-round.mjs` is a thin wrapper (flags, print, exit) and `chicla bump-round` imports the same code, so both run one implementation.
 // WHEN TO RUN: at step 5 of the "closing kit", AFTER the CHANGELOG entry, "Last updated" and any app edit are final (the hashes are of the final content)
 // and BEFORE make-delivery-zip.mjs. The hashes are computed over BYTES: app = tail -n +4 | sha256sum; CHANGELOG = tail -n +2 | sha256sum (12 hex).
@@ -17,9 +17,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, writeFileSync, renameSync } from "node:fs";
 import { join, resolve } from "node:path";
-// C9.4a: the recovery toolchain pinned in CLAUDE.md (`toolchain-digest: <hex>`); same definition as recovery-report.mjs and the shell: sha256 of `sha256sum RECOVER/*.mjs`.
-const TOOLCHAIN = { "baseline.mjs": "packages/chicla-kit/src/pinned/baseline.mjs", "manifest.mjs": "packages/chicla-kit/src/pinned/manifest.mjs", "policy.mjs": "packages/chicla-kit/src/pinned/policy.mjs", "recovery-report.mjs": "packages/chicla-kit/src/pinned/recovery-report.mjs", "zipkit.mjs": "packages/chicla-zip/src/zipkit.mjs" };
-const PIN_RE = /toolchain-digest: ([0-9a-f]{64})/;
+import { FP, LF_FILES, PARA, PIN_RE, STATUS_FILE_RE, TOOLCHAIN, checkIntegrity, lineOf, tailFrom, toolchainDigest as digestOf } from "./integrity.mjs";
 
 // --- Chicla configuration -------------------------------------------------------------------------------
 // APP_FILE is the "app leg" of the fingerprint: a small, stable file that changes every round (the version).
@@ -28,14 +26,27 @@ const PIN_RE = /toolchain-digest: ([0-9a-f]{64})/;
 const APP_FILE = "version.mjs";
 // ---------------------------------------------------------------------------------------------------------
 
-// tail -n +n, in bytes (n=1 is the whole file)
-const tailFrom = (buf, n) => { let p = 0; for (let i = 1; i < n; i++) { const j = buf.indexOf(10, p); if (j < 0) return Buffer.alloc(0); p = j + 1; } return buf.subarray(p); };
-const h12 = (buf) => createHash("sha256").update(buf).digest("hex").slice(0, 12);
-const lineOf = (buf, n) => tailFrom(buf, n).toString("utf8").split("\n", 1)[0];
+// C17.2: `tailFrom`, `lineOf`, the fingerprint regexes (FP, PARA) and the TOOLCHAIN map live in integrity.mjs; this file only brings the reader (the disk) and `sha256`.
+const sha256 = (buf) => createHash("sha256").update(buf).digest("hex");
+const h12 = (buf) => sha256(buf).slice(0, 12);
 const replaceLine = (buf, n, text) => Buffer.concat([buf.subarray(0, buf.length - tailFrom(buf, n).length), Buffer.from(text + "\n"), tailFrom(buf, n + 1)]);
 
-const FP = /seq=(\d+) file=(\S+) app_sha256_12=([0-9a-f]{12}) changelog_sha256_12=([0-9a-f]{12})/;
-const PARA = /\*\*Fingerprint:\*\* seq=(\d+) · app=(\S+) ·\s*app_sha256_12=([0-9a-f]{12})[\s\S]*?changelog_sha256_12=([0-9a-f]{12})[\s\S]*?before doing anything else\./g;
+// C20.1 (AUDIT-7 F-1): the arguments of `scripts/bump-round.mjs`, checked before anything is written. Pure: it returns, never prints or exits (the wrapper does). An option it does not know,
+// a stray word, `--note` with no text (or followed by an option) and `--verify` with another mode are errors, not «bump for real»; `--help` / `-h` ask for the usage.
+export const BUMP_USAGE = "usage: node scripts/bump-round.mjs [--verify | [--refresh] [--dry-run] [--note <text>]]   (no option: bump N to N+1; --help prints this)";
+export function parseBumpArgs(args) {
+  if (args.includes("--help") || args.includes("-h")) return { help: true };
+  const KNOWN = new Set(["--verify", "--refresh", "--dry-run", "--note"]);
+  let bad = false;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--note") { if (args[i + 1] === undefined || args[i + 1].startsWith("--")) bad = true; else i++; }
+    else if (!KNOWN.has(args[i])) bad = true;
+  }
+  if (args.includes("--verify") && args.length > 1) bad = true;
+  if (bad) return { error: true };
+  const has = (f) => args.includes(f);
+  return { mode: has("--verify") ? "verify" : has("--refresh") ? "refresh" : "bump", dry: has("--dry-run"), note: has("--note") ? args[args.indexOf("--note") + 1] : "" };
+}
 
 /** A refusal with a stable code; caught inside `bumpRound` and returned, never thrown to the caller. */
 class Stop extends Error { constructor(code, message) { super(message); this.code = code; } }
@@ -56,7 +67,7 @@ function statusProblem(s) {
 
 function readState(ROOT, P) {
   const names = readdirSync(ROOT);
-  const st = names.filter((f) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f));
+  const st = names.filter((f) => STATUS_FILE_RE.test(f));
   const apOk = existsSync(P(APP_FILE));
   if (st.length !== 1) stop("EBUMP_STATE", `there must be exactly 1 CHICLA_PROJECT_STATUS-N.md in the root (found ${st.length}).`);
   if (!apOk) stop("EBUMP_STATE", `${APP_FILE} is missing (the "app" leg of the fingerprint; see APP_FILE at the top of packages/chicla-kit/src/bump-round.mjs).`);
@@ -74,26 +85,43 @@ function readState(ROOT, P) {
   return s;
 }
 
-const toolchainDigest = (P) => createHash("sha256").update(Object.keys(TOOLCHAIN).sort().map((n) => `${createHash("sha256").update(readFileSync(P(TOOLCHAIN[n]))).digest("hex")}  RECOVER/${n}\n`).join("")).digest("hex");
+// C19.2 (AUDIT-6 F-1): the archive limits of instruction 6, REPORTED at the close, never run (the same numbers as test/audit5-archive.test.mjs, which used to be the first to say it).
+// One entry per limit that the status file or the CHANGELOG passes: { id, line }; `line` names the command. A file within the limits gives nothing.
+const LIMITS = { previous: 5, done: 10, rounds: 21, bytes: 4096 };
+function archiveLimits(s) {
+  const out = [], over = (id, what, n, limit, cmd, file) => out.push({ id, line: `  ! ${n} ${what} in ${file} (limit ${limit}): run ${cmd}, then node scripts/bump-round.mjs --refresh` });
+  const rows = s.stTxt.split("\n"), snapAt = rows.findIndex((l) => /^## Snapshot[ \t]*$/.test(l)), nextAt = rows.findIndex((l, i) => i > snapAt && /^## Next up[ \t]*$/.test(l));
+  const previous = rows.filter((l) => l.startsWith("**Previous (round ")).length;
+  const done = snapAt < 0 ? 0 : rows.slice(snapAt, nextAt < 0 ? rows.length : nextAt).filter((l) => l.startsWith("- Done:")).length;
+  if (previous > LIMITS.previous) over("previous", "«Previous» blocks", previous, LIMITS.previous, "node scripts/archive-changelog.mjs --status", s.statusName);
+  if (done > LIMITS.done) over("done", "«Done» lines", done, LIMITS.done, "node scripts/archive-changelog.mjs --snapshot", s.statusName);
+  for (const [id, head] of [["current-version", "**Current version:**"], ["open-decisions", "**Open decisions:**"]]) {
+    const row = rows.find((l) => l.startsWith(head)), bytes = row === undefined ? 0 : Buffer.byteLength(row);
+    if (bytes > LIMITS.bytes) over(id, "bytes", bytes, LIMITS.bytes, "node scripts/archive-changelog.mjs --rolling", `the «${head.slice(2, -3)}» line of ${s.statusName}`);
+  }
+  const rounds = s.cl.toString("utf8").split("\n").filter((l) => /^## Round /.test(l)).length;
+  if (rounds > LIMITS.rounds) over("changelog", "rounds", rounds, LIMITS.rounds, "node scripts/archive-changelog.mjs", "CHANGELOG.md");
+  return out;
+}
+
+// A view of the disk for the shared rules (integrity.mjs): the names that exist among the ones the rules read, and a reader that never throws.
+const diskView = (P) => {
+  const names = [...new Set([...LF_FILES, ...Object.values(TOOLCHAIN), APP_FILE, ...readdirSync(P(".")).filter((f) => STATUS_FILE_RE.test(f))])].filter((f) => existsSync(P(f)));
+  return { names, read: (f) => { try { return readFileSync(P(f)); } catch { return null; } } };
+};
+const toolchainDigest = (P) => digestOf(diskView(P), sha256) ?? stop("EBUMP_STATE", "a file the toolchain pin covers is missing or unreadable; I cannot rewrite the pin.");
 const pinned = (P) => (existsSync(P("CLAUDE.md")) ? (readFileSync(P("CLAUDE.md"), "utf8").match(PIN_RE) ?? [])[1] : undefined);
-const pinCheck = (P) => { if (!pinned(P) || !Object.values(TOOLCHAIN).every((f) => existsSync(P(f)))) return []; const d = toolchainDigest(P); return [[`toolchain digest ${d.slice(0, 12)} = the pin in CLAUDE.md (${pinned(P).slice(0, 12)})`, d === pinned(P)]]; };
-function verify(s, P) { // instruction 11 a-c (and the toolchain pin)
-  const eq = (a, b) => a === b;
-  return [...pinCheck(P),
-    [`app: seq=${s.appFp[1]} = status file -${s.seq}`, eq(+s.appFp[1], s.seq)],
-    [`CHANGELOG: seq=${s.clFp[1]} = -${s.seq}`, eq(+s.clFp[1], s.seq)],
-    [`status file: seq=${s.stFp[1]} = -${s.seq}`, eq(+s.stFp[1], s.seq)],
-    [`file= points to ${s.statusName} (app and CHANGELOG)`, eq(s.appFp[2], s.statusName) && eq(s.clFp[2], s.statusName)],
-    [`app=${s.appName} in the status file paragraph`, eq(s.stFp[2], s.appName)],
-    [`app hash ${s.hApp} = app, CHANGELOG and status file`, [s.appFp[3], s.clFp[3], s.stFp[3]].every((h) => h === s.hApp)],
-    [`CHANGELOG hash ${s.hCl} = app, CHANGELOG and status file`, [s.appFp[4], s.clFp[4], s.stFp[4]].every((h) => h === s.hCl)],
-  ];
+// CLAUDE.md is in no hash (the pin reads one line of it), so CRLF in it would pass every other check; the status file, CHANGELOG and version.mjs are hashed, so CRLF there already fails.
+// C17.1/C17.2: every rule is the shared one (integrity.mjs). The CLAUDE.md LF row is always printed, last (the table of docs/fingerprint.md); the other LF rows print only when they fail.
+function verify(_s, P) { // instruction 11 a-c (and the toolchain pin, and the line endings)
+  const rows = checkIntegrity(diskView(P), { sha256, appFile: APP_FILE }), lf = (r) => r.id === "lf";
+  return [...rows.filter((r) => !lf(r) || (!r.ok && r.file !== "CLAUDE.md")), ...rows.filter((r) => lf(r) && r.file === "CLAUDE.md")].map((r) => [r.label, r.ok]);
 }
 
 /**
  * The mechanical close of a round for the project at `root`. `mode`: "bump" (default), "refresh" or "verify"; `dry` shows without writing; `note` is added to
  * the fingerprint comments; `regenerateManifest(root)` -> { ok, out, err } is the manifest step of a bump (default: runs `<root>/scripts/check-manifest.mjs --write`
- * as a process; the kit CLI passes `checkManifest` in-process, so it works on a project without `scripts/`). Returns { ok, code, mode, dry, seq, statusFile, nextSeq, checks?, messages }: `code` is null when ok, else EBUMP_USAGE, EBUMP_STATE,
+ * as a process; the kit CLI passes `checkManifest` in-process, so it works on a project without `scripts/`). Returns { ok, code, mode, dry, seq, statusFile, nextSeq, checks?, limits? (C19.2: archive limits passed, reported only), messages }: `code` is null when ok, else EBUMP_USAGE, EBUMP_STATE,
  * EBUMP_UNPAIRED (11a), EBUMP_STATUS (C10.5, bump and refresh only), EBUMP_VERIFY, EBUMP_MANIFEST, EBUMP_FINAL or EBUMP_ERROR (anything unexpected); `messages` is [{ stream: "out" | "err", text }] in the order
  * the script prints them (see `renderBumpRound`). Never prints, exits or throws.
  */
@@ -149,6 +177,8 @@ instructions item 11 above before doing anything else.`;
     say("out", `  app hash           : ${s.appFp[3]} → ${s.hApp} (${appChanged ? "CHANGED" : "unchanged"})`);
     say("out", `  CHANGELOG hash     : ${s.clFp[4]} → ${s.hCl}${s.clFp[4] === s.hCl ? " (unchanged)" : ""}`);
     say("out", `  rewritten          : ${s.appName} line 3 · CHANGELOG.md line 1 · "Fingerprint:" paragraph of the status file`);
+    result.limits = archiveLimits(s); // C19.2: reported, never run, never part of `ok`
+    for (const l of result.limits) say("out", l.line);
     if (dry) { say("out", "  (dry-run: nothing was written)"); return result; }
 
     writeFileSync(P(s.appName), newApp);

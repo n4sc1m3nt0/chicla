@@ -15,17 +15,19 @@
 // This file is only the wrapper: it re-exports the core (so the CLI and the tests import it from here as before) and, when run directly, prints and exits.
 import { fileURLToPath } from "node:url";
 import { realpathSync } from "node:fs";
-import { bumpRound, renderBumpRound } from "../packages/chicla-kit/src/bump-round.mjs";
+import { bumpRound, renderBumpRound, parseBumpArgs, BUMP_USAGE } from "../packages/chicla-kit/src/bump-round.mjs";
 export { bumpRound, renderBumpRound };
 
 // Runs only as the entry point, never when the kit CLI or a test imports it. The root is the project this file sits in.
 const isEntry = (() => { try { return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); } catch { return false; } })();
 if (isEntry) {
   const args = process.argv.slice(2);
-  const has = (f) => args.includes(f);
-  const note = has("--note") ? args[args.indexOf("--note") + 1] ?? "" : "";
-  const mode = has("--verify") ? "verify" : has("--refresh") ? "refresh" : "bump";
-  const r = bumpRound({ root: fileURLToPath(new URL("..", import.meta.url)), mode, dry: has("--dry-run"), note });
+  // C20.1 (AUDIT-7 F-1): the arguments are checked by the core (`parseBumpArgs`) before anything is written: an unknown one is an error, never «bump for real».
+  const a = parseBumpArgs(args);
+  if (a.help) { console.log(BUMP_USAGE); process.exit(0); }
+  if (a.error) { console.error(BUMP_USAGE); process.exit(2); }
+  const { mode, dry, note } = a;
+  const r = bumpRound({ root: fileURLToPath(new URL("..", import.meta.url)), mode, dry, note });
   const { out, err } = renderBumpRound(r);
   process.stdout.write(out); process.stderr.write(err);
   process.exitCode = r.ok ? 0 : 1;

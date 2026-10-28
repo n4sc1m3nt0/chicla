@@ -61,12 +61,13 @@ test('the table of checks in the doc is the list `--verify` prints, in the same 
   const rows = [...read(DOC).matchAll(/^\| *`([^`]+)` *\|/gm)].map((m) => m[1]);
   const begin = rows.indexOf('toolchain digest'); // first row of the table of checks
   assert.ok(begin >= 0, 'the table of checks must start with the row `toolchain digest`');
-  const docChecks = rows.slice(begin, begin + 8);
+  const docChecks = rows.slice(begin, begin + 9);
   const labels = verify(project()).checks.map((c) => c.label); // no CLAUDE.md in the throw-away project: no pin row
   assert.equal(labels.length, 7);
   labels.forEach((l, i) => assert.ok(l.startsWith(docChecks[i + 1]), `check ${i + 1} is «${l}», the doc says «${docChecks[i + 1]}»`));
   const real = bumpRound({ root: ROOT, mode: 'verify' }).checks;
-  assert.equal(real.length, 8, 'the real project prints the pin row plus the seven');
+  assert.equal(real.length, 9, 'the real project prints the pin row, the seven and the line-ending check of CLAUDE.md');
+  assert.ok(real[8].label.startsWith(docChecks[8]), `the last real check is «${real[8].label}», the doc says «${docChecks[8]}»`);
   assert.ok(real[0].label.startsWith(docChecks[0]), `the first real check is «${real[0].label}», the doc says «${docChecks[0]}»`);
 });
 
