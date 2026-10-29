@@ -30,6 +30,13 @@ if (!existsSync(join(dir, 'package.json'))) usage(`no package.json in ${dir}`);
 const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
 if (pkg.private) refuse('EPRIVATE', `${pkg.name} is private`);
 
+// A package whose `bin` targets or `files` entries are not in the folder would be packed as a broken tarball (packages/chicla is only metadata until build-chicla.mjs assembles it).
+{
+  const binTargets = typeof pkg.bin === 'string' ? [pkg.bin] : Object.values(pkg.bin ?? {});
+  const missing = [...binTargets, ...(pkg.files ?? []).filter((f) => !/[*?[]/.test(f))].map((f) => String(f).replace(/^\.\//, '')).filter((f) => f !== 'LICENSE' && !existsSync(join(dir, f))); // a missing LICENSE is ELICENSE's, below
+  if (missing.length) refuse('EINCOMPLETE', `${pkg.name}: not in the folder: ${[...new Set(missing)].join(', ')}`);
+}
+
 // The tarball is built in a scratch folder, checked, and only then copied to --out, so a refusal writes nothing.
 const scratch = mkdtempSync(join(tmpdir(), 'chicla-pack-'));
 process.on('exit', () => rmSync(scratch, { recursive: true, force: true })); // done() and refuse() end the process

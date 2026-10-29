@@ -11,8 +11,14 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const script = join(root, 'scripts', 'pack-release.mjs');
-const zipPkg = join(root, 'packages', 'chicla-zip');
 const tmp = () => mkdtempSync(join(tmpdir(), 'chicla-rel-'));
+// Since C23.3 (D148) packages/chicla-zip is private and pack-release refuses it (retire-packages.test.mjs). The packer is still tested on the same files:
+// a copy of the folder (without its tests, bench and mutants) whose package.json is no longer private.
+const zipCopyRoot = tmp();
+const zipPkg = join(zipCopyRoot, 'chicla-zip');
+cpSync(join(root, 'packages', 'chicla-zip'), zipPkg, { recursive: true, filter: (s) => !/\/(test|bench|mutants)(\/|$)/.test(s.slice(join(root, 'packages', 'chicla-zip').length)) });
+{ const f = join(zipPkg, 'package.json'); const j = JSON.parse(readFileSync(f, 'utf8')); delete j.private; writeFileSync(f, JSON.stringify(j, null, 2) + '\n'); }
+process.on('exit', () => rmSync(zipCopyRoot, { recursive: true, force: true }));
 const run = (...a) => spawnSync(process.execPath, [script, ...a], { encoding: 'utf8' });
 
 test('packs chicla-zip: tarball, .sha256 file, notes on stdout; sha256sum agrees', () => {

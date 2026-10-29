@@ -12,10 +12,11 @@ Chicla has two pieces, in `packages/`:
 
 | Package | What it is | State |
 | --- | --- | --- |
-| [`chicla-zip`](packages/chicla-zip/README.md) | Read, verify, safely extract, **write** and repair zips, with correct UTF-8 names in every reader. | Library and CLI built and tested; published on npm (`0.1.0`; `0.1.1` prepared, README only) |
-| `chicla-kit` | The workflow: state file, fingerprints, "never leaves" policy, manifest, verified delivery, `/dump` and recovery. Ships the `chicla` command. | Six subcommands built; the cores are being moved from `scripts/` into the package, one slice at a time (`check-build` and `check-manifest` are done) |
+| [`chicla`](packages/chicla/README.md) | **The package to install** (D148): `npm install chicla` gives the `chicla` command (the workflow), the `chicla-zip` command and the zip library at `chicla/zip`, with no dependencies. Assembled when it is published from the two source folders below (`scripts/build-chicla.mjs`). | Built and tested (round 280); `0.2.0` waits for the owner to publish it (G-C16) |
+| [`chicla-zip`](packages/chicla-zip/README.md) | Read, verify, safely extract, **write** and repair zips, with correct UTF-8 names in every reader. | Source of the zip module of `chicla`; the name on npm (`0.1.0`, `0.1.1`) is to be deprecated in favour of `chicla` (D148) |
+| `chicla-kit` | The workflow: state file, fingerprints, "never leaves" policy, manifest, verified delivery, `/dump` and recovery. Ships the `chicla` command. | Six subcommands built; the cores are being moved from `scripts/` into the package, one slice at a time (`check-build` and `check-manifest` are done); source of the kit part of `chicla`, its name on npm (`0.1.1`) is to be deprecated (D148) |
 
-The kit depends on `chicla-zip` only through its public API.
+The kit depends on `chicla-zip` only through its public API. The package `chicla` has no dependencies: it ships the kit and the zip module together (D148); `chicla-zip` and `chicla-kit` are the two source folders it is assembled from, `private` since round 281 (npm refuses to publish them, and `pack-release` refuses to pack them), and are not published any more.
 
 ## chicla-zip in one minute
 

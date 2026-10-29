@@ -6,6 +6,7 @@ Chicla has two packages with different security surfaces: `chicla-zip` reads zip
 
 | Package | Supported |
 | --- | --- |
+| `chicla` | the latest `0.2.x` |
 | `chicla-zip` | the latest `0.1.x` |
 | `chicla-kit` | the latest `0.1.x` |
 

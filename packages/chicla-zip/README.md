@@ -6,6 +6,8 @@ A zip is hostile input, so everything here is built around that: the extractor v
 
 > Status: `0.1.1`, published on npm (`npm install chicla-zip`; the release steps are in [`docs/release.md`](../../docs/release.md)). The API below is what the test suite pins. Security limits and how to report a problem: [`SECURITY.md`](../../SECURITY.md).
 
+> **Moved into `chicla`** (D148, round 281): this folder is private source now and nothing more is published under the name `chicla-zip`; its `0.1.x` stay on npm and are deprecated. Install `npm install chicla` instead (the same `chicla-zip` command, and the library as `chicla/zip`). The `0.1.1`, published on npm, is the last release under this name.
+
 ## Library
 
 ```js

@@ -24,7 +24,7 @@ test("package.json: entry points and allowlist are declared", () => {
   assert.deepEqual(pkg.bin, { "chicla-zip": "src/zipkit.mjs" });
   assert.ok(Array.isArray(pkg.files) && pkg.files.length > 0);
   assert.equal(pkg.version, "0.1.1", "the release version of chicla-zip (0.1.1 since round 276, README-only release; Rodrigo publishes)");
-  assert.equal(pkg.private, undefined);
+  assert.equal(pkg.private, true, "private since round 281 (D148): internal source of `chicla`, nothing more is published under this name");
 });
 
 test("npm pack lists exactly the shipped files (no tests, bench, mutants)", () => {

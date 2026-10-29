@@ -15,11 +15,11 @@ const zipDir = join(rootDir, "packages", "chicla-zip");
 const pkg = JSON.parse(readFileSync(join(kitDir, "package.json"), "utf8"));
 const read = (p) => readFileSync(join(kitDir, p), "utf8");
 
-test("package.json: reaches chicla-zip by name, ships an allowlist, names its repository, is not private", () => {
+test("package.json: reaches chicla-zip by name, ships an allowlist, names its repository, is private (D148, round 281)", () => {
   assert.deepEqual(pkg.dependencies, { "chicla-zip": "^0.1.0" });
   assert.deepEqual(pkg.files, ["src", "templates", "README.md", "LICENSE"]);
   assert.deepEqual(pkg.repository, { type: "git", url: "git+https://github.com/n4sc1m3nt0/chicla.git", directory: "packages/chicla-kit" });
-  assert.equal(pkg.private, undefined);
+  assert.equal(pkg.private, true); // internal source of the single package `chicla`; npm refuses to publish it
   assert.equal(pkg.license, "Apache-2.0");
 });
 
@@ -107,5 +107,38 @@ test("installed from the two tarballs into a clean folder, the kit finds chicla-
     assert.ok(existsSync(join(proj, "node_modules", "chicla-zip", "src", "zipkit.mjs")));
     writeFileSync(join(proj, "probe.mjs"), `import { loadZipkit } from "chicla-kit/src/zipkit-loader.mjs"; const m = await loadZipkit(); process.stdout.write(typeof m.writeZip + " " + typeof m.writeZipStream);`);
     assert.equal(execFileSync("node", ["probe.mjs"], { cwd: proj, encoding: "utf8" }), "function function");
+  } finally { rmSync(tmp, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
+});
+
+// Round 279 (C23.1, D148): in the single package `chicla` the zip module ships BESIDE the loader (src/zipkit.mjs). The loader looks there first;
+// without it (a monorepo checkout, or the kit installed with chicla-zip) the order is the one above: package name, then the monorepo path.
+const sibling = pathToFileURL(join(kitDir, "src", "zipkit.mjs")).href;
+
+test("loader: a zipkit.mjs beside the loader is tried first, and the package name is then never asked for", async () => {
+  const seen = [];
+  const mod = await loader.loadZipkit(async (s) => { seen.push(s); return { writeZip: 3 }; }, () => true);
+  assert.deepEqual(seen, [sibling]);
+  assert.deepEqual(mod, { writeZip: 3 });
+});
+
+test("loader: with no sibling the order is unchanged (the name first, no sibling specifier)", async () => {
+  const seen = [];
+  await loader.loadZipkit(async (s) => { seen.push(s); return {}; }, () => false);
+  assert.deepEqual(seen, ["chicla-zip"]);
+});
+
+test("loader: a sibling that exists but fails is reported as it is (neither the name nor the monorepo path hides it)", async () => {
+  const seen = [];
+  const boom = Object.assign(new Error("syntax"), { code: "ERR_X" });
+  await assert.rejects(loader.loadZipkit(async (s) => { seen.push(s); if (s === sibling) throw boom; return { hidden: true }; }, () => true), (e) => e === boom);
+  assert.deepEqual(seen, [sibling]);
+});
+
+test("loader: copied with zipkit.mjs into a folder that has no chicla-zip anywhere, it loads the writer (the layout of the single package)", async () => {
+  const tmp = mkdtempSync(join(tmpdir(), "chicla-loader-sibling-"));
+  try {
+    execFileSync("node", ["-e", `const fs=require("fs");fs.mkdirSync(${JSON.stringify(join(tmp, "src"))});fs.copyFileSync(${JSON.stringify(join(kitDir, "src", "zipkit-loader.mjs"))},${JSON.stringify(join(tmp, "src", "zipkit-loader.mjs"))});fs.copyFileSync(${JSON.stringify(join(zipDir, "src", "zipkit.mjs"))},${JSON.stringify(join(tmp, "src", "zipkit.mjs"))})`]);
+    writeFileSync(join(tmp, "probe.mjs"), `import { loadZipkit } from "./src/zipkit-loader.mjs"; const m = await loadZipkit(); process.stdout.write(typeof m.writeZip + " " + typeof m.extractZip);`);
+    assert.equal(execFileSync("node", ["probe.mjs"], { cwd: tmp, encoding: "utf8" }), "function function");
   } finally { rmSync(tmp, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });

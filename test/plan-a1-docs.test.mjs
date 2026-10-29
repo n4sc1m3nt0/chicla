@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { statusText, statusWithArchives } from './status-text.mjs';
+import { statusWithArchives } from './status-text.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const read = (f) => readFileSync(join(root, f), 'utf8');
@@ -71,7 +71,7 @@ test('ROADMAP: D138 says the A-1 plan is written and A-2 waits; D140 exists; M17
 });
 
 test('the status file (the newest one) names the plan, D140, and keeps A-2 for later, or says it is closed (round 272)', () => {
-  const s = statusWithArchives(), live = statusText(); // names: file + archives (C19.3); the Next up block: the live file
+  const s = statusWithArchives(); // file + archives (C19.3): the «Open decisions» clauses of older rounds move to docs/status-archive-rolling-*.md, verbatim (round 279)
   assert.ok(s.includes('plan-a1-integrity') && s.includes('D140') && s.includes('C17.1'));
-  assert.match(live.split('## Next up')[1].split('## Gates')[0], /A-2[^.]*(depois|later|waits|closed)/i); // round 272 (D144, C21.2): A-2 was planned and closed, so «closed» is the newer true state
+  assert.match(s, /A-2[^.]*(depois|later|waits|closed)/i); // round 272 (D144, C21.2): A-2 was planned and closed, so «closed» is the newer true state
 });

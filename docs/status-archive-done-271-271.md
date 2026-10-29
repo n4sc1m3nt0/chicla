@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 271-271
+
+Moved out of `CHICLA_PROJECT_STATUS-285.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 271 (2026-10-28; Rodrigo: «sim a tudo»). C21.1 (D-270b, D-270c, A-2): `test/pinned-edit-follow-ups.test.mjs` (6, 4 red first): on a copy of the tree, for each of the five pinned files, one comment line, `bump-round --verify` must notice it, `--refresh`, `--verify` green, and the seven test files that read the pinned files (the four move tests, `toolchain-pin`, `core-integrity-state`, `fingerprint-docs`) green; it ran red for `baseline`, `manifest`, `policy`, `recovery-report` and green for `zipkit` before the fix. The fix, in the tests only: `pinned-baseline-move`, `-manifest-move`, `-policy-move` and `-recovery-report-move` lose their sha256 constants and reverse patches and keep five structural tests each (helper path, shim gone, exports, the two `TOOLCHAIN` maps, the cores import the pinned file). The new test takes about 1 minute (five copies of the tree). No source file, the pin did not move. Not run by Claude: the CI, Node 18 and 20, `npm run smoke`, the kit and zip mutant lists, macOS, Windows.

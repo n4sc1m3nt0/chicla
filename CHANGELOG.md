@@ -1,7 +1,44 @@
-<!-- CHANGELOG_FINGERPRINT: seq=281 file=CHICLA_PROJECT_STATUS-281.md app_sha256_12=065d37032ef1 changelog_sha256_12=34041d1484b2 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 276: release 0.1.1) -->
+<!-- CHANGELOG_FINGERPRINT: seq=286 file=CHICLA_PROJECT_STATUS-286.md app_sha256_12=065d37032ef1 changelog_sha256_12=f068659d349a (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now., `CHANGELOG-archive-rounds-220-230.md`, `CHANGELOG-archive-rounds-231-241.md`, `CHANGELOG-archive-rounds-242-253.md`, `CHANGELOG-archive-rounds-254-263.md`
+
+## Round 281 — one npm package, step 3: the old packages retired (v0.0.285)
+
+- Task (Rodrigo: «avança»; no decision open). C23.3 (D148): `packages/chicla-zip` and `packages/chicla-kit` are `private` (names and `0.1.1` unchanged); `pack-release` refuses them (EPRIVATE), so the CI jobs `pack` and `pack-kit` are removed; `pack-chicla` stays. `docs/release.md` «Releasing chicla 0.2.0» (publish, then `npm deprecate` on both names, never `npm unpublish`) replaces the thin 0.1.1 runbook; the 0.1.1 sections are marked history.
+- Test first: `test/retire-packages.test.mjs` (10, all red): both folders private, `pack-release` exit 1 with EPRIVATE, the CI jobs, the runbook (order: publish, check, deprecate; every `chicla` command it runs exists), READMEs and SECURITY, ROADMAP rows. Old tests adjusted (the first full run had 11 red, all from `private`): `single-package-docs`, `ci` (the `pack` and `pack-kit` tests now check `pack-chicla`), the kit `packaging` and zip `package` tests (private), and `pack-release.test.mjs`, which packs a copy of `chicla-zip` without `private`.
+- Change: the two `package.json`, `ci.yml` (3 source files); docs: `docs/release.md`, the two folder READMEs, SECURITY.md, README, ROADMAP C23.3. No source of the kit or the zip module, no pinned file, the pin did not move. Housekeeping (item 6): `--status`, `--snapshot`, `--rolling`, verbatim.
+- NOT run by Claude: the CI, Node 18 and 20, macOS, Windows, `npm run smoke`, the mutant lists, C23.4 (Rodrigo publishes and deprecates; G-C16 stays open).
+
+## Round 280 — one npm package, step 2: the assembly (v0.0.284)
+
+- Task (Rodrigo: «avança»; D-B, D-C, D-D confirmed). C23.2: `scripts/build-chicla.mjs` assembles the package `chicla` 0.2.0 (kit `src/` and `templates/`, `zipkit.mjs` beside the loader, metadata of `packages/chicla`; two commands, `chicla/zip`, no dependencies). `packages/chicla` is now only metadata. The thin package of round 278 is replaced.
+- Test first: `test/chicla-single-package.test.mjs` (9, all red; replaces `test/chicla-package.test.mjs`): fields, metadata-only folder, README, the build (exit codes, byte-for-byte stage, no tests), `pack-release` EINCOMPLETE, the tarball installed alone offline (both commands, `chicla/zip`, a blocked deep import, `dump`), the CI job, the ROADMAP rows.
+- Change: `scripts/build-chicla.mjs`, `scripts/pack-release.mjs` (EINCOMPLETE), `packages/chicla/{package.json,README.md}`, `ci.yml` (`pack-chicla` builds, then packs), README rows, ROADMAP D148/C23.2. No pinned file, the pin did not move. The first full run had one red: `EINCOMPLETE` fired before `ELICENSE` for a fake package whose `files` lists a missing LICENSE; the guard now leaves LICENSE to `ELICENSE`. Housekeeping (item 6): `--status`, `--snapshot`, `--rolling`, verbatim.
+- Seen, not changed: `chicla dump` outside a Chicla tree has no `RECOVER/` and 5 warnings (the same with the old kit installed alone).
+- NOT run by Claude: the CI, Node 18 and 20, macOS, Windows, `npm run smoke`, the mutant lists, C23.3 and C23.4.
+
+## Round 279 — one npm package, step 1: the loader (v0.0.283)
+
+- Task (Rodrigo: one package; «ok vamos com a opção 1»). D148 / M23: `chicla` becomes the only package, assembled when it is published (D-A); the two folders stay as internal source and the pin does not move. D-B, D-C, D-D (commands, `0.2.0`, deprecating the two old names) are proposals applied as default.
+- Test first: 4 loader tests in `packages/chicla-kit/test/packaging.test.mjs` (3 red): a sibling `zipkit.mjs` is tried first; none: the order is unchanged; a sibling that fails is not hidden; copied beside the loader into a folder with no chicla-zip it loads the writer. `test/single-package-docs.test.mjs` (5, all red).
+- Change: `zipkit-loader.mjs` (sibling, then name, then monorepo path; `hasSibling` for the tests). Docs: ROADMAP D148, M23, G-C16 reworded, D147 marked superseded in part; `docs/release.md` stop sign on «Releasing chicla 0.1.1». Housekeeping (item 6): `--status`, `--snapshot`, `--rolling`, verbatim; the archived «Open decisions» clauses made `test/plan-a1-docs.test.mjs` and `test/plan-a2-docs.test.mjs` red (they read the live «Next up» block), so both now read the file plus its archives, like the others.
+- NOT run by Claude: the CI, Node 18 and 20, macOS, Windows, `npm run smoke`, the mutant lists, C23.2 to C23.4.
+
+## Round 278 — the npm name `chicla` becomes a real package (v0.0.282)
+
+- Task (Rodrigo: his original intent was a package called `chicla`; «arranja uma solução»). The name held only the `0.0.0` placeholder, so `npx chicla` gave nothing. D147 (call made on delegation): a thin package `packages/chicla` (`bin/chicla.mjs` runs `main` of `chicla-kit/src/cli.mjs`; one dependency `chicla-kit ^0.1.1`; `0.1.1`). `chicla-zip` and `chicla-kit` unchanged.
+- Test first: `test/chicla-package.test.mjs` (8, all red): fields, LICENSE and README, the wrapper, the tarball (four files), the three tarballs installed offline in an empty folder (`--help` 0, `init` writes the files, unknown command 2), the CI job, the runbook and ROADMAP rows, the README row.
+- Change: `packages/chicla/` (package.json, bin/chicla.mjs, README.md, LICENSE), `pack-chicla` job in `ci.yml`, `docs/release.md` «Releasing chicla 0.1.1», ROADMAP D147, M22, G-C16, README row. No source of the two published packages, the pin did not move. Housekeeping (item 6): `--status`, `--snapshot`, `--rolling`, verbatim.
+- NOT run by Claude: the CI (the new job included), Node 18 and 20, macOS, Windows, `npm run smoke`, the mutant lists, `npm publish` and the steps after it (Rodrigo's).
+
+## Round 277 — 0.1.1 publication recorded in the docs (v0.0.281)
+
+- Task (Rodrigo: «já fiz as tags as releases e verifiquei os sha256 dos tarball… só falta documentar»; D146). Both `0.1.1` packages are on npm; the tags, the GitHub releases and the sha256 check are his, in his word.
+- Test first: `test/release-published-docs.test.mjs` (5; all red before the text, green after): the new section of `docs/release.md`, the D146 and G-C6 rows of the ROADMAP, the status file.
+- Change: `docs/release.md` «Published: 0.1.1» (who, when, order), ROADMAP D146 (PUBLISHED) and the G-C6 row (a clause; the gate keeps its closing of round 230, none marked), the status file. No source file, the pin did not move. Housekeeping (item 6): `--status`, `--snapshot`, `--rolling`, verbatim.
+- Seen by Claude (registry, 2026-10-28): `latest` = `0.1.1` for both, zip at 21:45 UTC and kit at 21:48 UTC; the served tarballs (sha256 `a20c2f20e31d…` and `f8ca89dd1e3e…`) are byte-identical to `pack-release` of the round 276 tree.
+- NOT seen or run by Claude: the tags, the GitHub releases, his sha256 check, the CI of this tree, Node 18 and 20, macOS, Windows, `npm run smoke`, the mutant lists (no source changed).
 
 ## Round 276 — release 0.1.1 of chicla-zip and chicla-kit prepared (v0.0.280)
 

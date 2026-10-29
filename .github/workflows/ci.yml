@@ -79,9 +79,8 @@ jobs:
           node-version: 22
       - run: node packages/chicla-zip/bench/small-files.mjs --runs 5 --budget 3
 
-  # C5.5b: pack chicla-zip as the release will (npm pack), with its sha256; kept as a build artifact. Nothing is published:
-  # only Rodrigo publishes (login and 2FA).
-  pack:
+  # C22.2, C23.2, C23.3 (D147, D148): the `pack` and `pack-kit` jobs are gone (the two folders are private since C23.3; pack-release refuses them). Build the single package `chicla` (kit + zip module, no dependencies), pack it; a tarball, never published.
+  pack-chicla:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
@@ -89,23 +88,9 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
-      - run: node scripts/pack-release.mjs packages/chicla-zip --out dist
+      - run: node scripts/build-chicla.mjs --out stage
+      - run: node scripts/pack-release.mjs stage/chicla --out dist
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: chicla-zip-tarball
-          path: dist/
-
-  # C13.5: pack chicla-kit the same way (it depends on chicla-zip by name); a tarball, never published.
-  pack-kit:
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: 22
-      - run: node scripts/pack-release.mjs packages/chicla-kit --out dist
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: chicla-kit-tarball
+          name: chicla-tarball
           path: dist/

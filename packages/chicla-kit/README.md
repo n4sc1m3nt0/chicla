@@ -4,6 +4,8 @@ The workflow of Chicla for coding agents, as the `chicla` command: a status file
 
 > **Status: `0.1.1`, published on npm** (`npm install chicla-kit`, which pulls `chicla-zip` from npm; then `npx chicla <command>`). From a clone of the repository you can also run `node packages/chicla-kit/src/cli.mjs <command>`. It is not declared supported on Windows: its suite passes in CI there, but the dump and recovery never ran on a real Windows machine. `chicla init` starts a new project (instruction files, status file, changelog, version file and manifest, consistent from the first second); `chicla update` compares the instruction files with the templates of the installed kit and replaces a file only when you name it. A new project still copies `ROADMAP.md`-style planning files by hand if it wants them. The kit finds `chicla-zip` by its package name (an installed kit) and, only inside this repository, by the relative path (card C13.5, round 166).
 
+> **Moved into `chicla`** (D148, round 281): this folder is private source now and nothing more is published under the name `chicla-kit`; its `0.1.x` stay on npm and are deprecated. Install `npm install chicla` instead (which ships the `chicla` command together with the zip module). The `0.1.1`, published on npm, is the last release under this name.
+
 The whole picture (the files, the rounds, the delivery and the emergency path) is in the [root README](../../README.md). Security limits: [`SECURITY.md`](../../SECURITY.md).
 
 ## Commands

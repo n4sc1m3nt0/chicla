@@ -4,7 +4,33 @@ Only Rodrigo publishes (login and two-factor authentication): the AI never runs 
 
 The tag name is proposed in D116: one tag per package, `chicla-zip-v0.1.0` and later `chicla-kit-v0.1.0`, because the two packages are versioned apart (D4). If D116 is changed, change the tag in steps 5 and 6 only.
 
+## Releasing chicla 0.2.0 (round 281, D148, gate G-C16)
+
+`chicla` 0.2.0 is the ONE package (D148): the `chicla` command, the `chicla-zip` command and the zip library at `chicla/zip`, with no dependencies. It is assembled from the kit and the zip module by `scripts/build-chicla.mjs` (nothing is converted: every file is a byte copy), and packed by `scripts/pack-release.mjs`, which is the CI job `pack-chicla`. `packages/chicla-zip` and `packages/chicla-kit` stay in the tree as internal source and are `private`: `pack-release` refuses them (`EPRIVATE`), so nothing more can go out under their names. Their `0.1.x` stay on npm; step 8 deprecates them. The thin `chicla` 0.1.1 of D147 was never published and has no runbook any more. Only Rodrigo publishes: the AI never runs `npm publish`, `git tag`, `gh release create` or `npm deprecate`. Tag: `chicla-v0.2.0`.
+
+1. **Push** the delivery (copy it over the clone, `git rm` any old `CHICLA_PROJECT_STATUS-*.md` the check lists) and wait for CI: every job green, `pack-chicla` included.
+2. **Download** `chicla-tarball` from **Artifacts** into `dist/`.
+3. **Check** it (`cd dist`): `sha256sum -c chicla-0.2.0.tgz.sha256` (macOS: `shasum -a 256 -c`), then `tar -tzf chicla-0.2.0.tgz`: `package/package.json`, `package/README.md`, `package/LICENSE`, `package/templates/` and `package/src/`, with `package/src/zipkit.mjs` beside `package/src/zipkit-loader.mjs`; no `test/`, no `packages/`, no `node_modules/`.
+4. **Try it in an empty folder:** `npm init -y && npm install /path/to/dist/chicla-0.2.0.tgz` (no dependencies are pulled), then `npx --no-install chicla --help`, `npx --no-install chicla-zip --help`, `node -e 'import("chicla/zip").then((m) => console.log(Object.keys(m).length))'`, and in a new folder `npx --no-install chicla init` and `npx --no-install chicla bump-round --verify`.
+5. **Tag and release:**
+   ```
+   git tag -a chicla-v0.2.0 -m "chicla 0.2.0" && git push origin chicla-v0.2.0
+   node scripts/build-chicla.mjs --out stage2 && node scripts/pack-release.mjs stage2/chicla --out dist2 > notes-chicla.md      # its sha256 must equal the one in dist/; if not, stop
+   gh release create chicla-v0.2.0 dist/chicla-0.2.0.tgz dist/chicla-0.2.0.tgz.sha256 --title "chicla 0.2.0" --notes-file notes-chicla.md
+   ```
+6. **Publish** (login and two-factor, irreversible; write `./dist/`, never `dist/`, or npm stops with `EALLOWGIT`): `npm whoami`, then `npm publish ./dist/chicla-0.2.0.tgz --access public`; npm asks for the two-factor code (or add `--otp=<code>`).
+7. **Check what npm serves:** `npm view chicla version` says `0.2.0` and `npm view chicla dependencies` prints nothing; `npm pack chicla --pack-destination .` in a scratch folder gives a file whose `sha256sum` equals the `.sha256` line (if a hash differs, tell Claude before going on); and in an empty folder with nothing installed first, `npx chicla --help` works (this is the point of the package).
+8. **Deprecate the two old names, only after step 7 passed** (login and two-factor; the message is the one agreed in D148):
+   ```
+   npm deprecate chicla-zip@"*" "moved into chicla: npm install chicla"
+   npm deprecate chicla-kit@"*" "moved into chicla: npm install chicla"
+   ```
+   (`npm deprecate chicla-zip "moved into chicla: npm install chicla"` and `npm deprecate chicla-kit "moved into chicla: npm install chicla"`, with no range, do the same.) Deprecating only adds a warning at install time: their `0.1.x` stay on npm, so nobody who pinned them breaks; do not run `npm unpublish` on either. Check: `npm view chicla-zip deprecated` and `npm view chicla-kit deprecated` print the message.
+9. **Record it:** tell Claude «chicla 0.2.0 published, both deprecated» with the tag. Rodrigo marks G-C16; the AI never does.
+
 ## Releasing 0.1.1 (round 276, D146)
+
+> **History, retired by D148 (rounds 279 to 281):** both packages were published at `0.1.1` and are now `private`; do not repeat these steps. The runbook for what goes out next is «Releasing chicla 0.2.0» above.
 
 Both packages are at `0.1.1` in the tree; `0.1.0` of each is on npm since round 230. What is new, measured against the published tarballs: **`chicla-zip` 0.1.1 is a README only release** (`src/zipkit.mjs` is byte-identical to 0.1.0; the npm page still says «not published yet»), and **`chicla-kit` 0.1.1** carries the fixes of rounds 231 to 275 in nine sources (the one that matters most: two `emergency-dump` runs in the same second no longer delete each other's archive). The kit keeps `"chicla-zip": "^0.1.0"`, so it works with either zip version. Only Rodrigo publishes: the AI never runs `npm publish`, `git tag` or `gh release create`. Publish `chicla-zip` first, then `chicla-kit`; the same steps twice. Tags: `chicla-zip-v0.1.1` and `chicla-kit-v0.1.1`.
 
@@ -24,6 +50,18 @@ Both packages are at `0.1.1` in the tree; `0.1.0` of each is on npm since round 
 6. **Publish** (login and two-factor, irreversible; write `./dist/`, never `dist/`, or npm stops with `EALLOWGIT`): `npm whoami`, then `npm publish ./dist/chicla-zip-0.1.1.tgz --access public`, check it (step 7), and only then `npm publish ./dist/chicla-kit-0.1.1.tgz --access public`; npm asks for the two-factor code (or add `--otp=<code>`).
 7. **Check what npm serves:** `npm view chicla-zip version` and `npm view chicla-kit version` say `0.1.1`; `npm pack chicla-zip chicla-kit --pack-destination .` in a scratch folder gives files whose `sha256sum` equal the `.sha256` lines; `npm install chicla-kit` in an empty folder and `npx --no-install chicla --help` work. If a hash differs, tell Claude before using the package.
 8. **Record it:** tell Claude «chicla-zip 0.1.1 and chicla-kit 0.1.1 published» with the tags. Rodrigo marks any gate; the AI never does.
+
+## Published: 0.1.1 (round 277, D146)
+
+Rodrigo published `chicla-zip` 0.1.1 and `chicla-kit` 0.1.1 on npm on 2026-10-28, the zip first and the kit three minutes later, made both tags (`chicla-zip-v0.1.1`, `chicla-kit-v0.1.1`) and both GitHub releases, and checked the sha256 of both tarballs; he told Claude «já fiz as tags as releases e verifiquei os sha256 dos tarball». Only Rodrigo publishes: the AI ran no `npm publish`, `git tag` or `gh release create`.
+
+What Claude saw itself, on 2026-10-28 (the npm registry, read with `curl`, and the tree of round 276):
+
+- `npm` serves `0.1.1` as `latest` for both packages: `chicla-zip` published at 21:45 UTC and `chicla-kit` at 21:48 UTC, so the zip went first, as the runbook says.
+- The tarballs downloaded from the registry have these sha256: `chicla-zip-0.1.1.tgz` (37082 bytes) `a20c2f20e31d6937c0c90252412d96d51237c4676cbf99cce85f8e7a9ac7f8f7`, and `chicla-kit-0.1.1.tgz` (73737 bytes) `f8ca89dd1e3e3fb4c1b47d014c472605975f12ea9535bb6a6a41c731625bf37f`.
+- `node scripts/pack-release.mjs packages/chicla-zip` and `packages/chicla-kit`, run on the round 276 tree, give tarballs that are byte-identical to those two (same sha256), so what npm serves is what the tree holds.
+
+Not seen by Claude: the two tags, the two GitHub releases, the checked `.sha256` files of his `dist/` and the clean-folder install of step 4; they are in his word only. No gate was opened or marked by this round (G-C6 is closed since round 230).
 
 ## Where the release stands (round 230)
 

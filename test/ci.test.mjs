@@ -30,18 +30,20 @@ test('C5.4: the bench job uses one Node version, not the whole matrix', () => {
   assert.match(bench, /node-version:\s*22/);
 });
 
-// C5.5 slice b: CI packs chicla-zip and keeps the tarball with its sha256 as an artifact (nothing is published).
-const pack = jobs.find((j) => /^pack:/.test(j)) ?? '';
+// C5.5 slice b, C23.3 (round 281): the `pack` job (chicla-zip) is gone with D148: the folder is private and pack-release refuses it. CI packs the single package in `pack-chicla`
+// (build-chicla, then pack-release; retire-packages.test.mjs and chicla-single-package.test.mjs hold the details).
+const pack = jobs.find((j) => /^pack-chicla:/.test(j)) ?? '';
 
-test('C5.5b: CI has a separate `pack` job on Linux and one Node version', () => {
-  assert.ok(pack, 'no `pack:` job in ci.yml');
+test('C5.5b, C23.3: CI has a separate `pack-chicla` job on Linux and one Node version; the `pack` job is gone', () => {
+  assert.ok(pack, 'no `pack-chicla:` job in ci.yml');
+  assert.ok(!jobs.some((j) => /^pack:/.test(j)), 'the `pack` job of chicla-zip must be gone');
   assert.match(pack, /runs-on:\s*ubuntu-latest/);
   assert.doesNotMatch(pack, /matrix/);
   assert.match(pack, /node-version:\s*22/);
 });
 
-test('C5.5b: the pack job runs scripts/pack-release.mjs on chicla-zip and uploads the output, and never publishes', () => {
-  assert.match(pack, /node scripts\/pack-release\.mjs packages\/chicla-zip --out [^\n]+/);
+test('C5.5b, C23.3: the pack-chicla job builds the package, packs it with scripts/pack-release.mjs, uploads the output, and never publishes', () => {
+  assert.match(pack, /node scripts\/pack-release\.mjs stage\/chicla --out [^\n]+/);
   assert.match(pack, /actions\/upload-artifact@[0-9a-f]{40}/);
   assert.doesNotMatch(ci, /npm publish/);
 });
@@ -142,19 +144,6 @@ test('D115: the kit step is no longer named «informative» and still runs after
   assert.match(s, /if:\s*(\$\{\{\s*)?always\(\)/);
 });
 
-// C13.5 (round 166): chicla-kit is packed as the release will, in a job of its own.
-const packKit = jobs.find((j) => /^pack-kit:/.test(j)) ?? '';
-test('C13.5: CI has a `pack-kit` job on Linux and Node 22 that packs chicla-kit, uploads the tarball and never publishes', () => {
-  assert.ok(packKit, 'no `pack-kit:` job in ci.yml');
-  assert.match(packKit, /runs-on:\s*ubuntu-latest/);
-  assert.doesNotMatch(packKit, /matrix/);
-  assert.match(packKit, /node-version:\s*22/);
-  assert.match(packKit, /node scripts\/pack-release\.mjs packages\/chicla-kit --out [^\n]+/);
-  assert.match(packKit, /name:\s*chicla-kit-tarball/);
-  assert.match(packKit, /actions\/upload-artifact@[0-9a-f]{40}/);
-  assert.doesNotMatch(packKit, /secrets\.|npm publish|continue-on-error/);
-});
-
 // C16.2 (round 235, AUDIT-4 S-3 and S-4): the workflow token is read-only and every action is pinned to a commit.
 test('C16.2: ci.yml has a top-level `permissions:` of `contents: read` and no job widens it', () => {
   const head = ci.split(/^jobs:/m)[0];
@@ -164,7 +153,7 @@ test('C16.2: ci.yml has a top-level `permissions:` of `contents: read` and no jo
 
 test('C16.2: every `uses:` in ci.yml is pinned to a 40-hex commit SHA with the tag in a comment', () => {
   const uses = ci.split('\n').filter((l) => /^\s*(-\s+)?uses:/.test(l));
-  assert.ok(uses.length >= 10, `expected the workflow's actions, found ${uses.length}`);
+  assert.ok(uses.length >= 8, `expected the workflow's actions, found ${uses.length}`);
   for (const l of uses) {
     assert.match(l, /uses:\s*[\w.-]+\/[\w.-]+@[0-9a-f]{40}\s+#\s*v\d+(\.\d+)*\s*$/, `not pinned to a SHA with a tag comment: ${l.trim()}`);
   }

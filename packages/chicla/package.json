@@ -1,0 +1,20 @@
+{
+  "name": "chicla",
+  "version": "0.2.0",
+  "description": "Project memory and verified zip delivery for coding agents: the chicla command (workflow, delivery, dump, recovery) and the chicla-zip command and library (read, verify, extract and write zips, zero dependencies).",
+  "type": "module",
+  "bin": {
+    "chicla": "src/cli.mjs",
+    "chicla-zip": "src/zipkit.mjs"
+  },
+  "exports": {
+    "./zip": "./src/zipkit.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": ["src", "templates", "README.md", "LICENSE"],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": { "type": "git", "url": "git+https://github.com/n4sc1m3nt0/chicla.git", "directory": "packages/chicla" },
+  "license": "Apache-2.0"
+}

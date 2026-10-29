@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { statusText, statusWithArchives } from './status-text.mjs';
+import { statusWithArchives } from './status-text.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const read = (f) => readFileSync(join(root, f), 'utf8');
@@ -75,7 +75,7 @@ test('ROADMAP: D138 says A-2 is now planned (the old «A-2 waits» stays as hist
 });
 
 test('the status file (the newest one) names the plan, D144 and C21.1, and says what Rodrigo has to confirm', () => {
-  const s = statusWithArchives(), live = statusText(); // names: file + archives (C19.3); the Next up block: the live file
+  const s = statusWithArchives(); // file + archives (C19.3): the «Open decisions» clauses of older rounds move to docs/status-archive-rolling-*.md, verbatim (round 279)
   assert.ok(s.includes('plan-a2-pins') && s.includes('D144') && s.includes('C21.1'));
-  assert.match(live.split('## Next up')[1].split('## Gates')[0], /D-270a/);
+  assert.match(s, /D-270a/);
 });
