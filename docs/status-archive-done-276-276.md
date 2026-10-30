@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 276-276
+
+Moved out of `CHICLA_PROJECT_STATUS-290.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 276 (2026-10-28; Rodrigo: «faz o passo 1. quero os dois»). Release 0.1.1 of both packages prepared (D146): compared with `npm pack chicla-zip@0.1.0 chicla-kit@0.1.0`, `chicla-zip` `src/zipkit.mjs` is byte-identical and only its README differs (the npm page said «not published yet»), `chicla-kit` has 9 changed sources (`agents`, `bump-round`, `check-manifest`, `cli`, `emergency-dump`, `make-delivery`, `verify-delivery`, `pinned/policy`, `pinned/recovery-report`), the templates are identical. Tests first: `package.test`, `layout`, `pack-release`, `cli-check-manifest`, `release-docs` expect `0.1.1` and two new tests hold the runbook section and the root README (12 red first, green after); `package.json` of both at `0.1.1`, the two README status lines, the root README (it also still said `chicla-zip` was not yet published), `docs/release.md` «Releasing 0.1.1» (zip first, the AI never publishes) and ROADMAP D146. No source file, the pin did not move. Not run by Claude: the CI, Node 18 and 20, macOS, Windows, `npm publish` and everything after it (Rodrigo's).

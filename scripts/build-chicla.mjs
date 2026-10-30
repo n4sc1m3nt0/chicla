@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // build-chicla: assemble the single package `chicla` (D148, C23.2) into <out>/chicla. It copies the metadata of packages/chicla (package.json, README.md, LICENSE),
-// the kit's src/ and templates/, and the zip module as src/zipkit.mjs, beside zipkit-loader.mjs (which looks there first, C23.1). Nothing is converted: every
+// the kit's src/ and templates/, and the zip module as src/zipkit.mjs, beside zipkit-loader.mjs (which looks there first, C23.1), and once more as src/pinned/zipkit.mjs, beside the pinned recovery-report.mjs (C24.1). Nothing is converted: every
 // file is a byte-for-byte copy, and zipkit.mjs is checked against its source (it is one of the five pinned files of the dump). Then pack the stage:
 //   node scripts/build-chicla.mjs --out stage && node scripts/pack-release.mjs stage/chicla --out dist
 // It never publishes (CLAUDE.md product rule 4). Exit 0 ok, 1 refused, 2 usage. With --json stdout is exactly one line.
@@ -49,6 +49,12 @@ cpSync(join(kit, 'src'), join(work, 'src'), { recursive: true });
 cpSync(join(kit, 'templates'), join(work, 'templates'), { recursive: true });
 copyFileSync(zipSrc, join(work, 'src', 'zipkit.mjs'));
 if (sha(join(work, 'src', 'zipkit.mjs')) !== sha(zipSrc)) refuse('EHASH', 'zipkit.mjs changed while being copied');
+// C24.1 (AUDIT-8 F-1): the pinned recovery-report.mjs looks for zipkit.mjs beside itself (the layout of RECOVER/) and otherwise in ../../../chicla-zip (the monorepo);
+// in the package neither exists, so `chicla recovery` died with ERR_MODULE_NOT_FOUND. The same bytes go beside it, in the built package only: no pinned file is edited.
+const pinnedZip = join(work, 'src', 'pinned', 'zipkit.mjs');
+if (!existsSync(join(work, 'src', 'pinned'))) refuse('EMISSING', 'src/pinned/ is not in the kit: nothing to put the zip module beside');
+copyFileSync(zipSrc, pinnedZip);
+if (sha(pinnedZip) !== sha(zipSrc)) refuse('EHASH', 'src/pinned/zipkit.mjs changed while being copied');
 renameSync(work, stage);
 
 const pkg = JSON.parse(readFileSync(join(stage, 'package.json'), 'utf8'));

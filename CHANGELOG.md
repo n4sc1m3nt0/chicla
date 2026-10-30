@@ -1,7 +1,73 @@
-<!-- CHANGELOG_FINGERPRINT: seq=286 file=CHICLA_PROJECT_STATUS-286.md app_sha256_12=065d37032ef1 changelog_sha256_12=f068659d349a (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=294 file=CHICLA_PROJECT_STATUS-294.md app_sha256_12=065d37032ef1 changelog_sha256_12=d4f6b9e2b06d (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
-Archived rounds (nothing deleted): `CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now., `CHANGELOG-archive-rounds-220-230.md`, `CHANGELOG-archive-rounds-231-241.md`, `CHANGELOG-archive-rounds-242-253.md`, `CHANGELOG-archive-rounds-254-263.md`
+Archived rounds (nothing deleted): `CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now., `CHANGELOG-archive-rounds-220-230.md`, `CHANGELOG-archive-rounds-231-241.md`, `CHANGELOG-archive-rounds-242-253.md`, `CHANGELOG-archive-rounds-254-263.md`, `CHANGELOG-archive-rounds-264-275.md`
+
+## Round 289 — C24.4: the old package names said once (v0.0.293)
+
+- Task (Rodrigo: «avança»; next card of M24). C24.4 (D149, AUDIT-8 F-5): eleven places still spoke of `chicla-zip` and `chicla-kit` as live packages.
+- Test first: `test/stale-package-words-docs.test.mjs` (10, all red first): `SECURITY.md` (one package, a table with `chicla` only, «Checking a release» about `chicla`), the root README (Status, sample from `chicla/zip`, the CI sentence, the `NEXT:` limit of `recovery` written down), `docs/README.md`, the two old READMEs (Moved notice first, no install line), the header and first `--help` line of `cli.mjs`, the `EZIP_WRITE` text, a grep of the live docs for «two packages», ROADMAP.
+- Change: two source files, `packages/chicla-kit/src/cli.mjs` (header comment and the first line of `HELP`: «chicla: the workflow CLI») and `packages/chicla-kit/src/make-delivery.mjs` (the `EZIP_WRITE` message only; the code stays), plus one line of `scripts/smoke-test-delivery-guards.mjs` that read that message. Neither source is pinned; the pin did not move. Docs as above; ROADMAP C24.4 done.
+- Also: three older docs tests pinned the stale sentences and follow (`test/release-docs.test.mjs` twice, `test/retire-packages.test.mjs`: «`0.1.1` is the last release under this name» instead of «published on npm», and the old rows are gone from the SECURITY.md table); nothing else changed in them.
+- Run on this machine: the new tests, `smoke-test-delivery-guards` (52 checks), the whole `npm test` after `bump-round` (1739 tests, 1737 pass, 0 fail, 2 skipped, 1142 s on 1 core), `check-build`. NOT run: the CI, Node 18 and 20, macOS, Windows, the rest of `npm run smoke`, the mutant lists.
+
+## Round 288 — C24.3: the CI installs and drives the packed tarball (v0.0.292)
+
+- Task (Rodrigo: «avança»; next card of M24). C24.3 (D149, AUDIT-8 F-4): until now the tarball installed alone was tried only by one unit test inside `npm test`, never on Windows and never as a CI job of its own.
+- Test first: `test/smoke-tarball.test.mjs` (8, all red first): usage errors exit 2; a missing `--tarball` is `ETARBALL` (1, one JSON line); the real run, nine steps all ok and only `chicla` installed; break it on purpose: a tarball without `src/pinned/zipkit.mjs` (the 0.2.0 defect) goes red at `recovery` and exits 1; `smoke:tarball` in `package.json` and not in `smoke`; the CI job shape; ROADMAP.
+- Change: one source file, `scripts/smoke-test-tarball.mjs` (builds and packs, or takes `--tarball`; installs offline in an empty folder; `init`, `bump-round --verify`, `make-delivery`, `verify-delivery`, `dump`, `RECOVER/` in the dump, `recovery`, `chicla-zip`, `import "chicla/zip"`; every step runs even after a red one; `--json`). CI: job `tarball` on Ubuntu, macOS and Windows, the Windows leg `continue-on-error` (reported, not promised, D114). `package.json`: `smoke:tarball`. ROADMAP C24.3 done. No pinned file touched, the pin did not move.
+- Also: three docs tests followed the round (`init-package-json-docs` reads the archives for the round 285 clause; the CI comment of the new job avoids words another test forbids in the `pack-chicla` job); the «Current version» clauses of rounds 283 to 287 were joined with `; round ` (they were separate parentheses, which `--rolling` cannot cut) and the old ones archived verbatim to `docs/status-archive-rolling-273-285.md`; nothing deleted.
+- Run on this machine: the script (9 of 9 ok, 3 s), the whole `npm test` after `bump-round` (1729 tests, 1727 pass, 0 fail, 2 skipped, 1091 s on 1 core), `check-build`. NOT run: the CI job on GitHub (first run is Rodrigo's push), Node 18 and 20, macOS, Windows, `npm run smoke`, the mutant lists (the script has no hand mutant; the broken-tarball test is its break-on-purpose).
+
+## Round 287 — C24.5 reversed and fixed: the dump from the installed package carries `RECOVER/` (v0.0.291)
+
+- Task (Rodrigo: «reverte a decisão e faz a correção»). D-283b is reverted. Claude had said the fix «could move the pin»; that was overstated (the pin hashes the five RECOVER files, `emergency-dump.mjs` is not one). C24.5 (D149, AUDIT-8 F-2) became the fix.
+- Cause, read in the code: the five pinned files were read three folders up from `emergency-dump.mjs` (`packages/chicla-kit/src/pinned/…`), a layout only the repository has.
+- Test first: `test/chicla-single-package.test.mjs` (the dump made by the tarball installed alone has the five `RECOVER/` files byte for byte the pinned ones, the marker hashes them the same, no warning; red) and `test/dump-limit-docs.test.mjs` (rewritten, 4, red first).
+- Change: one source file, `packages/chicla-kit/src/emergency-dump.mjs` (`toolchainPaths`: the module's own `pinned/<name>`, then `<name>`, then the repository path). Docs: the round 286 limit text removed, `SECURITY.md` one line about 0.2.0, the 0.2.1 runbook, ROADMAP D149, C24.5, G-C17, AUDIT-8 update, the status file. The pin did not move (`bump-round --verify`: `24014f88…`).
+- Run: the 42 dump tests of the repository layout; mutants K-INT-11 and K-INT-12 (still RED).
+- Housekeeping (item 6): see the status file.
+- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke`, the rest of the mutant lists, macOS, Windows, `npm publish` (Rodrigo's gate G-C17).
+
+## Round 286 — C24.5: the missing `RECOVER/` in a package dump is a documented limit (v0.0.290)
+
+- Task (Rodrigo: «avança»). C24.5 (D149, AUDIT-8 F-2, D-283b confirmed): a dump made by the installed `chicla` has no `RECOVER/`. Docs only: no source, the pin did not move.
+- Test first: `test/dump-limit-docs.test.mjs` (3, all red): the README section, the `SECURITY.md` bullet and the kit README row, ROADMAP and status.
+- Read before writing: the digest check only runs from a folder named `RECOVER/` (`recovery-report.mjs` line 104) and `chicla recovery` runs the installed copy, so it never runs code from the dump; what is lost is the digest pin.
+- Change: `packages/chicla/README.md` («Known limit: dumps made by the package»), `SECURITY.md`, `packages/chicla-kit/README.md`, ROADMAP C24.5, the status file. Not taken: reading the pinned files from the module's own folder (could move the pin).
+- Housekeeping (item 6): `--status`, `--snapshot` and `--rolling` run; the «Current version» clauses of rounds 281 and 282 moved by hand to `docs/status-archive-rolling-281-282.md` (the script does not cut the `(round N: …)` form).
+- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke`, the mutant lists, macOS, Windows, `npm publish` (Rodrigo's gate G-C17).
+
+## Round 285 — C24.2: `chicla init` writes `package.json` (v0.0.289)
+
+- Task (Rodrigo: «confirmo tudo. avança»: D-283a and D-283b confirmed with Claude's suggestions). C24.2 (D149, AUDIT-8 F-3): a project made by `chicla init` was refused by `make-delivery`, `verify-delivery` and `recovery` for want of a `package.json`.
+- Test first: `packages/chicla-kit/test/init.test.mjs` (six files became seven, 5 new: minimal private package, one version, an existing one kept byte for byte and said in `kept`, all or nothing, `init` then `make-delivery` and `verify-delivery` through the CLI; 7 red) and `test/init-package-json-docs.test.mjs` (3, red first). `test/chicla-single-package.test.mjs` drops its by-hand `package.json` and runs `init` then `make-delivery` from the installed tarball.
+- Change: one source file, `packages/chicla-kit/src/init.mjs`. Docs: both READMEs, `docs/release.md` (the 0.2.1 runbook now has both fixes), ROADMAP D120, D149, C24.2, C24.5, gate G-C17, the status file. The pin did not move.
+- Housekeeping (item 6): `--status`, `--snapshot` and the plain CHANGELOG archive (rounds 264 to 275) run; a first full `npm test` was red on the CHANGELOG limit (22 rounds) and on `init-agent.test.mjs` (six files) and both are fixed.
+- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke`, the mutant lists (no entry names `init.mjs`), macOS, Windows, `npm publish` (Rodrigo's gate G-C17).
+
+## Round 284 — C24.1: `chicla recovery` starts from the installed package (v0.0.288)
+
+- Task (Rodrigo: «temos que corrigir os defeitos encontrados»). C24.1 (D149, AUDIT-8 F-1): in `chicla` 0.2.0 `chicla recovery` ended `ECOMMAND_LOAD: ERR_MODULE_NOT_FOUND`. F-3 (`init` and `make-delivery`, C24.2) is NOT done: it waits for Rodrigo's answer to D-283a.
+- Test first: `test/chicla-single-package.test.mjs` (the stage has `src/pinned/zipkit.mjs` byte for byte and the repository does not; the tarball installed alone runs `dump` then `recovery`; 2 red with `ERR_MODULE_NOT_FOUND`, then 9 of 9) and `test/release-021-docs.test.mjs` (4, red first).
+- Change: one script, `scripts/build-chicla.mjs` (a second sha256-checked copy of `zipkit.mjs` beside the pinned `recovery-report.mjs`, in the built package only: 30 files). `packages/chicla` is `0.2.1`; the tests that hard-coded `0.2.0` follow. `docs/release.md` «Releasing chicla 0.2.1», ROADMAP C24.1 done and gate G-C17 open, the status file. No pinned file edited, the pin did not move.
+- Housekeeping (item 6): `--status` and `--snapshot` run.
+- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke`, the mutant lists, macOS, Windows, `npm publish` (Rodrigo's gate G-C17).
+
+## Round 283 — the audit after M23: the published package read and driven (v0.0.287)
+
+- Task (Rodrigo: «faz o audit final»). The `audit` of M23: `docs/audits/AUDIT-8.md`, seven findings, plan M24 (C24.1 to C24.5, D149, proposed). Docs only: no source, no pinned file, the pin did not move; nothing was fixed in the package.
+- Test first: `test/audit8-docs.test.mjs` (7, all red): the sections, one plan block per card, a measurement in every finding, the sha256 npm serves, the two defects recorded, ROADMAP D149 and M24, the docs index, the status file.
+- Measured: registry (`latest` 0.2.0, both old names deprecated), the tarball from `npm pack` byte-identical to `build-chicla` and `pack-release` of this tree (`diff -r` empty), the installed package driven as a user: `chicla recovery` ends `ERR_MODULE_NOT_FOUND` (F-1), `chicla init` makes a project that `make-delivery` and `recovery` refuse (F-3), a package dump has no `RECOVER/` (F-2). The whole `npm test` on the round 282 tree: 1698 tests, 1696 pass, 0 fail, 2 skipped, 594 s.
+- Change: `docs/audits/AUDIT-8.md`, `ROADMAP.md` (D149, M24), `docs/README.md`, the status file, the test. Housekeeping (item 6): `--status`, `--snapshot` and `--rolling` run; the «Current version» clauses of rounds 277 to 280 moved by hand to `docs/status-archive-rolling-277-280.md` (the script does not cut the `(round N: …)` form).
+- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke`, the mutant lists, macOS, Windows, `npx chicla` with a clean cache.
+
+## Round 282 — one npm package, step 4: published and recorded (v0.0.286)
+
+- Task (Rodrigo: «podes fechar e registar nos docs do projeto»). C23.4 and G-C16 (D148): Rodrigo published `chicla` 0.2.0, made the tag and the release and deprecated `chicla-zip` and `chicla-kit`; this round records it. Docs only: no source, no pinned file, the pin did not move.
+- Test first: `test/published-chicla-docs.test.mjs` (8, all red): the «Published: chicla 0.2.0» section (who, when, the sha256 and the numbers, per-version deprecation, the surprises, what Claude did not see), ROADMAP C23.4 / D148 / G-C16, the status gate row, the READMEs. `retire-packages` and `single-package-docs` relaxed (they said «open»).
+- Change: `docs/release.md` (new section; step 5 compares the content with `diff -r` because the bytes of a tarball depend on the npm version: npm 12 on his Mac gave another sha256, npm 10 on Linux gave the CI's; step 6 says to publish without `tee`: it stopped with `EOTP`), `ROADMAP.md`, the status file, README and the two old READMEs. Housekeeping (item 6): `--status`, `--snapshot`, `--rolling`, verbatim.
+- NOT run by Claude: the CI of this tree, `npm run smoke`, the mutant lists. What happened on npm and GitHub is in his pasted output only.
 
 ## Round 281 — one npm package, step 3: the old packages retired (v0.0.285)
 
@@ -46,91 +112,4 @@ Archived rounds (nothing deleted): `CHANGELOG-archive-rounds-0-219.md`. Referenc
 - Test first: the version tests (`package.test`, `layout`, `pack-release`, `cli-check-manifest`, `release-docs`) expect `0.1.1`; two new tests in `test/release-docs.test.mjs` hold the section «Releasing 0.1.1» (both tags, both tarballs, zip published before the kit, the AI never publishes) and the root README. 12 red first, green after.
 - Change: `"version": "0.1.1"` in both `package.json`, the status line of both READMEs, the root README (it also said `chicla-zip` was not yet published), `docs/release.md` section «Releasing 0.1.1», ROADMAP D146. The kit keeps `"chicla-zip": "^0.1.0"`. No source file, the pin did not move. Housekeeping (item 6): `--status`, `--snapshot`, `--rolling`, verbatim.
 - NOT run by Claude: the CI, Node 18 and 20, macOS, Windows, `npm publish` and the steps after it (Rodrigo's); the mutant lists (no source changed).
-
-## Round 275 — emergency-dump: the zip/tar fallback no longer shares a temp name between processes (v0.0.279)
-
-- Task (Rodrigo: the CI of the round 274 tree, `logs_110353174996.zip`; `test (ubuntu-latest, 18)` red once, green on his re-run). Test 1319 (`emergency-dump (tar path)…`, `dump-secret-content.test.mjs`) failed with `ENOENT … copyfile '/tmp/chicla-EMERGENCY-afterRoundunknown-…150744.tar.gz'`; the other 11 jobs were green. Cause: the fallback built its archive at `tmpdir()/<name>`, a name with one-second resolution that every process shares; `node --test` runs files in parallel, and two dumps in the same second removed each other's archive (the zip path also did `rmSync(tmpZip)` before creating it). Not a Node 18 problem.
-- Test first: `test/emergency-dump-concurrent.test.mjs` (2, zip and tar): 8 dumps at once, same second, one shared `TMPDIR`, the chicla-zip writer broken so each takes the external path; all must exit 0 with one archive each and leave nothing in the shared `TMPDIR`. Red 3 of 3 before (the same ENOENT), green 3 of 3 after.
-- Fix, one source file: `packages/chicla-kit/src/emergency-dump.mjs` builds `tmpZip` and `tmpTar` inside the run's own `mkdtemp` stage (removed at the end) and no longer deletes a shared name; the members are listed explicitly, so the archive is never packed into itself. The pin did not move.
-- Run by Claude (Node 22, Linux, 2 cores): the whole `npm test` after `bump-round`: 1656 tests, 1654 pass, 0 fail, 2 skipped (624 s); `check-build` and the whole `npm run smoke` green; kit mutants `K-DMP-04` to `K-DMP-09` (the fallback entries) one by one, all RED. The first whole run had 2 red (`plan-a1-docs`, `plan-a2-docs`: they require «A-2 … closed» and `D-270a` in the live «Next up», and the rolling archive had moved that clause out); the sentence is back in the round 275 clause, `--refresh`, the whole suite again green. Those two tests break whenever that clause rotates out: reported, not changed.
-- NOT run by Claude: the CI, Node 18 and 20 (the failing job's version), macOS, Windows, the other 3 kit mutant entries of `emergency-dump.mjs` (`K-DMP-01` to `-03`, the `allow` release, not touched), the zip list, the whole kit list.
-
-## Round 274 — C20.7: `npm run mutants` passes its baseline with no TMPDIR trick (v0.0.278)
-
-- Task (Rodrigo: «avança»; D145, D-272a). The first whole run on his Mac stopped at the baseline: four tests of chicla-zip (`ZIP-014`, `-015`, `-016`, `-020`) read `../../../docs/zip-handling.md`, and `scripts/mutants.mjs` copied the package to `<tmp>/chicla-mutants-X/pkg`, so that path was the OS temp folder, outside the private folder. Test first: `test/mutants-docs-layout.test.mjs` (2, 1 red first: an EMPTY `TMPDIR`, baseline FAILED with `ENOENT` on `docs/zip-handling.md`; the child runs without `NODE_TEST_CONTEXT`, else it exits 0 without running).
-- Fix, one script: a package inside the repo is copied to the same relative place below the private folder (`packages/chicla-zip`) and the private folder gets the repo's `docs/`; a package outside the repo and `--pkg .` (the kit list) are copied to `pkg` as before.
-- Run by hand, no `TMPDIR` trick: `R202-folder-counts` RED; `K-DEL-04` with `--pkg .` RED; four entries, one per docs file (baseline of 6 files ok), all RED; `scripts/smoke-test-mutants.mjs` green. Housekeeping (item 6): `--status`, `--snapshot`, `--rolling`, and the CHANGELOG itself (rounds 254-263 to `CHANGELOG-archive-rounds-254-263.md`), verbatim. M20 complete. The pin did not move.
-- NOT run by Claude: the CI, Node 18 and 20, the other five smoke scripts, the whole zip list and the whole kit list again, macOS, Windows.
-
-## Round 273 — C20.6: the one survivor of the first whole mutant run on a Mac was a list entry, fixed (v0.0.277)
-
-- Task (Rodrigo: «sim a tudo»; D145, D-272b, AUDIT-7 F-5). He ran the whole `npm run mutants` on his Mac (round 272 tree): the baseline failed first (four docs tests read `docs/zip-handling.md` outside the folder the script copies; he got past it with a `TMPDIR` holding a copy of `docs/`; card C20.7 is next), then 348 entries: 1 not as listed, `R202-folder-counts` SURVIVED, 9 not run on darwin, the rest RED or explained.
-- Cause, measured on a copy: the entry ran only `read-duplicate.test.mjs`; with the mutant `read("dir/")` returns an empty buffer and `read.test.mjs` («a directory is not a file») and `open.test.mjs` go red. Test first: `test/mutants-zip-list-tests.test.mjs` (2, 1 red first). The entry now names both files; run alone (`--only R202-folder-counts`, a `TMPDIR` copy of `docs/`): SURVIVED before, RED after.
-- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`, verbatim. ROADMAP: D145, C20.4 done by Rodrigo, C20.6 done, C20.7 added; G-C14 line noted. No source file, the pin did not move.
-- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), the whole zip list again after the fix (Rodrigo's run is from before it), the kit list, macOS, Windows.
-
-## Round 272 — C21.2: the cost of editing a pinned file is written once; A-2 closed (v0.0.276)
-
-- Task (Rodrigo: «sim a tudo»; D144, D-270d, A-2). Test first: `test/pinned-cost-docs.test.mjs` (4, 3 red first): `docs/pinned-files-design.md` §8 «What an edit of a pinned file costs» with five steps in order (edit, `bump-round`, `--verify`, the whole `npm test`, the real-dump gate), what no longer costs anything (the move tests do not freeze bytes; `pinned-edit-follow-ups` proves it), and the digest of `CLAUDE.md` found in no other file of the manifest (broken on purpose: the digest copied into `README.md` turns it red, restored afterwards).
-- Docs: §8 of the design note, the row of `docs/README.md`, D138 «A-2 closed (round 272)» (its round 242 history kept: `plan-a1-docs` reads it), D144 and the M21 rows, AUDIT-4 A-2 marked closed. M21 is complete.
-- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`, verbatim. No source file, the pin did not move.
-- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), the kit and zip mutant lists, macOS, Windows, and the gate after a pin move does not apply (the pin did not move).
-
-## Round 271 — C21.1: an edit of a pinned file costs bump-round only (v0.0.275)
-
-- Task (Rodrigo: «sim a tudo»; D144, D-270b and D-270c, A-2). Test first: `test/pinned-edit-follow-ups.test.mjs` (6, 4 red first): for each of the five pinned files, on a copy of the tree, one comment line (`--verify` must go red), `bump-round --refresh`, `--verify` green, and the four `pinned-*-move` tests, `toolchain-pin`, `core-integrity-state` and `fingerprint-docs` green. Red for `baseline`, `manifest`, `policy` and `recovery-report`, green for `zipkit` (no frozen test).
-- Fix, in the tests only: the four `pinned-*-move` tests lose their frozen sha256 constants and reverse patches (the proof of the moves of rounds 128 to 133) and keep five structural tests each. The pin in `CLAUDE.md` guards the bytes from now on.
-- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`, verbatim. No source file, the pin did not move.
-- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), the kit and zip mutant lists, macOS, Windows. The new test copies the tree five times (about 1 minute on 2 cores).
-
-## Round 270 — A-2 planned: what an edit of a pinned file really costs (v0.0.274)
-
-- Task (Rodrigo: «vamos avançar com o a-2»; D138 part 2, AUDIT-4 A-2). Docs only: `docs/plan-a2-pins.md`, ROADMAP D144 (D-270a to D-270d proposed) and milestone M21 (C21.1, C21.2), `docs/README.md`. Test first: `test/plan-a2-docs.test.mjs` (8, red first).
-- Measured on a copy of the round 269 tree: a comment line in `policy.mjs` plus `bump-round --refresh` gives `--verify` green, the fast suite 1 red of 1580 (`pinned-policy-move`, a frozen sha256), the slow suite 52 of 52 green; one comment line in each of the other four pinned files gives one red each (`pinned-baseline-move`, `pinned-manifest-move`, `pinned-recovery-report-move`, reverse patches) and none for `zipkit.mjs`. Read: the pin is already generated (one home, `CLAUDE.md`), fewer pinned modules is rejected, the cost is four tests that froze bytes. The count of pin moves (31 of 273 entries, none since round 240) is a search of the CHANGELOG wording, not git history.
-- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`, verbatim. No source file, the pin did not move.
-- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), the kit and zip mutant lists, macOS, Windows; the experiment ran on Node 22 in the 2-core sandbox.
-
-## Round 269 — C20.5: the outer `catch` of `makeDelivery` gets a test (v0.0.273)
-
-- Task (Rodrigo: «avança»; D-265e, AUDIT-7 F-6). A root in which a core throws exists, so no source file changed: `verifyDelivery` calls `allowRemoved.map` AFTER the zip is written, so an `allowRemoved` that is a number or a plain object throws a TypeError out of the core. `packages/chicla-kit/test/core-make-delivery-catch.test.mjs` (3 tests) asserts that `makeDelivery` does not reject, returns `EDELIVERY_ERROR` with `step` and `cause` null, leaves no zip at `out` (neither the one just written nor an old file that was there) and prints no stack trace, and that the same project still delivers afterwards. Probed first and NOT reachable that way: `FILES.manifest`, `CHANGELOG.md`, the baseline or the status file replaced by a folder, a missing root, a bad `against` (the cores return those as `EDELIVERY_STEP`).
-- Red first: the tests are green on the code (the catch already worked, it was untested); what proves they protect it is the list: `K-DEL-04` (another code from the catch) and `K-DEL-05` (the catch keeps the zip) added to `packages/chicla-kit/mutants/list.mjs`, each run alone: RED, RED.
-- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`, verbatim. ROADMAP C20.5 row says feito. Pin did not move.
-- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), the whole `npm run mutants:kit` (only `K-DEL-04` and `-05`), the 348 mutants of the zip list, macOS, Windows.
-
-## Round 268 — C20.3: the docs about the kit mutant list are true, and a test holds them (v0.0.272)
-
-- Task (Rodrigo: «avança»; D-265c, AUDIT-7 F-2 and F-4). Test first: `test/mutants-kit-figures.test.mjs` (4, 3 red first): the prefixes are derived from `packages/chicla-kit/mutants/list.mjs` (ten); `docs/README.md` must name each; item 20 (c) of the status file and the header of the list must say «half an hour» and carry no «N entries» or «N mutants» that is not the list's; the M19 rows and heading of the ROADMAP must not say proposed or in progress.
-- Docs: `docs/README.md` names `K-CMN-` and `K-VER-`; item 20 (c) and the list header say the whole pass is about half an hour on 2 cores (measured in round 265) instead of «100 entries, minutes, about 18 s per entry»; the ROADMAP: M19 heading «confirmed», C19.5 feito, C19.7 CONFIRMED. No count was written in their place on purpose: a count is one more thing that goes stale.
-- Housekeeping (item 6): `--status --keep-previous 4` and `--snapshot --keep-done 9`, verbatim. No source file, the pin did not move.
-- Run: `check-build` (222 files) and the whole `npm test` once after `bump-round` (1629 tests: 1627 pass, 0 fail, 2 skipped, Node 22, the 2-core sandbox, 635 s). NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), the 348 mutants of the zip list, macOS, Windows.
-
-## Round 267 — C20.2: the limit tests stop assuming the live counts (v0.0.271)
-
-- Task (Rodrigo: «avança»; D-265b, AUDIT-7 F-3). Test first: `test/limits-archived-copy.test.mjs` (1, red first): a copy of the whole tree is archived as deep as item 6 allows (`--keep 3`, `--status --keep-previous 1`, `--snapshot --keep-done 2`, `--rolling --keep-clauses 1`), `bump-round --refresh` fixes its fingerprints and `core-bump-round-limits.test.mjs` runs there: 3 red (the «Previous» count, «several limits», the real `--refresh`). The child `node --test` runs without `NODE_TEST_CONTEXT`: with it inherited the child reported into the parent runner and exited 0 whatever it saw (the first version of this test was green for that reason).
-- Fix, in the test only: `addPrevious` pads to exactly 5 blocks before it adds `k` (as `addDone` pads to 10); `padLine` replaces the line with `head` plus filler instead of growing it (a live paragraph already past the target made `repeat` throw). `core-bump-round-limits.test.mjs` 9 of 9 green in the copy and in the tree.
-- Housekeeping (item 6): `--status --keep-previous 4` and `--snapshot --keep-done 9`, verbatim. No source file, the pin did not move.
-- Run: `check-build` (220 files) and the whole `npm test` once after `bump-round` (1625 tests: 1623 pass, 0 fail, 2 skipped, Node 22, the 2-core sandbox, 658 s). NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), the 348 mutants of the zip list, macOS, Windows.
-
-## Round 266 — C20.1: `scripts/bump-round.mjs` refuses an option it does not know (v0.0.270)
-
-- Task (Rodrigo: «aceito tudo. avança»: D143 and D-265a to D-265e confirmed; C20.1, AUDIT-7 F-1). Test first: `test/bump-round-options.test.mjs` (4, 2 red first): in a copy of the whole tree, an unknown option (`--bogus`, `--verfy`, `--dry-runn`), a stray word, `--note` with no text or followed by an option, and `--verify` with another mode each exit 2 with a usage text on stderr and leave the tree byte for byte as it was; `--help` and `-h` exit 0 with the usage and change nothing; `--verify`, `--dry-run`, `--refresh --dry-run`, `--note <text> --dry-run` and the default bump still work.
-- Code: `parseBumpArgs` and `BUMP_USAGE` in the kit core `packages/chicla-kit/src/bump-round.mjs` (pure, it never prints or exits) and a few lines in the wrapper `scripts/bump-round.mjs`, which calls it before `bumpRound` (a first version put the check in the wrapper and `core-bump-round.test.mjs` went red: the wrapper is held to 24 lines); the kit CLI already refused the same cases. Smoke: one case in `scripts/smoke-test-bump-round.mjs` (13 checks). Kit list: `K-BMP-14` to `-17` (the help, the unknown option, the note, `--verify` alone), each run alone: 4 red; the exit codes of the wrapper are held by the test and the smoke case (the list mutates kit sources only: a first `K-BMP-18` and `-19` on the wrapper went red in `mutants-kit-list.test.mjs`, so they were dropped).
-- Housekeeping (item 6): `--status --keep-previous 4` and `--snapshot --keep-done 9`, verbatim. Two source files, the pin did not move.
-- Run: `check-build` (219 files) and the whole `npm test` once after `bump-round` (1624 tests: 1622 pass, 0 fail, 2 skipped, Node 22, the 2-core sandbox, 661 s); the first whole run found two reds that are fixed (the wrapper held to 24 lines, a new test that picked the status file by itself). `bump-round` now warned that «Open decisions» passed 4 KB (C19.2 at work): `--rolling` run, verbatim. NOT run by Claude: the CI, Node 18 and 20, the 348 mutants of the zip list, macOS, Windows.
-
-## Round 265 — AUDIT-7 after M19: `docs/audits/AUDIT-7.md`, D143, milestone M20 (v0.0.269)
-
-- Task (Rodrigo: «avança para o próximo audit»; the process asks an audit after each milestone, item 2). Test first: `test/audit7-docs.test.mjs` (7, red first): the sections, one plan block per card (files, tests first, pin, done when), a measurement per finding, the pass of the kit list with its count, D143 and M20 in the ROADMAP, the audit in `docs/README.md` and in the status file or its archives (through `statusWithArchives`); `test/status-reads.test.mjs` lists it with the other audit tests.
-- Measured (all in the audit): the whole `npm test` (1613, 1611 pass, 0 fail, 2 skipped, 473 s); the whole `npm run mutants:kit` (126 entries, 122 red, 4 explained, about 34 minutes, `K-VER-` 74 % of it); every script run with an unknown option on a COPY; the copy archived to the limits and the whole suite run on it (3 red of 1613, all in `core-bump-round-limits.test.mjs`); the coverage of the kit sources and `scripts/` (97.88 % lines, 92.11 % branches).
-- Findings: F-1 `scripts/bump-round.mjs --help` or `--verfy` renames the status file N to N+1 and rewrites the fingerprints (the kit CLI refuses with `EUSAGE`); F-2 stale figures about the kit list; F-3 tests that assume the live counts; F-4 stale M19 states in the ROADMAP; F-5 the 348 mutants of the zip list not run whole since 2026-10-17; F-6 the outer `catch` of `makeDelivery` has no test. Plan: C20.1 to C20.5 (D143, D-265a to D-265e PROPOSED); nothing was fixed in this round.
-- Files: `docs/audits/AUDIT-7.md`, `docs/README.md`, `ROADMAP.md` (D143, M20), `test/audit7-docs.test.mjs`, `test/status-reads.test.mjs`, the status file, this entry. No source file; the pin did not move. Housekeeping (item 6): `--status --keep-previous 4` and `--snapshot --keep-done 9`, verbatim.
-- Run: `check-build` (219 files) and the whole `npm test` once after `bump-round` (1620 tests: 1618 pass, 0 fail, 2 skipped, Node 22, the 2-core sandbox, 453 s).
-- NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), the 348 mutants of the zip list and the 8 `R170-*` ones, macOS, Windows.
-
-## Round 264 — C19.7: the survivors of the `verify-delivery` slice are closed (v0.0.268)
-
-- Task (Rodrigo: «avança»; D-263a). Test first: `packages/chicla-kit/test/core-verify-delivery-gaps.test.mjs` (12): a delivery made once by the real writer, then each variant BUILT entry by entry with chicla-zip's independent `zipfab.mjs` (no Python), wrong in one way: `*.tsbuildinfo` junk (`K-VER-02`), a wrapper folder (`-04`), one name twice (`-05`), a Unicode Path field with a wrong crc32 (`-06`), a file outside the manifest (`-11`), one the baseline lists and the zip lacks (`-12`), no CHANGELOG.md (`-13`), a status number that is not the seq= (`-14`), `--against` with two top folders (`-20`), with a `__MACOSX/` folder (`-21`), and the lines of `renderVerifyDelivery` (`-24`). Green on the code.
-- Data: those 11 entries now name the new file and lose `survives`; run once: 11 red. `K-VER-25` stays `survives`, now explained as equivalent: a zip whose entry count is 0xffff gives EZIP_UNREADABLE with and without the mutant (checked by hand on a fabricated zip), only the wording differs. One list test (red first). M19 is complete.
-- Housekeeping (item 6): `--status --keep-previous 4` and `--snapshot --keep-done 9`, verbatim. No source file, the pin did not move.
-- Run: the whole `npm test` once after `bump-round` (1613 tests: 1611 pass, 0 fail, 2 skipped, Node 22, the 2-core sandbox, 368 s) and `check-build` (218 files). NOT run by Claude: the CI, Node 18 and 20, `npm run smoke` (no script changed), the whole `npm run mutants:kit` in one pass, the mutants of the zip list (348), macOS, Windows.
 

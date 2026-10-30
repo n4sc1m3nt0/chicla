@@ -21,7 +21,7 @@ test('D148 D-D: chicla-zip and chicla-kit are private (npm refuses to publish th
     assert.equal(p.version, '0.1.1', `${dir} version stays at the last published one`);
   }
   assert.notEqual(json('packages/chicla/package.json').private, true, 'the single package is the one that gets published');
-  assert.equal(json('packages/chicla/package.json').version, '0.2.0');
+  assert.equal(json('packages/chicla/package.json').version, '0.2.1');
 });
 
 test('pack-release refuses both private folders with EPRIVATE, so no tarball of an old package can be made by mistake', () => {
@@ -105,24 +105,23 @@ test('the history stays: the 0.1.1 sections say they are history (the packages a
   assert.ok(s.includes('## Published: 0.1.1 (round 277, D146)'));
 });
 
-test('READMEs and SECURITY.md: the two old packages say they moved into `chicla`; the 0.1.1 sentences the older tests rely on stay', () => {
+test('READMEs and SECURITY.md: the two old packages say they moved into `chicla`; the last release under the old name is named (C24.4 reworded the 0.1.1 sentences)', () => {
   for (const f of ['packages/chicla-zip/README.md', 'packages/chicla-kit/README.md']) {
     const r = read(f);
     assert.match(r, /Moved into `chicla`/, `${f} must say it moved`);
     assert.match(r, /npm install chicla\b(?!-)/, `${f} must give the new command`);
-    assert.match(r, /`0\.1\.1`, published on npm/, `${f} keeps the published-version sentence`);
+    assert.match(r, /`0\.1\.1` is the last release under this name/, `${f} names the last release under the old name`);
     assert.match(r, /private/i, `${f} says the folder is private source`);
   }
   const sec_ = read('SECURITY.md');
   assert.match(sec_, /\| `chicla` \| the latest `0\.2\.x`/);
-  assert.match(sec_, /\| `chicla-zip` \| the latest `0\.1\.x`/, 'the old rows stay: their 0.1.x remain on npm');
+  assert.doesNotMatch(sec_, /\| `chicla-zip` \|/, 'round 289 (C24.4): the old rows are gone from the supported table; one sentence says they are deprecated');
+  assert.match(sec_, /`chicla-zip` and `chicla-kit` \(`0\.1\.x`\) are the old names/);
   assert.match(read('README.md'), /private/i);
 });
 
-test('ROADMAP: C23.3 done in round 281, C23.4 still open (a gate for Rodrigo), G-C16 still open', () => {
+test('ROADMAP: C23.3 done in round 281 (C23.4 and G-C16 are closed in round 282: see published-chicla-docs.test.mjs)', () => {
   const r = read('ROADMAP.md');
   assert.match(row(r, '| C23.3 |'), /feito \(round 281/);
-  assert.match(row(r, '| C23.4 |'), /gate · open/);
   assert.match(row(r, '| G-C16 '), /0\.2\.0/);
-  assert.doesNotMatch(row(r, '| G-C16 '), /closed|FECHADO/i, 'the AI never marks a gate');
 });

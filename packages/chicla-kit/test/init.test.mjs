@@ -17,19 +17,21 @@ const { main } = await imp('src/cli.mjs');
 const { bumpRound } = await imp('src/bump-round.mjs');
 const { checkManifest, renderCheckManifest } = await imp('src/check-manifest.mjs');
 const tpl = (n) => readFileSync(join(KIT, 'templates', n), 'utf8');
-const ALL = ['AGENTS.md', 'CHANGELOG.md', 'CHICLA_PROJECT_STATUS-1.md', 'CLAUDE.md', 'FILES.manifest', 'version.mjs'];
+const ALL = ['AGENTS.md', 'CHANGELOG.md', 'CHICLA_PROJECT_STATUS-1.md', 'CLAUDE.md', 'FILES.manifest', 'version.mjs']; // the targets: any of these existing refuses the run
+// C24.2 (AUDIT-8 F-3, D-283a confirmed by Rodrigo): init also writes a minimal private package.json, because make-delivery, verify-delivery and `chicla recovery` all need one. It is NOT a target: an existing one is kept.
+const CREATED = [...ALL, 'package.json'].sort();
 const regen = (root) => { const m = checkManifest({ root, write: true }); return { ok: m.ok, ...renderCheckManifest(m) }; };
 
 const T = () => mkdtempSync(join(tmpdir(), 'chicla-init-'));
 const done = (d) => rmSync(d, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 });
 const run = async (args, cwd) => { let out = '', err = ''; const status = await main(args, { stdout: { write: (s) => { out += s; } }, stderr: { write: (s) => { err += s; } }, cwd }); return { status, out, err }; };
 
-test('core: an empty folder gets the six files and nothing else; the two instruction files are byte for byte the templates', () => {
+test('core: an empty folder gets the seven files (the six and package.json) and nothing else; the two instruction files are byte for byte the templates', () => {
   const d = T(); try {
     const r = initProject({ root: d });
     assert.equal(r.ok, true);
-    assert.deepEqual([...r.created].sort(), ALL);
-    assert.deepEqual(readdirSync(d).sort(), ALL);
+    assert.deepEqual([...r.created].sort(), CREATED);
+    assert.deepEqual(readdirSync(d).sort(), CREATED);
     assert.equal(readFileSync(join(d, 'CLAUDE.md'), 'utf8'), tpl('CLAUDE.md'));
     assert.equal(readFileSync(join(d, 'AGENTS.md'), 'utf8'), tpl('AGENTS.md'));
   } finally { done(d); }
@@ -53,7 +55,7 @@ test('core: the manifest lists the generated files (so a later delivery cannot s
   const d = T(); try {
     initProject({ root: d });
     const m = readFileSync(join(d, 'FILES.manifest'), 'utf8');
-    for (const f of ALL.filter((x) => x !== 'FILES.manifest')) assert.ok(m.includes(f), `${f} is not in the manifest`);
+    for (const f of CREATED.filter((x) => x !== 'FILES.manifest')) assert.ok(m.includes(f), `${f} is not in the manifest`);
   } finally { done(d); }
 });
 
@@ -149,9 +151,71 @@ test('cli: `chicla init --root <dir>` creates the project (0); the project then 
 test('cli: --json is one object with the created files; a bad option or a bare word is usage (2)', async () => {
   const e = T(); try {
     const c = await run(['init', '--json'], e); assert.equal(c.status, 0);
-    const jc = JSON.parse(c.out); assert.equal(jc.ok, true); assert.deepEqual([...jc.created].sort(), ALL);
+    const jc = JSON.parse(c.out); assert.equal(jc.ok, true); assert.deepEqual([...jc.created].sort(), CREATED);
     assert.equal(c.out.trim().split('\n').length, 1, 'stdout is exactly one JSON line');
     assert.equal((await run(['init', '--force'], e)).status, 2);
     assert.equal((await run(['init', 'extra'], e)).status, 2);
   } finally { done(e); }
+});
+
+// ---- C24.2 (AUDIT-8 F-3): the project that init makes can be delivered and recovered ----
+
+test('C24.2 core: package.json is minimal, private, named after the folder (npm-safe), and its version is the APP_VERSION of the template', () => {
+  const base = T(); const d = join(base, 'My Project_X!'); mkdirSync(d); try {
+    assert.equal(initProject({ root: d }).ok, true);
+    const pkg = JSON.parse(readFileSync(join(d, 'package.json'), 'utf8'));
+    assert.deepEqual(Object.keys(pkg).sort(), ['name', 'private', 'version']);
+    assert.match(pkg.name, /^[a-z0-9][a-z0-9._-]*$/, 'an npm-safe name');
+    assert.equal(pkg.private, true);
+    assert.equal(pkg.version, tpl('version.mjs').match(/APP_VERSION = "([^"]+)"/)[1], 'one version, not two');
+    assert.ok(readFileSync(join(d, 'package.json'), 'utf8').endsWith('\n'));
+  } finally { done(base); }
+});
+
+test('C24.2 core: an existing package.json is kept byte for byte (no EEXIST), is not in `created`, is said in `kept`, and is in the manifest', () => {
+  const d = T(); try {
+    const mine = '{\n  "name": "mine",\n  "version": "3.4.5",\n  "scripts": { "test": "x" }\n}\n';
+    writeFileSync(join(d, 'package.json'), mine);
+    const r = initProject({ root: d });
+    assert.equal(r.ok, true, r.message);
+    assert.equal(readFileSync(join(d, 'package.json'), 'utf8'), mine);
+    assert.deepEqual([...r.created].sort(), ALL);
+    assert.deepEqual(r.kept, ['package.json']);
+    assert.ok(readFileSync(join(d, 'FILES.manifest'), 'utf8').includes('package.json'));
+    assert.equal(bumpRound({ root: d, mode: 'verify' }).ok, true);
+  } finally { done(d); }
+});
+
+test('C24.2 core: all or nothing still holds with package.json: when the consistency step fails it is removed again; one that was there before stays', () => {
+  const d = T(), tp = T(); try {
+    for (const f of ['CLAUDE.md', 'AGENTS.md', 'CHANGELOG.md', 'version.mjs']) writeFileSync(join(tp, f), tpl(f));
+    writeFileSync(join(tp, 'CHICLA_PROJECT_STATUS-1.md'), '# a status file that lost its fingerprint paragraph\n');
+    const r = initProject({ root: d, templates: pathToFileURL(tp + '/') });
+    assert.equal(r.ok, false); assert.equal(r.code, 'EWRITE');
+    assert.deepEqual(readdirSync(d), [], 'nothing, package.json included, is left behind');
+    writeFileSync(join(d, 'package.json'), '{"name":"keep"}\n');
+    assert.equal(initProject({ root: d, templates: pathToFileURL(tp + '/') }).ok, false);
+    assert.deepEqual(readdirSync(d), ['package.json'], 'the one that was there before stays');
+    assert.equal(readFileSync(join(d, 'package.json'), 'utf8'), '{"name":"keep"}\n');
+  } finally { done(d); done(tp); }
+});
+
+test('C24.2 cli: a fresh `chicla init` can `make-delivery` and `verify-delivery` at once (AUDIT-8 F-3: it ended «package.json is not at the ROOT of the zip»)', async () => {
+  const d = T(), o = T(); try {
+    assert.equal((await run(['init', '--root', d], process.cwd())).status, 0);
+    const zip = join(o, 'first.zip');
+    const m = await run(['make-delivery', zip, '--root', d], process.cwd());
+    assert.equal(m.status, 0, m.out + m.err);
+    assert.ok(existsSync(zip), 'the zip exists');
+    const v = await run(['verify-delivery', zip, '--root', d], process.cwd());
+    assert.equal(v.status, 0, v.out + v.err);
+  } finally { done(d); done(o); }
+});
+
+test('C24.2 render: a kept package.json is said on stdout', () => {
+  const d = T(); try {
+    writeFileSync(join(d, 'package.json'), '{"name":"mine"}\n');
+    const r = renderInit(initProject({ root: d }));
+    assert.ok(r.out.includes('package.json') && r.err === '');
+  } finally { done(d); }
 });

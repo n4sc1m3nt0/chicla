@@ -4,9 +4,9 @@ Read, verify, safely extract, write and repair zip files in plain Node. **Zero d
 
 A zip is hostile input, so everything here is built around that: the extractor validates the whole archive before it writes anything, extracts into a temporary folder and renames at the end (a failure leaves the destination untouched), never follows or creates symlinks, and never trusts names, sizes or counts from the archive. What the writer produces is accepted by `unzip -t` and by Python's `zipfile`, with UTF-8 names marked correctly (bit 11).
 
-> Status: `0.1.1`, published on npm (`npm install chicla-zip`; the release steps are in [`docs/release.md`](../../docs/release.md)). The API below is what the test suite pins. Security limits and how to report a problem: [`SECURITY.md`](../../SECURITY.md).
+> **Moved into `chicla`** (D148, round 281): this folder is private source now and nothing more is published under the name `chicla-zip`; its `0.1.x` stay on npm and are deprecated on npm (round 282). Install `npm install chicla` instead (the same `chicla-zip` command, and the library as `chicla/zip`). The `0.1.1` is the last release under this name.
 
-> **Moved into `chicla`** (D148, round 281): this folder is private source now and nothing more is published under the name `chicla-zip`; its `0.1.x` stay on npm and are deprecated. Install `npm install chicla` instead (the same `chicla-zip` command, and the library as `chicla/zip`). The `0.1.1`, published on npm, is the last release under this name.
+> Status: private source of `chicla` (its zip module). The API below is what the test suite pins. Security limits and how to report a problem: [`SECURITY.md`](../../SECURITY.md).
 
 ## Library
 

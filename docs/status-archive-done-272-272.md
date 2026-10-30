@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 272-272
+
+Moved out of `CHICLA_PROJECT_STATUS-286.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 272 (2026-10-28; Rodrigo: «sim a tudo»). C21.2 (D-270d, A-2): `docs/pinned-files-design.md` §8 «What an edit of a pinned file costs» (edit, `bump-round`, `--verify`, the whole `npm test`, the gate of a real `/dump` and «recovery mode», G-C11; what it no longer costs and what it never costs); `test/pinned-cost-docs.test.mjs` (4, 3 red first): the section and its five steps in order, the test that proves the cost, and the digest of the `toolchain-digest:` line of `CLAUDE.md` found in no other file of the manifest (history in the CHANGELOG files and the status archives excepted; broken on purpose by copying the digest into `README.md`: red, then restored); D138 says «A-2 closed (round 272)» with its round 242 history kept, AUDIT-4 A-2 says closed, `docs/README.md` points at §8, the M21 rows say feito. M21 is complete: A-2 is no longer open. Docs and one test, no source, the pin did not move. Not run by Claude: the CI, Node 18 and 20, `npm run smoke`, the kit and zip mutant lists, macOS, Windows.

@@ -43,12 +43,12 @@
 // C11.1 slice 5f (D84, D89): this is the CORE, in the kit package. It imports only `node:` modules and the PINNED files, by relative path (src/pinned/manifest.mjs statically,
 // src/pinned/policy.mjs through the guarded import, the writer through src/zipkit-loader.mjs, 12 lines that fall back to packages/chicla-zip/src/zipkit.mjs; a writer that fails leaves the zip/tar path), never its other siblings in src/, and has no entry point: the dump must keep
 // working when anything else is broken. `scripts/emergency-dump.mjs` is a thin wrapper (flags, print, exit) and `chicla dump` imports the same code. The project root, where the
-// five pinned RECOVER files are read from, is three folders up from this file.
+// five pinned RECOVER files are read from in the repository, is three folders up from this file; C24.5 (AUDIT-8 F-2): the files are looked for FIRST beside this module (src/pinned/, and src/zipkit.mjs in the built package), because in the installed package three folders up is not a project at all.
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { copyFileSync, createReadStream, createWriteStream, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
-import { join, relative, resolve, sep } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 // C14.7 (D113): every `rel` of the scan is made here, with «/» whatever the platform: the rest of the core compares and splits it with «/» (project root, `dir.split("/")`, `projRel`), and on win32 `path.relative` gives backslashes (round 156 CI log). `pm` lets a Linux test take the win32 branch; on POSIX a backslash in a name is a name character and is left alone.
 export const relPosix = (root, p, pm = { relative, sep }) => pm.relative(root, p).split(pm.sep).join("/");
 import { tmpdir } from "node:os";
@@ -56,6 +56,7 @@ import { parseManifest } from "./pinned/manifest.mjs";
 import { loadZipkit } from "./zipkit-loader.mjs";
 
 const SCRIPT_ROOT = resolve(fileURLToPath(new URL("../../..", import.meta.url))); // never URL.pathname (round 198)
+const HERE = dirname(fileURLToPath(import.meta.url)); // C24.5: this module's own folder (src/)
 
 const EXCLUDE_DIRS = new Set(["node_modules", ".next", ".git", "__MACOSX", ".npm-global", ".cache", ".npm", ".venv", "__pycache__", ".ssh", ".aws"]);
 const isKeptEnv = (n) => /^\.env(\..*)?$/.test(n) && /\.(example|sample)$/.test(n); // W2 rule: .env.example/.sample are not secrets
@@ -92,6 +93,8 @@ const scanKind = (path, size) => {
 // Round 221: the rule is every name that starts with a dot (it was four names, and a session's own tokens in .claude/ and .pki/ got through). `isHomeDot` is the one predicate.
 const isHomeDot = (n) => n.startsWith(".");
 
+// C24.5: where a RECOVER/ file is read from, in this order: the module's own src/pinned/<name> (the four kit files, in the repository AND in the built package), src/<name> (zipkit.mjs in the built package, next to the loader), and the repository path (zipkit.mjs in packages/chicla-zip). The first that reads wins; the bytes are the same everywhere (the build checks them), so the pinned digest does not change.
+const toolchainPaths = (name, repoRel) => { const base = name.slice("RECOVER/".length); return [join(HERE, "pinned", base), join(HERE, base), join(SCRIPT_ROOT, repoRel)]; };
 // C9.2: RECOVER/ = the recovery toolchain, ASCII names, taken from THIS tree (the scripts that ran), with its sha256 in the marker.
 const TOOLCHAIN = { "RECOVER/recovery-report.mjs": "packages/chicla-kit/src/pinned/recovery-report.mjs", "RECOVER/baseline.mjs": "packages/chicla-kit/src/pinned/baseline.mjs", "RECOVER/manifest.mjs": "packages/chicla-kit/src/pinned/manifest.mjs", "RECOVER/policy.mjs": "packages/chicla-kit/src/pinned/policy.mjs", "RECOVER/zipkit.mjs": "packages/chicla-zip/src/zipkit.mjs" };
 
@@ -129,7 +132,7 @@ async function dump(o, say) {
   const safe = (what, fn, fallback) => { try { return fn(); } catch (e) { errors.push(`${what}: ${e.code ? `${e.code}: ` : ""}${e.message}`); return fallback; } };
 
   const toolchain = {}, toolData = {};
-  for (const [name, src] of Object.entries(TOOLCHAIN)) safe(`toolchain ${src}`, () => { const b = readFileSync(join(SCRIPT_ROOT, src)); toolData[name] = b; toolchain[name] = createHash("sha256").update(b).digest("hex"); });
+  for (const [name, src] of Object.entries(TOOLCHAIN)) safe(`toolchain ${src}`, () => { let b, first; for (const p of toolchainPaths(name, src)) { try { b = readFileSync(p); break; } catch (e) { first ??= e; } } if (b === undefined) throw first; toolData[name] = b; toolchain[name] = createHash("sha256").update(b).digest("hex"); });
 
   // Walks a tree (without following symlinks), returns [{rel, size, mtime}] and the excluded .zip files.
   function walk(root, prefix) {

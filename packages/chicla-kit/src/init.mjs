@@ -2,10 +2,13 @@
 // agents) and the state files the rest of the kit needs: CHICLA_PROJECT_STATUS-1.md, CHANGELOG.md, version.mjs and FILES.manifest. The fingerprint
 // hashes are not computed here: the files are written with placeholder hashes and `bump-round --refresh` (the kit's own code) computes them and the
 // manifest, so there is one definition of the fingerprint, not two; then `--verify` must pass or everything is removed again.
+// C24.2 (AUDIT-8 F-3, D-283a): it also writes a minimal private package.json (name from the folder, version = the APP_VERSION of the template), because
+// make-delivery, verify-delivery and `chicla recovery` all take package.json as the mark of a project root. It is NOT a target: one that exists is kept as it
+// is and reported in `kept` (an existing repository adopting the workflow already has its own).
 // It never overwrites: if any target exists (a file, a folder, a link), or any CHICLA_PROJECT_STATUS-N.md exists, nothing is written and the run is
 // refused with EEXIST; replacing files is `chicla update` (C11.3, update.mjs). It never prints, never exits and never throws; the CLI renders the result.
 import { closeSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync, rmdirSync, statSync, writeSync, constants } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { AGENTS, resolveAgents } from "./agents.mjs";
 import { bumpRound } from "./bump-round.mjs";
 import { checkManifest, renderCheckManifest } from "./check-manifest.mjs";
@@ -13,10 +16,16 @@ import { checkManifest, renderCheckManifest } from "./check-manifest.mjs";
 const TEMPLATES = new URL("../templates/", import.meta.url);
 const FILES = ["CLAUDE.md", "AGENTS.md", "CHICLA_PROJECT_STATUS-1.md", "CHANGELOG.md", "version.mjs"]; // from templates; FILES.manifest is generated
 const regenerateManifest = (root) => { const m = checkManifest({ root, write: true }); return { ok: m.ok, ...renderCheckManifest(m) }; };
+// package.json of a new project: npm-safe name from the folder, the version of the version.mjs template (one version, not two).
+const packageJson = (root, templates) => {
+  const name = basename(resolve(root)).toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^[^a-z0-9]+/, "").replace(/-+$/, "") || "chicla-project";
+  const version = readFileSync(new URL("version.mjs", templates), "utf8").match(/APP_VERSION = "([^"]+)"/)?.[1] ?? "0.0.1";
+  return `${JSON.stringify({ name, version, private: true }, null, 2)}\n`;
+};
 const present = (p) => { try { lstatSync(p); return true; } catch { return false; } };
 
 /** @param {{ root: string, agents?: string[], templates?: URL }} o `agents` (C12.6) adds the files of those agents of the matrix to the default set; `templates` is a folder URL; only the tests change it (to make a step fail and prove the rollback)
- * @returns {{ ok: true, root: string, created: string[] } | { ok: false, code: "ENOROOT"|"EEXIST"|"EWRITE"|"EAGENT", root: string, existing?: string[], message: string }} */
+ * @returns {{ ok: true, root: string, created: string[], kept: string[] } | { ok: false, code: "ENOROOT"|"EEXIST"|"EWRITE"|"EAGENT", root: string, existing?: string[], message: string }} */
 export function initProject({ root, agents = [], templates = TEMPLATES }) {
   const ra = resolveAgents(agents);
   if (!ra.ok) return { ok: false, code: "EAGENT", root, message: ra.message };
@@ -29,6 +38,7 @@ export function initProject({ root, agents = [], templates = TEMPLATES }) {
   const existing = [...new Set([...ALL.filter((f) => present(join(root, f))), ...readdirSync(root).filter((f) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f))])];
   if (existing.length) return { ok: false, code: "EEXIST", root, existing, message: `${existing.join(", ")} already exist; nothing was written` };
   const made = [];
+  const kept = []; // C24.2: package.json when the project already had one
   const madeDirs = []; // folders this run created (.github/), removed again if still empty
   const undo = () => { for (const f of made) { try { rmSync(join(root, f), { force: true }); } catch { /* best effort */ } } for (const d of madeDirs.reverse()) { try { rmdirSync(d); } catch { /* not empty or gone: leave it */ } } };
   try {
@@ -40,6 +50,13 @@ export function initProject({ root, agents = [], templates = TEMPLATES }) {
       made.push(f);
       try { writeSync(fd, text); } finally { closeSync(fd); }
     }
+    const pj = "package.json"; // C24.2: written last among the files and before the manifest, so the manifest lists it; exclusive like the others, but a race is «kept», not a failure
+    if (present(join(root, pj))) kept.push(pj);
+    else {
+      let fd;
+      try { fd = openSync(join(root, pj), constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL, 0o666); } catch (e) { if (e.code === "EEXIST") kept.push(pj); else throw e; }
+      if (fd !== undefined) { made.push(pj); try { writeSync(fd, packageJson(root, templates)); } finally { closeSync(fd); } }
+    }
     made.push("FILES.manifest"); // removed too if a later step fails
     const r = bumpRound({ root, mode: "refresh", regenerateManifest });
     if (!r.ok) throw Object.assign(new Error(r.code ?? "EBUMP"), { code: r.code });
@@ -47,11 +64,12 @@ export function initProject({ root, agents = [], templates = TEMPLATES }) {
     undo(); // all or nothing
     return { ok: false, code: e.code === "EEXIST" ? "EEXIST" : "EWRITE", root, existing: e.code === "EEXIST" ? ALL.filter((f) => present(join(root, f))) : undefined, message: `could not create the project files (${e.code ?? e.message}); nothing was left behind` };
   }
-  return { ok: true, root, created: made };
+  return { ok: true, root, created: made, kept };
 }
 
 /** @returns {{ out: string, err: string }} */
 export function renderInit(r) {
   if (!r.ok) return { out: "", err: `✗ init: ${r.message}\n` };
-  return { out: `✓ created ${r.created.join(", ")} in ${r.root}\n  next: edit CLAUDE.md and the status file for the project, then run \`chicla bump-round --verify\`\n`, err: "" };
+  const kept = r.kept?.length ? `  kept as it was: ${r.kept.join(", ")} (already there)\n` : "";
+  return { out: `✓ created ${r.created.join(", ")} in ${r.root}\n${kept}  next: edit CLAUDE.md and the status file for the project, then run \`chicla bump-round --verify\`\n`, err: "" };
 }

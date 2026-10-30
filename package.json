@@ -1,7 +1,7 @@
 {
   "name": "chicla",
   "private": true,
-  "version": "0.0.285",
+  "version": "0.0.293",
   "type": "module",
   "workspaces": ["packages/*"],
   "engines": { "node": ">=18" },
@@ -11,7 +11,8 @@
     "test:slow": "node scripts/run-tests.mjs slow",
     "mutants": "node scripts/mutants.mjs",
     "mutants:kit": "node scripts/mutants.mjs --pkg . --list packages/chicla-kit/mutants/list.mjs",
-    "smoke": "node scripts/smoke-test-archive-changelog.mjs && node scripts/smoke-test-bump-round.mjs && node scripts/smoke-test-check-build.mjs && node scripts/smoke-test-delivery-guards.mjs && node scripts/smoke-test-emergency.mjs && node scripts/smoke-test-mutants.mjs"
+    "smoke": "node scripts/smoke-test-archive-changelog.mjs && node scripts/smoke-test-bump-round.mjs && node scripts/smoke-test-check-build.mjs && node scripts/smoke-test-delivery-guards.mjs && node scripts/smoke-test-emergency.mjs && node scripts/smoke-test-mutants.mjs",
+    "smoke:tarball": "node scripts/smoke-test-tarball.mjs"
   },
   "license": "Apache-2.0"
 }

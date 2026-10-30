@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 277-277
+
+Moved out of `CHICLA_PROJECT_STATUS-291.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 277 (2026-10-28; Rodrigo: «já fiz as tags as releases e verifiquei os sha256 dos tarball. já verifiquei e confirmei e fiz tudo, só falta documentar»). Publication of `chicla-zip` 0.1.1 and `chicla-kit` 0.1.1 recorded (D146): `docs/release.md` «Published: 0.1.1», the D146 row and the G-C6 row of the ROADMAP (G-C6 stays closed since round 230; no gate marked). Seen by Claude on 2026-10-28: the npm registry gives `latest` = `0.1.1` for both, `chicla-zip` published 21:45 UTC and `chicla-kit` 21:48 UTC (zip first); the tarballs downloaded from the registry (37082 and 73737 bytes, sha256 `a20c2f20e31d…` and `f8ca89dd1e3e…`) are byte-identical to what `scripts/pack-release.mjs` packs from the round 276 tree. In his word only, not seen by Claude: both tags, both GitHub releases, his sha256 check of `dist/`, the clean-folder install. `test/release-published-docs.test.mjs` (5, all red first). Docs and one test, no source, the pin did not move. Not run by Claude: the CI of this tree, Node 18 and 20, macOS, Windows, `npm run smoke`, the mutant lists (no source changed).

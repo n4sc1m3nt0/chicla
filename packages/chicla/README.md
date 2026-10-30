@@ -6,7 +6,7 @@ Project memory and verified zip delivery for coding agents. One package, no depe
 npm install chicla          # or: npm install --save-dev chicla
 npx chicla --help
 mkdir myproject && cd myproject
-npx chicla init             # CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs, FILES.manifest
+npx chicla init             # CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs, FILES.manifest and a minimal package.json (an existing one is kept)
 npx chicla bump-round --verify
 ```
 

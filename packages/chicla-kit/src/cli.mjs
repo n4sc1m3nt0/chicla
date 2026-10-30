@@ -28,8 +28,8 @@
 // Every planned subcommand is built. The human output is styled (marks only) on an interactive terminal by ui.mjs (C11.5 slice b, D93).
 //
 // NOTE (round 112, updated in round 135): every core lives in src/ (the four pinned ones in src/pinned/) and this CLI imports them from there, so the kit no longer needs scripts/ (C11.1 slices 5 to 7, D84, D91, D92);
-// only `bump-round` still spawns scripts/check-manifest.mjs, when its caller gives no in-process manifest step. The kit still needs the sibling package chicla-zip (the zip writer), so it cannot be published alone yet.
-// Nothing is published before 0.1 (CLAUDE.md product rule 4).
+// only `bump-round` still spawns scripts/check-manifest.mjs, when its caller gives no in-process manifest step. This file ships in the single npm package `chicla` (D148), together with the zip module (`zipkit.mjs`);
+// `chicla-zip` and `chicla-kit` are no longer packages. Only the owner publishes (CLAUDE.md product rule 4).
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
@@ -37,7 +37,7 @@ import { shouldStyle, styleSummary } from "./ui.mjs";
 
 const SRC = new URL("./", import.meta.url); // C11.1 slice 7 (D92): every core is imported from the kit itself, never through scripts/
 const CORES = { "check-manifest": "check-manifest.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs", update: "update.mjs" };
-const HELP = `chicla: the kit CLI
+const HELP = `chicla: the workflow CLI
 
 Usage: chicla <command> [options]
 

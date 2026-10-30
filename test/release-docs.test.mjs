@@ -33,7 +33,7 @@ test('chicla-kit README documents every subcommand of the CLI and the exit codes
   assert.ok(names.length >= 6, 'the CORES table was not parsed');
   for (const n of names) assert.ok(readme.includes('chicla ' + n), `the README does not document «chicla ${n}»`);
   assert.match(readme, /Exit codes/);
-  assert.match(readme, /`0\.1\.1`, published on npm/, 'round 276: the kit README names the release it ships with');
+  assert.match(readme, /`0\.1\.1` is the last release under this name/, 'round 289 (C24.4): the kit README names the last release under its old name, and no longer says it is published');
   assert.doesNotMatch(readme, /not published yet|pre-release|cannot be installed alone/i, 'no stale pre-release wording');
 });
 
@@ -78,9 +78,9 @@ test('docs/release.md: every `chicla` command and script the kit runbook names e
 test('round 230: after the publication of both 0.1.0 packages no document still says they are unpublished', () => {
   const stale = /not published (to npm )?yet|ready to release|pre-release|not releasable|none yet|has not been published/i;
   for (const f of ['README.md', 'packages/chicla-zip/README.md', 'packages/chicla-kit/README.md', 'SECURITY.md']) assert.doesNotMatch(read(f), stale, `${f} still says the release is pending`);
-  assert.match(read('README.md'), /published on npm at `0\.1\.0`/);
-  assert.match(read('packages/chicla-zip/README.md'), /`0\.1\.1`, published on npm/);
-  assert.match(read('SECURITY.md'), /\| `chicla-kit` \| the latest `0\.1\.x`/);
+  assert.match(read('README.md'), /`0\.2\.0` is published on npm/); // round 289 (C24.4): the root README speaks of `chicla`, not of the two old names
+  assert.match(read('packages/chicla-zip/README.md'), /`0\.1\.1` is the last release under this name/);
+  assert.match(read('SECURITY.md'), /`chicla-zip` and `chicla-kit` \(`0\.1\.x`\) are the old names/);
   const rel = read('docs/release.md');
   assert.ok(!/npm publish dist\//.test(rel), 'npm reads «dist/x.tgz» as a GitHub shorthand and refuses it (EALLOWGIT): the runbook says «./dist/x.tgz»');
   assert.ok(rel.includes('npm publish ./dist/chicla-zip-0.1.0.tgz') && rel.includes('Published (round 230)'));

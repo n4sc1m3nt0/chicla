@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 275-275
+
+Moved out of `CHICLA_PROJECT_STATUS-289.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 275 (2026-10-28; Rodrigo: the CI of the round 274 tree, then «entrega o delivery zip completo»). Flaky `test (ubuntu-latest, 18)`: test 1319 `emergency-dump (tar path)` failed once with `ENOENT` on `copyfile '/tmp/chicla-EMERGENCY-afterRoundunknown-…tar.gz'` (11 of 12 jobs green; green on his re-run). Cause, reproduced: the external zip/tar fallback of `packages/chicla-kit/src/emergency-dump.mjs` built `tmpdir()/<name>`, a name with one-second resolution shared by every process, and two dumps started in the same second removed each other's archive (`node --test` runs files in parallel; not a Node 18 problem). `test/emergency-dump-concurrent.test.mjs` (2, zip and tar: 8 dumps at once, one `TMPDIR`, writer broken; red 3 of 3 first, green 3 of 3 after); the fix puts `tmpZip` and `tmpTar` inside the run's `mkdtemp` stage. One kit source and one test, the pin did not move. Not run by Claude: the CI, Node 18 and 20, macOS, Windows, the rest of the kit mutant list (see the CHANGELOG for what was run).

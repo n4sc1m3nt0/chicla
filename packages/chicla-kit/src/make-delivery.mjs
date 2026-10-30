@@ -80,7 +80,7 @@ export async function makeDelivery({ out, against = [], allowRemoved = [], root 
         return { name, data: readFileSync(abs), mtime: st.mtime, mode: st.mode & 0o777 };
       });
       await writeZip(outPath, sources);
-    } catch (e) { if (existsSync(outPath)) rmSync(outPath); return stop("EZIP_WRITE", `\n✗ could not write the zip with chicla-zip (${e.code ?? "error"}: ${e.message}) — delivery aborted; partial zip deleted.`); }
+    } catch (e) { if (existsSync(outPath)) rmSync(outPath); return stop("EZIP_WRITE", `\n✗ could not write the zip (${e.code ?? "error"}: ${e.message}) — delivery aborted; partial zip deleted.`); }
     const v = verifyDelivery({ zip: outPath, against, allowRemoved, root: ROOT });
     relay(renderVerifyDelivery(v));
     result.files = v.files; result.problems = v.problems;

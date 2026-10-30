@@ -94,3 +94,21 @@ jobs:
         with:
           name: chicla-tarball
           path: dist/
+
+  # C24.3 (AUDIT-8 F-4, M24): install the packed `chicla` tarball ALONE (offline, empty folder) and drive init, bump-round --verify, make-delivery, verify-delivery,
+  # dump (with RECOVER/), recovery and chicla-zip, on Ubuntu, macOS and Windows. The script builds and packs by itself. Windows is REPORTED, not promised (D114): its leg
+  # may be red without turning the run red; read it, do not trust it.
+  tarball:
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - run: node scripts/smoke-test-tarball.mjs

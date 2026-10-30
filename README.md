@@ -4,7 +4,7 @@ Project memory for coding agents that survives sessions, accounts and usage limi
 
 An agent forgets everything between sessions. Chicla makes the repository itself the memory: a status file, fingerprints that prove the files belong together, a verified delivery zip, and an emergency dump that can restore the work when a session is cut off.
 
-> **Status: released.** `chicla-zip` and `chicla-kit` are published on npm at `0.1.0` (tags `chicla-zip-v0.1.0` and `chicla-kit-v0.1.0`, each with a GitHub release; the owner published them on 2026-10-22). The tree is at `0.1.1` for both (round 276: `chicla-zip` changes its README only, `chicla-kit` carries the fixes of rounds 231 to 275); the runbook is in [`docs/release.md`](docs/release.md) and only the owner publishes it. The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). Only the owner publishes; the licence is decided (Apache-2.0).
+> **Status: released.** The package to install is `chicla`: `0.2.0` is published on npm (tag `chicla-v0.2.0`, with a GitHub release; the owner published it on 2026-10-29), and the tree is at `0.2.1`, prepared and waiting for the owner (gate G-C17: `recovery` starts from the installed package, `init` writes `package.json`, the dump carries `RECOVER/`). The old names `chicla-zip` and `chicla-kit` (`0.1.x`) are deprecated on npm; their folders here are private source. The runbook is in [`docs/release.md`](docs/release.md) and only the owner publishes it. The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). The licence is decided (Apache-2.0).
 
 ## What is in here
 
@@ -12,9 +12,9 @@ Chicla has two pieces, in `packages/`:
 
 | Package | What it is | State |
 | --- | --- | --- |
-| [`chicla`](packages/chicla/README.md) | **The package to install** (D148): `npm install chicla` gives the `chicla` command (the workflow), the `chicla-zip` command and the zip library at `chicla/zip`, with no dependencies. Assembled when it is published from the two source folders below (`scripts/build-chicla.mjs`). | Built and tested (round 280); `0.2.0` waits for the owner to publish it (G-C16) |
-| [`chicla-zip`](packages/chicla-zip/README.md) | Read, verify, safely extract, **write** and repair zips, with correct UTF-8 names in every reader. | Source of the zip module of `chicla`; the name on npm (`0.1.0`, `0.1.1`) is to be deprecated in favour of `chicla` (D148) |
-| `chicla-kit` | The workflow: state file, fingerprints, "never leaves" policy, manifest, verified delivery, `/dump` and recovery. Ships the `chicla` command. | Six subcommands built; the cores are being moved from `scripts/` into the package, one slice at a time (`check-build` and `check-manifest` are done); source of the kit part of `chicla`, its name on npm (`0.1.1`) is to be deprecated (D148) |
+| [`chicla`](packages/chicla/README.md) | **The package to install** (D148): `npm install chicla` gives the `chicla` command (the workflow), the `chicla-zip` command and the zip library at `chicla/zip`, with no dependencies. Assembled when it is published from the two source folders below (`scripts/build-chicla.mjs`). | Built and tested (round 280); `0.2.0` is published on npm (round 282, G-C16 closed) |
+| [`chicla-zip`](packages/chicla-zip/README.md) | Read, verify, safely extract, **write** and repair zips, with correct UTF-8 names in every reader. | Source of the zip module of `chicla`; the name on npm (`0.1.0`, `0.1.1`) is deprecated on npm in favour of `chicla` (D148, round 282) |
+| `chicla-kit` | The workflow: state file, fingerprints, "never leaves" policy, manifest, verified delivery, `/dump` and recovery. Ships the `chicla` command. | Six subcommands built; the cores are being moved from `scripts/` into the package, one slice at a time (`check-build` and `check-manifest` are done); source of the kit part of `chicla`, its name on npm (`0.1.1`) is deprecated on npm (D148, round 282) |
 
 The kit depends on `chicla-zip` only through its public API. The package `chicla` has no dependencies: it ships the kit and the zip module together (D148); `chicla-zip` and `chicla-kit` are the two source folders it is assembled from, `private` since round 281 (npm refuses to publish them, and `pack-release` refuses to pack them), and are not published any more.
 
@@ -23,7 +23,7 @@ The kit depends on `chicla-zip` only through its public API. The package `chicla
 A zip is hostile input. The extractor validates the whole archive before writing, extracts into a temporary folder and renames at the end (a failure leaves the destination untouched), never follows or creates symlinks, and never trusts names, sizes or counts from the archive. What the writer produces is accepted by `unzip -t` and by Python's `zipfile`.
 
 ```js
-import { openZip, testZip, extractZip, writeZip, createZip } from "chicla-zip";
+import { openZip, testZip, extractZip, writeZip, createZip } from "chicla/zip";
 
 const z = openZip("in.zip");                       // z.entries, z.read(name), z.close()
 await testZip("in.zip");                           // every CRC and size, streaming
@@ -90,7 +90,7 @@ node scripts/check-manifest.mjs        # FILES.manifest matches the disk?
 node scripts/check-build.mjs           # every .mjs passes `node --check`
 ```
 
-CI (`.github/workflows/ci.yml`) runs the suite, the manifest check, `bump-round --verify` and the smoke tests on Ubuntu and macOS with Node 18, 20 and 22; a `bench` job keeps extracting 20 000 small files within 3× `unzip`; a `pack` job builds the `chicla-zip` tarball with its sha256. Starting a session: read `CLAUDE.md`, then the highest-numbered `CHICLA_PROJECT_STATUS-N.md` and run `bump-round --verify`.
+CI (`.github/workflows/ci.yml`) runs the suite, the manifest check, `bump-round --verify` and the smoke tests on Ubuntu and macOS with Node 18, 20 and 22; a `bench` job keeps extracting 20 000 small files within 3× `unzip`; `pack-chicla` builds the `chicla` tarball with its sha256; a `tarball` job installs that tarball alone and drives `init`, `make-delivery`, `dump`, `recovery` and `chicla-zip` on Ubuntu, macOS and Windows (the Windows leg is reported, not promised). Starting a session: read `CLAUDE.md`, then the highest-numbered `CHICLA_PROJECT_STATUS-N.md` and run `bump-round --verify`.
 
 ## Repository map
 
@@ -124,3 +124,5 @@ Next: moving the kit cores from `scripts/` into `packages/chicla-kit/src/` in sl
 ## Licence
 
 Apache-2.0. See [`LICENSE`](LICENSE).
+
+**Known limit of `recovery`.** Its closing `NEXT:` hint names `node scripts/make-delivery-zip.mjs`, a path a user of the installed package does not have; with the package, run `chicla make-delivery <out.zip> --against <last delivery zip>` instead. The hint lives in a pinned file (`src/pinned/recovery-report.mjs`), so it is documented, not changed.

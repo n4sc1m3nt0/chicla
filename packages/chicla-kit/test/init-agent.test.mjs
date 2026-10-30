@@ -36,12 +36,12 @@ test('resolveAgents: known names give their files (deduplicated, in the order of
   assert.equal(agents.resolveAgents(['Gemini']).code, 'EAGENT', 'names are exact: no case folding');
 });
 
-test('core: --agent gemini and copilot add exactly their two files to the six; byte for byte the templates; the folder .github is created', () => {
+test('core: --agent gemini and copilot add exactly their two files to the seven (the six and package.json, C24.2); byte for byte the templates; the folder .github is created', () => {
   const d = T();
   try {
     const r = initProject({ root: d, agents: ['gemini', 'copilot'] });
     assert.equal(r.ok, true, JSON.stringify(r));
-    assert.deepEqual(tree(d), ['.github/', '.github/copilot-instructions.md', 'AGENTS.md', 'CHANGELOG.md', 'CHICLA_PROJECT_STATUS-1.md', 'CLAUDE.md', 'FILES.manifest', 'GEMINI.md', 'version.mjs']);
+    assert.deepEqual(tree(d), ['.github/', '.github/copilot-instructions.md', 'AGENTS.md', 'CHANGELOG.md', 'CHICLA_PROJECT_STATUS-1.md', 'CLAUDE.md', 'FILES.manifest', 'GEMINI.md', 'package.json', 'version.mjs']); // C24.2: package.json is one of the files init writes
     assert.equal(readFileSync(join(d, 'GEMINI.md'), 'utf8'), tpl('GEMINI.md'));
     assert.equal(readFileSync(join(d, '.github/copilot-instructions.md'), 'utf8'), tpl('copilot-instructions.md'));
     assert.ok(r.created.includes('GEMINI.md') && r.created.includes('.github/copilot-instructions.md'));

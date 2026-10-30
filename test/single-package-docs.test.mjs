@@ -22,13 +22,13 @@ test('ROADMAP D148: one package, D-A confirmed in Rodrigo\'s words (D-B, D-C and
   assert.match(d, /G-C11/, 'it must say why the physical merge was not chosen (the pin moves, G-C11 again)');
 });
 
-test('ROADMAP M23: C23.1 to C23.3 done, C23.4 open', () => {
+test('ROADMAP M23: C23.1 to C23.3 done (C23.4 closed in round 282)', () => {
   const r = read('ROADMAP.md');
   assert.match(r, /### M23 — One package: `chicla`/);
   assert.match(row(r, '| C23.1 |'), /feito \(round 279/);
   assert.match(row(r, '| C23.2 |'), /feito \(round 280/);
   assert.match(row(r, '| C23.3 |'), /feito \(round 281/);
-  assert.match(row(r, '| C23.4 |'), /open/, 'C23.4 must be listed and open');
+  assert.ok(row(r, '| C23.4 |'), 'C23.4 must be listed');
 });
 
 test('ROADMAP and status: G-C16 now means the single package 0.2.0 and the two deprecations, not the thin 0.1.1', () => {
@@ -36,7 +36,7 @@ test('ROADMAP and status: G-C16 now means the single package 0.2.0 and the two d
   assert.match(g, /0\.2\.0/);
   assert.match(g, /deprecate/);
   assert.doesNotMatch(g, /Releasing chicla 0\.1\.1/);
-  assert.match(statusWithArchives(root), /\| G-C16 \|[^\n]*0\.2\.0[^\n]*\| open \|/);
+  assert.match(statusWithArchives(root), /\| G-C16 \|[^\n]*0\.2\.0[^\n]*\| (open|CLOSED by Rodrigo) /);
 });
 
 test('docs/release.md: the thin-package runbook is gone (C23.3 replaced it by «Releasing chicla 0.2.0»; see retire-packages.test.mjs)', () => {

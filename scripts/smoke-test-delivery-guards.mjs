@@ -245,7 +245,7 @@ try {
     // a stand-in writer that leaves a partial file and then fails
     writeFileSync(join(p.root, "packages/chicla-zip/src/zipkit.mjs"), 'import { writeFileSync } from "node:fs";\nexport const writeZip = async (out) => { writeFileSync(out, "partial"); throw Object.assign(new Error("disk full"), { code: "EFAKE" }); };\n');
     const r = spawnSync(process.execPath, [join(p.root, "scripts/make-delivery-zip.mjs"), zip], { cwd: p.root, encoding: "utf8", env: ENV });
-    check(r.status === 1 && /could not write the zip with chicla-zip \(EFAKE/.test(r.stderr), "a writer that fails: exit 1 and its own message", out(r));
+    check(r.status === 1 && /could not write the zip \(EFAKE/.test(r.stderr), "a writer that fails: exit 1 and its own message", out(r));
     check(!existsSync(zip), "…and the partial zip is deleted", `stayed: ${zip}`);
   }
 

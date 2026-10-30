@@ -1,6 +1,6 @@
 {
   "name": "chicla",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Project memory and verified zip delivery for coding agents: the chicla command (workflow, delivery, dump, recovery) and the chicla-zip command and library (read, verify, extract and write zips, zero dependencies).",
   "type": "module",
   "bin": {

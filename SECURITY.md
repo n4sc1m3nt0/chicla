@@ -1,16 +1,16 @@
 # Security policy
 
-Chicla has two packages with different security surfaces: `chicla-zip` reads zips that anyone may have crafted, and `chicla-kit` moves project files into delivery zips and dumps and can run a recovery toolchain from a dump.
+Chicla is one npm package, `chicla`, with two security surfaces: its zip module (the `chicla-zip` command and `chicla/zip`) reads zips that anyone may have crafted, and its workflow commands (the `chicla` command) move project files into delivery zips and dumps and can run a recovery toolchain from a dump.
 
 ## Supported versions
 
 | Package | Supported |
 | --- | --- |
 | `chicla` | the latest `0.2.x` |
-| `chicla-zip` | the latest `0.1.x` |
-| `chicla-kit` | the latest `0.1.x` |
 
-Only the latest release of each package is fixed. This is a side project run by one person: reports are read and answered on a best-effort basis, with no fixed deadline.
+`chicla-zip` and `chicla-kit` (`0.1.x`) are the old names: they are deprecated on npm, private in the repository, and receive no fixes. Install `chicla`.
+
+Only the latest release of `chicla` is fixed. This is a side project run by one person: reports are read and answered on a best-effort basis, with no fixed deadline.
 
 ## How to report a vulnerability
 
@@ -20,14 +20,14 @@ If that button is not there, private vulnerability reporting is not switched on 
 
 ## What counts as a vulnerability
 
-For `chicla-zip` (a zip is **hostile input**):
+For the zip module (a zip is **hostile input**):
 
 - a crafted zip that makes `extractZip` or the CLI write outside the destination, follow or create a symlink, or leave a half-written destination after an error (with nobody else writing to the destination: a concurrent writer is one of the known limits listed below);
 - a crafted zip that makes the reader or extractor throw something other than a `ZipError`, hang, or use unbounded memory with the documented limits in place;
 - a zip written by `writeZip`, `writeZipStream` or `createZip` that a standard reader (`unzip -t`, Python `zipfile`) rejects or reads with different names or contents;
 - a name that Windows cannot hold being written without the `windowsNames` refusal where it applies.
 
-For `chicla-kit`:
+For the workflow commands:
 
 - a secret (`.env*`, credential files, keys) that enters a delivery zip or a dump despite the «never leaves» policy;
 - `recovery` running code from a dump whose `RECOVER/` digest does not match the pin in `CLAUDE.md`;
@@ -42,9 +42,10 @@ For `chicla-kit`:
 - **Three names Chicla refuses or reads differently from other tools (ZIP-025, ZIP-026, sixth review).** (1) A symlink `X` stored together with `X/` or `X/child` is refused whole (`EUNSAFE`, «file and a folder at the same time»; ZIP-025, since round 210). Info-ZIP can make such a zip with an unusual command line (`zip -y -r z.zip d dirlink d/ dirlink/`); plain `zip -ry`, `zip -r`, `7z -snl` and `bsdtar` do not. This costs availability, not safety. (2) A name that two entries share only through the Unicode Path extra field (0x7075) is refused; Python 3.12 and 3.13 and `unzip` apply that field like Chicla, Python 3.11 does not, so with 3.11 a repeated name can be invisible to Chicla (ZIP-026; the same holds for file + file). (3) Outside the duplicate check, three shapes were seen in review 6 and are left as they are, all safe because Chicla writes less than the other tools: a non-folder name ending in `/.` (Chicla and Python write a file, `unzip` a folder), an entry with symlink bits and host OS 2, 5 or 30 (Chicla writes a regular file, `unzip` a symlink), and the ZIP-023 shapes in the second order (`[a/ with symlink mode, file a]`: Chicla writes the file, Python and `unzip` create a folder and fail). The `filter` option of `extractZip` runs the duplicate check only on the entries it lets through (read, not tested). Run the same tool to check and to extract when the zip is hostile.
 - **Limits are defaults, not a sandbox.** Extraction limits (total declared size, number of entries) have defaults and can be changed by the caller. Pass your own limits when the input is untrusted and large.
 - **Not verified:** a real Windows machine, a real FAT or exFAT drive, macOS Finder or Archive Utility, and 7-Zip for streamed zips (the third reviewer used 7-Zip 25.01 on Linux only). CI runs the `chicla-zip` suite on Windows, macOS and Linux (Node 18, 20, 22); that is not the same as a manual check.
+- **A dump made by `chicla` 0.2.0 has no `RECOVER/` (AUDIT-8 F-2), fixed in 0.2.1.** `chicla dump` read the five pinned toolchain files from a path that only the Chicla repository has, so a dump made by the installed `chicla` 0.2.0 carries no `RECOVER/` and its report lists five warnings (`chicla recovery` of such a dump runs the installed code, never code from the dump, and does not apply the digest pin). From 0.2.1 the files are read from the package itself and the dump carries `RECOVER/` with the pinned bytes.
 - **`chicla-kit` is not supported on Windows.** It passes its suite in CI there, but its dump and recovery never ran on a real Windows machine.
 - Paths over 260 characters on Windows, encryption, methods other than stored and deflate, and multi-part archives are not supported.
 
 ## Checking a release
 
-Each release of `chicla-zip` comes with a `.tgz` and its `.sha256` on the GitHub release page. Check the file with `sha256sum -c` (or `shasum -a 256 -c` on macOS) before installing it from a downloaded copy. The steps are in [`docs/release.md`](docs/release.md).
+Each release of `chicla` comes with a `.tgz` and its `.sha256` on the GitHub release page. Check the file with `sha256sum -c` (or `shasum -a 256 -c` on macOS) before installing it from a downloaded copy. The steps are in [`docs/release.md`](docs/release.md).
