@@ -43,6 +43,7 @@ function fakeTree(buildBody, packBody) {
   mkdirSync(join(t, 'scripts'));
   copyFileSync(join(root, 'scripts', 'smoke-test-tarball.mjs'), join(t, 'scripts', 'smoke-test-tarball.mjs'));
   copyFileSync(join(root, 'scripts', 'win-quote.mjs'), join(t, 'scripts', 'win-quote.mjs')); // C25.1: the smoke script imports it
+  copyFileSync(join(root, 'scripts', 'failure-reason.mjs'), join(t, 'scripts', 'failure-reason.mjs')); // C25.4: and this one
   writeFileSync(join(t, 'scripts', 'build-chicla.mjs'), buildBody);
   writeFileSync(join(t, 'scripts', 'pack-release.mjs'), packBody);
   return t;

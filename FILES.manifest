@@ -9,14 +9,14 @@ CHANGELOG-archive-rounds-231-241.md	53f1115f	19930
 CHANGELOG-archive-rounds-242-253.md	6309f809	19156
 CHANGELOG-archive-rounds-254-263.md	b3a8c7c8	17515
 CHANGELOG-archive-rounds-264-275.md	77e472f3	19405
-CHANGELOG.md	44485709	28961
-CHICLA_PROJECT_STATUS-299.md	d8302fd2	50951
+CHANGELOG.md	b69dc25d	30964
+CHICLA_PROJECT_STATUS-300.md	2fb3be85	51306
 CLAUDE.md	ee50c915	6578
 CONTRIBUTING.md	17331dd2	2343
-FILES.baseline.json	60bb24ee	66456
+FILES.baseline.json	93c0b5b7	66922
 LICENSE	1ea3b7b0	10174
 README.md	2945f0b4	12812
-ROADMAP.md	c6a358e8	197319
+ROADMAP.md	7e3ced45	198019
 SECURITY.md	022440f9	7902
 docs/README.md	e5629c6b	7361
 docs/audits/AUDIT-1.md	a56e8d6e	7439
@@ -81,6 +81,7 @@ docs/status-archive-done-281-281.md	fc824561	1236
 docs/status-archive-done-282-282.md	a1726ff0	1248
 docs/status-archive-done-283-283.md	02ecb095	1929
 docs/status-archive-done-284-284.md	c88b0dda	1604
+docs/status-archive-done-285-285.md	e15ea727	1835
 docs/status-archive-previous-123-233.md	6d7605af	35356
 docs/status-archive-previous-233b-234.md	e885b55d	1374
 docs/status-archive-previous-235-243.md	8c0a2551	3860
@@ -128,6 +129,7 @@ docs/status-archive-previous-285-285.md	aa10b13a	737
 docs/status-archive-previous-286-286.md	480d405e	794
 docs/status-archive-previous-287-287.md	3422604c	732
 docs/status-archive-previous-288-288.md	9b8de441	513
+docs/status-archive-previous-289-289.md	98ebe8a6	500
 docs/status-archive-rolling-135-246.md	5f87068d	21508
 docs/status-archive-rolling-247-253.md	df871027	5092
 docs/status-archive-rolling-254-259.md	852ce075	4262
@@ -158,10 +160,10 @@ docs/status-archive-rolling-287-287.md	cfc7296a	946
 docs/zip-handling.md	4ee06488	28560
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	4fdab9a2	804
+package.json	fd730745	804
 packages/chicla-kit/LICENSE	1ea3b7b0	10174
 packages/chicla-kit/README.md	78d25e46	6878
-packages/chicla-kit/mutants/list.mjs	0c76d40b	29677
+packages/chicla-kit/mutants/list.mjs	b1d6ca8b	29982
 packages/chicla-kit/package.json	375cd6cd	566
 packages/chicla-kit/src/agents.mjs	e6c01be8	1451
 packages/chicla-kit/src/bump-round.mjs	4849d744	17872
@@ -314,6 +316,7 @@ scripts/bump-round.mjs	12fa3644	2525
 scripts/check-build.mjs	8fd6dd42	1269
 scripts/check-manifest.mjs	960ac064	1566
 scripts/emergency-dump.mjs	caffce8f	5683
+scripts/failure-reason.mjs	1f0e733f	1086
 scripts/make-delivery-zip.mjs	d7fe1000	2502
 scripts/mutants.mjs	2533fa63	7665
 scripts/pack-release.mjs	5445128a	4341
@@ -325,7 +328,7 @@ scripts/smoke-test-check-build.mjs	b7c534cc	2758
 scripts/smoke-test-delivery-guards.mjs	2e67c7cd	27576
 scripts/smoke-test-emergency.mjs	b2b1802a	13458
 scripts/smoke-test-mutants.mjs	ca09f5cc	7429
-scripts/smoke-test-tarball.mjs	3aeab9be	8012
+scripts/smoke-test-tarball.mjs	5799c618	8042
 scripts/verify-delivery-zip.mjs	c9881ad5	3707
 scripts/win-quote.mjs	71ec6a63	976
 test/archive-options.test.mjs	4e7105d5	4882
@@ -381,8 +384,8 @@ test/manifest.test.mjs	f72305a0	8188
 test/mutants-docs-layout.test.mjs	db3ae243	3007
 test/mutants-kit-docs.test.mjs	ac0f7358	2594
 test/mutants-kit-figures.test.mjs	31f0313e	3326
-test/mutants-kit-list.test.mjs	e4400c11	10024
-test/mutants-kit-m25.test.mjs	7c823765	2443
+test/mutants-kit-list.test.mjs	bdef1061	10082
+test/mutants-kit-m25.test.mjs	d33f0cd1	2565
 test/mutants-zip-list-tests.test.mjs	0b104217	1789
 test/pack-release.test.mjs	986ad9f2	5121
 test/pinned-baseline-move.test.mjs	ff00e8fe	2722
@@ -410,6 +413,7 @@ test/secret-kinds.test.mjs	cfb78ae9	7451
 test/secret-marker-chain.test.mjs	f8670c50	10567
 test/secret-names.test.mjs	d23b85d2	10369
 test/single-package-docs.test.mjs	6b3f290a	2876
+test/smoke-failure-reason.test.mjs	d6e4b34f	2825
 test/smoke-tarball-win-quote.test.mjs	b546a98f	2992
 test/smoke-tarball.test.mjs	bdcf612e	5734
 test/stale-package-words-docs.test.mjs	0fc32353	5689
@@ -423,5 +427,5 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
-test/windows-npm-spawn.test.mjs	19921f44	5404
-version.mjs	bcf26e55	531
+test/windows-npm-spawn.test.mjs	6e872e55	5530
+version.mjs	461dcbb3	531

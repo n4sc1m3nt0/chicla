@@ -1,7 +1,15 @@
-<!-- CHANGELOG_FINGERPRINT: seq=299 file=CHICLA_PROJECT_STATUS-299.md app_sha256_12=065d37032ef1 changelog_sha256_12=c1ca15a53bae (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=300 file=CHICLA_PROJECT_STATUS-300.md app_sha256_12=065d37032ef1 changelog_sha256_12=dc8e99adfc51 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now., `CHANGELOG-archive-rounds-220-230.md`, `CHANGELOG-archive-rounds-231-241.md`, `CHANGELOG-archive-rounds-242-253.md`, `CHANGELOG-archive-rounds-254-263.md`, `CHANGELOG-archive-rounds-264-275.md`
+
+## Round 295 — C25.4: a failed step says what failed (v0.0.299)
+
+- Task (Rodrigo sent the logs of the CI run of round 294, then «avança» on Claude's proposal). The run: 1764 tests, 0 fail on Ubuntu and macOS (Node 18, 20, 22); Windows 18, 20 and 22 `chicla-zip` 777 of 816 and `chicla-kit` 341 of 341, 0 fail; `pack-chicla` built `chicla-0.2.1.tgz` (134680 bytes, sha256 `554cbbc7…abf6`, the same bytes as a rebuild from the delivered tree); `tarball` 9 of 9 on Ubuntu and macOS. The Windows leg of `tarball` now builds and packs (C24.6 worked) and ends `EINSTALL: npm install of the tarball failed (exit 1): node:internal/modules/cjs/loader:1433`: the first line of a Node stack, so the cause is not visible. Whether it comes from the quoting of C25.1 or was only hidden before is NOT known.
+- Test first: `test/smoke-failure-reason.test.mjs` (6, red first, module missing): a Node stack gives the `Error: Cannot find module …` line, npm errors and `ERR_` codes are found, no match gives the first five non-empty lines, one line of at most 400 characters, the smoke script uses it for the install and every step. Breaking the picking on purpose turns it red.
+- Change: two scripts, `scripts/failure-reason.mjs` (new, pure) and `scripts/smoke-test-tarball.mjs`; `test/windows-npm-spawn.test.mjs` copies the new module into its fake tree; `K-PKG-07` in the kit list (RED alone); the shape test allows `failure-reason.mjs`. No pinned file, the pin did not move. ROADMAP C25.4 done.
+- Run on this machine: the five test files around it, `smoke-test-tarball` 9 of 9, `K-PKG-07` alone RED; then, after `bump-round`: `check-build` (ok) and the whole `npm test` on a copy of the closed tree: 1770 tests, 1768 pass, 0 fail, 2 skipped, 734 s (Node 22.23.4, 2 cores). CHANGELOG.md has 20 rounds now: the next round runs `archive-changelog` (item 6).
+- NOT run: Windows (the next `tarball` run shows the real reason; the cause is a later card), the whole kit list, the CI, `npm run smoke`, the zip list.
 
 ## Round 294 — C25.3: hand mutants for the M24 code (v0.0.298)
 

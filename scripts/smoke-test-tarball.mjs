@@ -10,6 +10,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { failureReason } from "./failure-reason.mjs";
 import { winLine } from "./win-quote.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -34,7 +35,7 @@ const sh = { cmd: true }; // npm and the .bin shims are .cmd files: on Windows o
 // With `sh` on Windows ONE quoted command line goes to the shell (winLine); an argument array with shell: true is not quoted by Node, so a path with a space split (AUDIT-9 F-1).
 const run = (cmd, args, cwd, opts = {}) => (opts.cmd && WIN ? spawnSync(winLine(cmd, args), { cwd, encoding: "utf8", maxBuffer: 1 << 26, shell: true }) : spawnSync(cmd, args, { cwd, encoding: "utf8", maxBuffer: 1 << 26 }));
 const node = (args, cwd) => run(process.execPath, args, cwd);
-const reason = (r) => { try { const e = JSON.parse(String(r.stdout).trim().split("\n").pop()).error; if (e?.code) return `${e.code}: ${e.message}`; } catch { /* not JSON: show the first line of what it printed */ } return String(r.stderr || r.stdout || r.error?.message || "no output").split("\n").find((l) => l.trim()) ?? "no output"; };
+const reason = (r) => { try { const e = JSON.parse(String(r.stdout).trim().split("\n").pop()).error; if (e?.code) return `${e.code}: ${e.message}`; } catch { /* not JSON: say what failed, from what it printed */ } return failureReason(r.stderr || r.stdout || r.error?.message); };
 
 if (tarball) {
   tarball = resolve(tarball);
@@ -52,7 +53,7 @@ const proj = join(T, "proj");
 mkdirSync(proj);
 run("npm", ["init", "-y"], proj, sh);
 const inst = run("npm", ["install", "--offline", "--no-audit", "--no-fund", "--ignore-scripts", tarball], proj, sh);
-if (inst.status !== 0) refuse("EINSTALL", `npm install of the tarball failed (exit ${inst.status}): ${String(inst.stderr).split("\n")[0]}`);
+if (inst.status !== 0) refuse("EINSTALL", `npm install of the tarball failed (exit ${inst.status}): ${failureReason(inst.stderr || inst.stdout || inst.error?.message)}`);
 const installed = readdirSync(join(proj, "node_modules")).filter((n) => !n.startsWith("."));
 const bin = (n, args, cwd = proj) => run(join(proj, "node_modules", ".bin", n + (WIN ? ".cmd" : "")), args, cwd, sh);
 
@@ -65,7 +66,7 @@ const step = (name, fn) => {
   try { const r = fn(); ok = r === true; why = ok ? "" : String(r); } catch (e) { why = String(e?.message ?? e).split("\n")[0]; }
   steps.push({ name, ok, ...(ok ? {} : { why }) });
 };
-const exit0 = (r, what) => (r.status === 0 ? true : `${what} exited ${r.status}: ${String(r.stderr || r.stdout).split("\n")[0]}`);
+const exit0 = (r, what) => (r.status === 0 ? true : `${what} exited ${r.status}: ${failureReason(r.stderr || r.stdout || r.error?.message)}`);
 const dumpZip = () => { const z = readdirSync(dumpDir).filter((f) => f.endsWith(".zip")); return z.length === 1 ? join(dumpDir, z[0]) : null; };
 
 step("init", () => { const r = bin("chicla", ["init", "--root", fresh]); return r.status !== 0 ? exit0(r, "init") : existsSync(join(fresh, "CLAUDE.md")) && existsSync(join(fresh, "FILES.manifest")) && existsSync(join(fresh, "package.json")) ? true : "init wrote no CLAUDE.md, FILES.manifest or package.json"; });
@@ -103,7 +104,7 @@ step("chicla-zip", () => {
 step("chicla-zip-library", () => {
   writeFileSync(join(proj, "probe.mjs"), 'import * as z from "chicla/zip"; process.stdout.write([typeof z.writeZip, typeof z.extractZip].join(" "));');
   const r = node(["probe.mjs"], proj);
-  return r.status === 0 && r.stdout === "function function" ? true : `import "chicla/zip": ${String(r.stderr).split("\n")[0] || r.stdout}`;
+  return r.status === 0 && r.stdout === "function function" ? true : `import "chicla/zip": ${failureReason(r.stderr || r.stdout)}`;
 });
 
 const ok = steps.every((s) => s.ok);
