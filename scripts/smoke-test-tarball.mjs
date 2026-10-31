@@ -51,7 +51,8 @@ if (tarball) {
 // An empty project folder with nothing but the tarball installed in it, offline.
 const proj = join(T, "proj");
 mkdirSync(proj);
-run("npm", ["init", "-y"], proj, sh);
+const ini = run("npm", ["init", "-y"], proj, sh);
+if (ini.status !== 0) refuse("EINIT", `npm init failed (exit ${ini.status}): ${failureReason(ini.stderr || ini.stdout || ini.error?.message)}`);
 const inst = run("npm", ["install", "--offline", "--no-audit", "--no-fund", "--ignore-scripts", tarball], proj, sh);
 if (inst.status !== 0) refuse("EINSTALL", `npm install of the tarball failed (exit ${inst.status}): ${failureReason(inst.stderr || inst.stdout || inst.error?.message)}`);
 const installed = readdirSync(join(proj, "node_modules")).filter((n) => !n.startsWith("."));

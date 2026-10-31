@@ -18,11 +18,12 @@ const WANT = {
   'K-PKG-05': 'scripts/pack-release.mjs',                    // npm is started through a shell on Windows only (C24.6)
   'K-PKG-06': 'scripts/win-quote.mjs',                       // every part of the Windows command line is quoted (C25.1)
   'K-PKG-07': 'scripts/failure-reason.mjs',                  // a failed step shows the line that says what failed (C25.4)
+  'K-PKG-08': 'scripts/win-quote.mjs',                       // a bare command name stays bare on Windows (C25.5)
   'K-LDR-01': 'packages/chicla-kit/src/zipkit-loader.mjs',   // a zipkit.mjs beside the loader is used first (C23.1)
   'K-LDR-02': 'packages/chicla-kit/src/zipkit-loader.mjs',   // any other error is passed on, never hidden by the next step
 };
 
-test('the kit list names the nine guarantees of the M24 code, each on the file that holds it', () => {
+test('the kit list names the ten guarantees of the M24 code, each on the file that holds it', () => {
   for (const [id, file] of Object.entries(WANT)) {
     const m = byId(id);
     assert.ok(m, `${id} is not in the list`);

@@ -196,6 +196,7 @@ export default [
   x("K-PKG-05", "scripts/pack-release.mjs", "stdio: ['ignore', 'pipe', 'pipe'], shell: WIN }", "stdio: ['ignore', 'pipe', 'pipe'], shell: false }", ["test/windows-npm-spawn.test.mjs"], "npm is no longer started through a shell on Windows (`npm` is a .cmd file there)"),
   x("K-PKG-06", "scripts/win-quote.mjs", ".map(quoteWin)", ".map(String)", ["test/smoke-tarball-win-quote.test.mjs"], "the Windows command line is joined with no quotes: a path with a space splits (AUDIT-9 F-1)"),
   x("K-PKG-07", "scripts/failure-reason.mjs", "const hit = lines.find((l) => SAYS_WHAT.test(l));", "const hit = undefined;", ["test/smoke-failure-reason.test.mjs"], "a failed step shows the first lines of its output, not the line that says what failed (the Node stack header of the Windows leg, C25.4)"),
+  x("K-PKG-08", "scripts/win-quote.mjs", "(BARE.test(String(cmd)) ? String(cmd) : quoteWin(cmd))", "(false ? String(cmd) : quoteWin(cmd))", ["test/win-quote-bare-command.test.mjs"], "the command name `npm` is put in quotes on Windows: npm.cmd then finds its files in the current folder (the EINSTALL of the CI of round 295, C25.5)"),
   x("K-LDR-01", LD, "if (hasSibling()) return importer(SIBLING.href);", "if (false) return importer(SIBLING.href);", PK, "a zipkit.mjs beside the loader (the single package) is no longer tried first"),
   x("K-LDR-02", LD, "if (!missingPackage(e)) throw e;", "if (false) throw e;", PK, "any error of the `chicla-zip` import, not only «not installed», is hidden by the monorepo fallback"),
 ];

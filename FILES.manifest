@@ -9,14 +9,15 @@ CHANGELOG-archive-rounds-231-241.md	53f1115f	19930
 CHANGELOG-archive-rounds-242-253.md	6309f809	19156
 CHANGELOG-archive-rounds-254-263.md	b3a8c7c8	17515
 CHANGELOG-archive-rounds-264-275.md	77e472f3	19405
-CHANGELOG.md	b69dc25d	30964
-CHICLA_PROJECT_STATUS-300.md	2fb3be85	51306
+CHANGELOG-archive-rounds-276-286.md	6eb65fc6	15023
+CHANGELOG.md	dc8de24a	18161
+CHICLA_PROJECT_STATUS-301.md	2676b1b3	51546
 CLAUDE.md	ee50c915	6578
 CONTRIBUTING.md	17331dd2	2343
-FILES.baseline.json	93c0b5b7	66922
+FILES.baseline.json	107df1ec	67539
 LICENSE	1ea3b7b0	10174
 README.md	2945f0b4	12812
-ROADMAP.md	7e3ced45	198019
+ROADMAP.md	cad4651b	198828
 SECURITY.md	022440f9	7902
 docs/README.md	e5629c6b	7361
 docs/audits/AUDIT-1.md	a56e8d6e	7439
@@ -82,6 +83,7 @@ docs/status-archive-done-282-282.md	a1726ff0	1248
 docs/status-archive-done-283-283.md	02ecb095	1929
 docs/status-archive-done-284-284.md	c88b0dda	1604
 docs/status-archive-done-285-285.md	e15ea727	1835
+docs/status-archive-done-286-286.md	95cc1426	1447
 docs/status-archive-previous-123-233.md	6d7605af	35356
 docs/status-archive-previous-233b-234.md	e885b55d	1374
 docs/status-archive-previous-235-243.md	8c0a2551	3860
@@ -130,6 +132,7 @@ docs/status-archive-previous-286-286.md	480d405e	794
 docs/status-archive-previous-287-287.md	3422604c	732
 docs/status-archive-previous-288-288.md	9b8de441	513
 docs/status-archive-previous-289-289.md	98ebe8a6	500
+docs/status-archive-previous-290-290.md	9efbb1d7	659
 docs/status-archive-rolling-135-246.md	5f87068d	21508
 docs/status-archive-rolling-247-253.md	df871027	5092
 docs/status-archive-rolling-254-259.md	852ce075	4262
@@ -160,10 +163,10 @@ docs/status-archive-rolling-287-287.md	cfc7296a	946
 docs/zip-handling.md	4ee06488	28560
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	fd730745	804
+package.json	f46d3f58	804
 packages/chicla-kit/LICENSE	1ea3b7b0	10174
 packages/chicla-kit/README.md	78d25e46	6878
-packages/chicla-kit/mutants/list.mjs	b1d6ca8b	29982
+packages/chicla-kit/mutants/list.mjs	5cf0bc8d	30316
 packages/chicla-kit/package.json	375cd6cd	566
 packages/chicla-kit/src/agents.mjs	e6c01be8	1451
 packages/chicla-kit/src/bump-round.mjs	4849d744	17872
@@ -328,9 +331,9 @@ scripts/smoke-test-check-build.mjs	b7c534cc	2758
 scripts/smoke-test-delivery-guards.mjs	2e67c7cd	27576
 scripts/smoke-test-emergency.mjs	b2b1802a	13458
 scripts/smoke-test-mutants.mjs	ca09f5cc	7429
-scripts/smoke-test-tarball.mjs	5799c618	8042
+scripts/smoke-test-tarball.mjs	65c44abd	8199
 scripts/verify-delivery-zip.mjs	c9881ad5	3707
-scripts/win-quote.mjs	71ec6a63	976
+scripts/win-quote.mjs	8877ca0b	1629
 test/archive-options.test.mjs	4e7105d5	4882
 test/archive-rolling.test.mjs	7cc272aa	10309
 test/archive-snapshot.test.mjs	8787ff62	9793
@@ -385,7 +388,7 @@ test/mutants-docs-layout.test.mjs	db3ae243	3007
 test/mutants-kit-docs.test.mjs	ac0f7358	2594
 test/mutants-kit-figures.test.mjs	31f0313e	3326
 test/mutants-kit-list.test.mjs	bdef1061	10082
-test/mutants-kit-m25.test.mjs	d33f0cd1	2565
+test/mutants-kit-m25.test.mjs	d5f2d863	2678
 test/mutants-zip-list-tests.test.mjs	0b104217	1789
 test/pack-release.test.mjs	986ad9f2	5121
 test/pinned-baseline-move.test.mjs	ff00e8fe	2722
@@ -427,5 +430,6 @@ test/toolchain-files.test.mjs	ca93fcbe	4034
 test/toolchain-pin.test.mjs	538a93d8	7831
 test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
+test/win-quote-bare-command.test.mjs	0a2933bb	2453
 test/windows-npm-spawn.test.mjs	6e872e55	5530
-version.mjs	461dcbb3	531
+version.mjs	f1fdd8de	531

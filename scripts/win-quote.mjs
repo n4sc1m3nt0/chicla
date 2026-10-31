@@ -10,5 +10,11 @@ export function quoteWin(part) {
   return `"${s}"`;
 }
 
-/** The command and its arguments as one quoted command line. */
-export const winLine = (cmd, args = []) => [cmd, ...args].map(quoteWin).join(' ');
+// C25.5: a bare command name (`npm`) stays bare. `npm.cmd` finds its own files through %~dp0; started as `"npm"` cmd.exe does not resolve the name through PATH and %~dp0 is the
+// current folder, so the Windows leg of `tarball` ended `Cannot find module '<cwd>\node_modules\npm\bin\npm-prefix.js'` (CI of round 295; the cause is inferred from that path). A command with a
+// path or a space is quoted: with a full path %~dp0 is right. Anything cmd.exe reads (& | < > ^ %) is not bare.
+const BARE = /^[A-Za-z0-9_.-]+$/;
+const quoteCmd = (cmd) => (BARE.test(String(cmd)) ? String(cmd) : quoteWin(cmd));
+
+/** The command (bare when it is a plain name) and its arguments (always quoted) as one command line. */
+export const winLine = (cmd, args = []) => [quoteCmd(cmd), ...args.map(quoteWin)].join(' ');
