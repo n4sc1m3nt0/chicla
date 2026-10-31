@@ -32,6 +32,8 @@ const VDW = [...VDT, "test/verify-nounzip.test.mjs", "test/manifest.test.mjs", "
 const VDAW = [...VDA, "test/verify-nounzip.test.mjs", "test/manifest.test.mjs"];
 const VDX = ["packages/chicla-kit/test/core-verify-delivery-gaps.test.mjs"]; // C19.7: the gaps of the first pass, closed in round 264
 const v = (id, find, replace, why, survives, tests = VDW) => x(id, VD, find, replace, tests, why, survives);
+// Slice 9 (C25.3, round 294, AUDIT-9 F-9 and AUDIT-8 F-6): the guarantees of the code M24 changed (C23.1, C24.1, C24.2, C24.5, C24.6, C25.1). Each was a hand mutant killed by the tests in AUDIT-9 §2; now `npm run mutants:kit` repeats them.
+const SP = ["test/chicla-single-package.test.mjs"], PK = ["packages/chicla-kit/test/packaging.test.mjs"], IN = ["packages/chicla-kit/test/init.test.mjs"], IJ = "packages/chicla-kit/src/init.mjs", LD = "packages/chicla-kit/src/zipkit-loader.mjs";
 
 export default [
   // ---- the status-file regex and the LF rule (C17.1) ----
@@ -186,4 +188,13 @@ export default [
   v("K-VER-24", "`${m.text}\\n`", "`${m.text}`", "messages are printed with no line break", undefined, VDX),
   v("K-VER-26", "const all = [...new Set(paths)].sort();", "const all = [...paths];", "the `git rm` line keeps duplicate names and the order of the other zip", undefined, VDG),
   v("K-VER-25", "total === 0xffff ||", "", "a zip64 marker in the entry count is no longer refused", "equivalent by code: a zip64 count of 0xffff is EZIP_UNREADABLE with or without this test of the count (the loop then meets a bad central directory); only the wording differs, and tests assert codes (round 264)"),
+  // ---- slice 9 (C25.3): the single package, init, the Windows command lines, the loader ----
+  x("K-PKG-01", "scripts/build-chicla.mjs", "copyFileSync(zipSrc, pinnedZip);", "", SP, "the built package has no src/pinned/zipkit.mjs: `chicla recovery` dies with ERR_MODULE_NOT_FOUND again (AUDIT-8 F-1)"),
+  x("K-PKG-02", D, 'return [join(HERE, "pinned", base), join(HERE, base), join(SCRIPT_ROOT, repoRel)];', "return [join(SCRIPT_ROOT, repoRel)];", SP, "a dump made by the installed package reads the toolchain only from the repository path: no RECOVER/ (AUDIT-8 F-2)"),
+  x("K-PKG-03", IJ, "{ name, version, private: true }", "{ name, version }", IN, "the package.json that `chicla init` writes is no longer private (it could be published by mistake)"),
+  x("K-PKG-04", IJ, "JSON.stringify({ name, version, private: true }", 'JSON.stringify({ name, version: "9.9.9", private: true }', IN, "the package.json of a new project carries a version other than the one of the version.mjs template"),
+  x("K-PKG-05", "scripts/pack-release.mjs", "stdio: ['ignore', 'pipe', 'pipe'], shell: WIN }", "stdio: ['ignore', 'pipe', 'pipe'], shell: false }", ["test/windows-npm-spawn.test.mjs"], "npm is no longer started through a shell on Windows (`npm` is a .cmd file there)"),
+  x("K-PKG-06", "scripts/win-quote.mjs", ".map(quoteWin)", ".map(String)", ["test/smoke-tarball-win-quote.test.mjs"], "the Windows command line is joined with no quotes: a path with a space splits (AUDIT-9 F-1)"),
+  x("K-LDR-01", LD, "if (hasSibling()) return importer(SIBLING.href);", "if (false) return importer(SIBLING.href);", PK, "a zipkit.mjs beside the loader (the single package) is no longer tried first"),
+  x("K-LDR-02", LD, "if (!missingPackage(e)) throw e;", "if (false) throw e;", PK, "any error of the `chicla-zip` import, not only «not installed», is hidden by the monorepo fallback"),
 ];

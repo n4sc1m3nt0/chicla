@@ -10,6 +10,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { winLine } from "./win-quote.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const WIN = process.platform === "win32";
@@ -29,18 +30,20 @@ for (let i = 0; i < argv.length; i++) {
 
 const T = mkdtempSync(join(tmpdir(), "chicla-tarball-"));
 process.on("exit", () => rmSync(T, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 })); // finish() ends the process
-const sh = WIN ? { shell: true } : {}; // npm and the .bin shims are .cmd files on Windows
-const run = (cmd, args, cwd, opts = {}) => spawnSync(cmd, args, { cwd, encoding: "utf8", maxBuffer: 1 << 26, ...opts });
+const sh = { cmd: true }; // npm and the .bin shims are .cmd files: on Windows only a shell starts them (C25.1)
+// With `sh` on Windows ONE quoted command line goes to the shell (winLine); an argument array with shell: true is not quoted by Node, so a path with a space split (AUDIT-9 F-1).
+const run = (cmd, args, cwd, opts = {}) => (opts.cmd && WIN ? spawnSync(winLine(cmd, args), { cwd, encoding: "utf8", maxBuffer: 1 << 26, shell: true }) : spawnSync(cmd, args, { cwd, encoding: "utf8", maxBuffer: 1 << 26 }));
 const node = (args, cwd) => run(process.execPath, args, cwd);
+const reason = (r) => { try { const e = JSON.parse(String(r.stdout).trim().split("\n").pop()).error; if (e?.code) return `${e.code}: ${e.message}`; } catch { /* not JSON: show the first line of what it printed */ } return String(r.stderr || r.stdout || r.error?.message || "no output").split("\n").find((l) => l.trim()) ?? "no output"; };
 
 if (tarball) {
   tarball = resolve(tarball);
   if (!existsSync(tarball)) refuse("ETARBALL", `no such file: ${tarball}`);
 } else {
   const b = node([join(ROOT, "scripts", "build-chicla.mjs"), "--out", join(T, "stage")], ROOT);
-  if (b.status !== 0) refuse("ETARBALL", `build-chicla failed (exit ${b.status})`);
+  if (b.status !== 0) refuse("ETARBALL", `build-chicla failed (exit ${b.status}): ${reason(b)}`);
   const p = node([join(ROOT, "scripts", "pack-release.mjs"), join(T, "stage", "chicla"), "--out", join(T, "dist"), "--json"], ROOT);
-  if (p.status !== 0) refuse("ETARBALL", `pack-release failed (exit ${p.status})`);
+  if (p.status !== 0) refuse("ETARBALL", `pack-release failed (exit ${p.status}): ${reason(p)}`);
   tarball = join(T, "dist", JSON.parse(p.stdout).file);
 }
 

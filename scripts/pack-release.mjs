@@ -8,6 +8,7 @@ import { existsSync, readFileSync, mkdirSync, mkdtempSync, writeFileSync, copyFi
 import { tmpdir } from 'node:os';
 import { join, resolve, basename } from 'node:path';
 
+const WIN = process.platform === 'win32'; // `npm` is a .cmd file there: only a shell starts it, and a shell needs each argument quoted (a path may hold a space)
 const argv = process.argv.slice(2);
 const json = argv.includes('--json');
 const done = (code, obj, text) => { process.stdout.write(json ? JSON.stringify(obj) + '\n' : text.endsWith('\n') ? text : text + '\n'); process.exit(code); };
@@ -42,7 +43,7 @@ const scratch = mkdtempSync(join(tmpdir(), 'chicla-pack-'));
 process.on('exit', () => rmSync(scratch, { recursive: true, force: true })); // done() and refuse() end the process
 {
   let packed;
-  try { packed = Object.values(JSON.parse(execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', scratch], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })))[0]; } // npm up to 11 prints a list, npm 12 an object keyed by package name: the first value is the package either way
+  try { packed = Object.values(JSON.parse(execFileSync('npm', WIN ? ['pack', '--ignore-scripts', '--json', '--pack-destination', scratch].map((a) => `"${a}"`) : ['pack', '--ignore-scripts', '--json', '--pack-destination', scratch], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], shell: WIN })))[0]; } // npm up to 11 prints a list, npm 12 an object keyed by package name: the first value is the package either way
   catch (e) { refuse('EPACK', String(e.stderr || e.message).split('\n')[0]); }
   if (!packed.files.some((f) => f.path === 'LICENSE')) refuse('ELICENSE', 'the tarball carries no LICENSE');
   const tgz = join(scratch, packed.filename);

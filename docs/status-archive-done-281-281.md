@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 281-281
+
+Moved out of `CHICLA_PROJECT_STATUS-294.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 281 (2026-10-29; Rodrigo: «avança»). C23.3 (D148, M23): `packages/chicla-zip/package.json` and `packages/chicla-kit/package.json` get `"private": true` (names and `0.1.1` unchanged), so `pack-release` refuses them (EPRIVATE) and the CI jobs `pack` and `pack-kit` are removed (`pack-chicla` stays: build, then pack); `docs/release.md` «Releasing chicla 0.2.0» (nine steps: push, artifact, checks, empty-folder try, tag and release, publish, what npm serves, `npm deprecate` on both names with «moved into chicla: npm install chicla», record it) replaces the thin 0.1.1 runbook, the 0.1.1 sections are marked history; the READMEs of the two folders say «Moved into `chicla`», SECURITY.md has a `chicla` row, README says «private»; `test/retire-packages.test.mjs` (10, all red first), `test/single-package-docs.test.mjs` adjusted. Not run: the CI, Node 18/20, macOS, Windows, `npm run smoke`, the mutant lists; C23.4 is a gate for Rodrigo

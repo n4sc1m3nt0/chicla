@@ -38,7 +38,7 @@ test('every entry has the shape scripts/mutants.mjs reads, a unique id, and a re
 
 test('every `find` occurs exactly once in its file, and the file and the tests exist (a stale anchor is caught here, not rounds later)', () => {
   for (const m of list ?? []) {
-    assert.ok(m.file.startsWith('packages/chicla-kit/src/') || m.file === 'scripts/archive-changelog.mjs', `${m.id}: the kit list mutates kit sources and the archive script only`);
+    assert.ok(m.file.startsWith('packages/chicla-kit/src/') || ['scripts/archive-changelog.mjs', 'scripts/build-chicla.mjs', 'scripts/pack-release.mjs', 'scripts/win-quote.mjs'].includes(m.file), `${m.id}: the kit list mutates kit sources and four scripts only (archive-changelog; since C25.3 build-chicla, pack-release, win-quote)`);
     assert.ok(existsSync(join(root, m.file)), `${m.id}: ${m.file} does not exist`);
     const n = read(m.file).split(m.find).length - 1;
     assert.equal(n, 1, `${m.id}: find occurs ${n} times in ${m.file}, must be exactly once`);

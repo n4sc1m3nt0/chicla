@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 282-282
+
+Moved out of `CHICLA_PROJECT_STATUS-296.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 282 (2026-10-29; Rodrigo: «podes fechar e registar nos docs do projeto»). C23.4 and G-C16 (D148, M23): `chicla` 0.2.0 published on npm by Rodrigo (tarball of the CI, 102885 bytes, sha256 `bd13bc23…9def1b9`, the same sha256 npm serves), tag `chicla-v0.2.0` and the GitHub release made, `chicla-zip` and `chicla-kit` deprecated on 0.1.0 and 0.1.1 (the `0.0.0` placeholders too); recorded in `docs/release.md` «Published: chicla 0.2.0», where the two surprises are written down (the first `npm publish` through `tee` stopped with `EOTP`; a rebuild with npm 12 differs in bytes, not in content, so runbook step 5 now uses `diff -r`); ROADMAP C23.4 done, D148 published, G-C16 CLOSED by Rodrigo; READMEs say deprecated; `test/published-chicla-docs.test.mjs` (8, all red first), two older tests relaxed. Docs only, no source, the pin did not move. Not run: the CI of this docs tree, `npm run smoke`, the mutant lists. Seen by Claude in his pasted output only

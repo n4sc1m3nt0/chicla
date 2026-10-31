@@ -44,6 +44,6 @@ test('ROADMAP: D-283b is REVERTED by Rodrigo with the honest reason, C24.5 is do
 
 test('the status file says no decision is open and the next card is C24.3; the status archives record C24.5 as fixed', () => {
   const f = readdirSync(root).find((n) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(n));
-  assert.match(read(f).split('## Next up')[1].split('## Gates')[0], /round 287: \*\*none open[^]*Next task: C24\.3/);
+  assert.match(read(f).split('## Next up')[1].split('## Gates')[0] + statusWithArchives(), /round 287: \*\*none open[^]*Next task: C24\.3/); // the clause moves to docs/status-archive-rolling-* as rounds go by (item 6)
   assert.ok(/C24\.5[^\n]*(reversed|REVERSED)/.test(statusWithArchives()), 'C24.5 is not recorded as reversed');
 });

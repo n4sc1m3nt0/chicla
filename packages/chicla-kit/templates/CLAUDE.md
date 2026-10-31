@@ -2,6 +2,8 @@
 
 Written by `chicla init`. Edit it to fit the project. These rules are short on purpose: read all of them at the start of every session.
 
+The `package.json` only marks the project root (`chicla init` writes it; `make-delivery` and `chicla recovery` look for it); the app version is `APP_VERSION` in `version.mjs`, which is the one you edit.
+
 ## 0. Emergency: `/dump`
 
 If the owner writes `/dump` (or «dump»), stop what you are doing, run `chicla dump`, and hand over the zip it makes. No questions, no checks, no cleaning up first. To restore a dump in a new session: `chicla recovery <dump.zip>`. It reads the zip, compares it with the last delivery and writes `RECOVERY_DIFF.md`; it refuses a toolchain whose digest does not match the pin in this file.

@@ -1,7 +1,49 @@
-<!-- CHANGELOG_FINGERPRINT: seq=294 file=CHICLA_PROJECT_STATUS-294.md app_sha256_12=065d37032ef1 changelog_sha256_12=d4f6b9e2b06d (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=299 file=CHICLA_PROJECT_STATUS-299.md app_sha256_12=065d37032ef1 changelog_sha256_12=c1ca15a53bae (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now., `CHANGELOG-archive-rounds-220-230.md`, `CHANGELOG-archive-rounds-231-241.md`, `CHANGELOG-archive-rounds-242-253.md`, `CHANGELOG-archive-rounds-254-263.md`, `CHANGELOG-archive-rounds-264-275.md`
+
+## Round 294 — C25.3: hand mutants for the M24 code (v0.0.298)
+
+- Task (Rodrigo: «avança»; last card of M25). C25.3 (D150, AUDIT-9 F-9, AUDIT-8 F-6): the five hand mutants of AUDIT-9 §2, one for the Windows quoting of C25.1 and two for the loader (C23.1) are entries of `packages/chicla-kit/mutants/list.mjs` (K-PKG-01 to 06, K-LDR-01 and 02).
+- Test first: `test/mutants-kit-m25.test.mjs` (2, red first): the eight ids exist, each on the file that holds the guarantee; ROADMAP says done. `test/mutants-kit-list.test.mjs` lets the list mutate `build-chicla`, `pack-release` and `win-quote` besides the kit sources and the archive script.
+- Run on this machine: each new entry alone with `node scripts/mutants.mjs --pkg . --list packages/chicla-kit/mutants/list.mjs --only <id>`: all eight RED (baseline ok each time). `check-build` ok. The whole `npm test` twice on copies of the closed tree: the first run had 2 real reds (1764 tests, 1760 pass, 2 fail: `test/mutants-kit-figures.test.mjs` knew ten prefixes and `docs/README.md` named ten; the list now has `K-PKG-` and `K-LDR-`; both fixed in this round); the second, after the fix: 1764 tests, 1762 pass, 0 fail, 2 skipped, 703 s (Node 22.23.4, 2 cores). After the last docs edit (the finding below): `npm run test:fast` 1712 tests, 1710 pass, 0 fail, 2 skipped.
+- FINDING, not fixed (item 20 e): the whole `npm run mutants:kit` could not start. Its baseline (the same tests, nothing mutated) ended `ETIMEDOUT` at the 300 s default, twice, with the same last test active; measured after: the 32 test files the list used before this round take 328 s on this sandbox, the 37 of today more. It is slow, not a hang, but a longer `--timeout` is Rodrigo's call (D-294a), so the whole list is NOT judged.
+- No source file edited (tests, the list and docs only), no pinned file, the pin did not move.
+- NOT run: the whole kit list (above), the CI, Windows, Node 18 and 20, macOS, `npm run smoke`, the 348 mutants of the zip list.
+
+## Round 293 — C25.2: the docs say what the pin means for a package project (v0.0.297)
+
+- Task (Rodrigo: «avança»; next card of M25). C25.2 (D150, AUDIT-9 F-2, F-3, F-6, F-7; D-290a and D-290b confirmed). Docs only.
+- Test first: `test/audit9-docs-c252.test.mjs` (4, red first): README «Emergency» says the digest pin is this repository's and that a project made by `chicla init` has none; the generated `CLAUDE.md` says `package.json` only marks the project root and `APP_VERSION` is the app version; `docs/release.md` 0.2.1 step 3 also compares the sha256; the M24 heading no longer says «proposed».
+- Change: `README.md`, `packages/chicla-kit/templates/CLAUDE.md`, `docs/release.md`, `ROADMAP.md` (M24 heading, C25.2 done). No source file, no pinned file, the pin did not move; no kit code change (D-290a).
+- Run on this machine: the new test (4 of 4), then, after `bump-round`: `check-build` (ok) and the whole `npm test` on a copy of the closed tree: 1762 tests, 1760 pass, 0 fail, 2 skipped, 783 s (Node 22.23.4, 2 cores).
+- NOT run: the CI, Windows, Node 18 and 20, macOS, `npm run smoke`, the mutant lists.
+
+## Round 292 — C25.1: the smoke script quotes its Windows command lines (v0.0.296)
+
+- Task (Rodrigo: «avança»; next card of M25). C25.1 (D150, AUDIT-9 F-1 and F-5): `scripts/smoke-test-tarball.mjs` started npm and the `.bin\*.cmd` shims on Windows with `{ shell: true }` and an argument array; Node quotes nothing there, so a temp or user folder with a space split the tarball path, the `--root` paths and the command. Read in the code, NOT confirmed on Windows.
+- Test first: `test/smoke-tarball-win-quote.test.mjs` (6): `quoteWin` and `winLine` as pure functions (a path with a space stays one argument; a double quote or line break is refused, `EQUOTE`), the script uses `winLine` and no longer has the unquoted option, the script still passes on this system, ROADMAP says done and not run on Windows. Red first (module missing). Breaking `winLine` on purpose (no quoting) turns it red.
+- Change: two scripts, `scripts/win-quote.mjs` (new) and `scripts/smoke-test-tarball.mjs`; Windows builds one quoted command line (no array with a shell, which also ends DEP0190 for that script); other systems unchanged. `test/windows-npm-spawn.test.mjs` copies the new module into its fake tree. No pinned file, the pin did not move. ROADMAP C25.1 done.
+- Run on this machine: the four test files around it (27 of 27), then, after `bump-round`: `check-build` (246 files, ok) and the whole `npm test` on a copy of the closed tree: 1758 tests, 1756 pass, 0 fail, 2 skipped, 737 s (Node 22.23.4, 2 cores).
+- NOT run: Windows (the Windows leg of the next `tarball` run is Rodrigo's to read), Node 18 and 20, macOS, the CI, `npm run smoke`, the mutant lists.
+
+## Round 291 — AUDIT-9: the audit after M24 (v0.0.295)
+
+- Task (Rodrigo: «faz a próxima auditoria», then «confirmo tudo»). `docs/audits/AUDIT-9.md`: promised against what exists for C24.1 to C24.6, what is good, ten findings, what was not measured, plan of three cards (M25, C25.1 to C25.3). D150; D-290a and D-290b confirmed as Claude suggested. Docs only.
+- Measured: `bump-round --verify` green; whole `npm test` 1745 tests, 1743 pass, 0 fail, 2 skipped, 744 s (Node 22.23.4, 2 cores, on a copy); the tarball of this tree 134509 bytes, sha256 `fd85ea57…cd0e8`, the same as the CI one, 30 files; `smoke-test-tarball` 9 of 9; `check-manifest` 414 of 414; installed `init` tried with an existing `package.json`, a folder name with a space and an invalid JSON one; five hand mutants on the M24 code, all killed.
+- Findings: F-1 the smoke script does not quote its arguments on Windows (read, not run); F-2 `package.json` and `version.mjs` carry two versions in a generated project; F-3 the README promises a digest pin that generated projects do not have; F-4 to F-8 smaller; F-9 no mutant in the lists for M24 code (AUDIT-8 F-6 still open).
+- Test first: `test/audit9-docs.test.mjs` (7, 4 red first). No source file and no pinned file edited; the pin did not move. ROADMAP D150, M25, docs index, status file.
+- Run after `bump-round`: `check-build` (244 files, ok) and the whole `npm test` on a copy of the closed tree: 1752 tests, 1750 pass, 0 fail, 2 skipped, 755 s (Node 22.23.4, 2 cores).
+- NOT run: the CI on GitHub (the Windows leg of `tarball` after C24.6 in particular), Node 18 and 20, Windows, macOS, `npm run smoke`, the mutant lists (`npm run mutants`, `npm run mutants:kit`), `npx chicla` from a clean cache.
+
+## Round 290 — C24.6: the Windows leg of the `tarball` job (v0.0.294)
+
+- Task (Rodrigo: «corrige agora»). The first CI run of the `tarball` job (round 289, logs read): Ubuntu and macOS 9 of 9 steps ok; Windows ended `ETARBALL: pack-release failed (exit 1)` with no reason. Every other job green (Ubuntu 1737, macOS 1725, Windows `chicla-zip` 777 and `chicla-kit` 341, 0 fail; `pack-chicla` built `chicla-0.2.1.tgz`).
+- Cause, read in the code and NOT confirmed on Windows: `scripts/pack-release.mjs` ran `execFileSync('npm', ...)`; on Windows `npm` is a `.cmd` file that only a shell starts. The smoke test also hid the reason (an exit code only).
+- Test first: `test/windows-npm-spawn.test.mjs` (6, 5 red first): the npm call has `shell: WIN` with each argument quoted, on Windows only; pack-release still packs here, into a path with a space (green before, a guard); `ETARBALL` carries the code and message of `pack-release`, the first stderr line of `build-chicla`, and the first line of a non-JSON failure (stub scripts in a copy of the tree); ROADMAP C24.6.
+- Change: two scripts, `scripts/pack-release.mjs` and `scripts/smoke-test-tarball.mjs`; no pinned file, the pin did not move. ROADMAP C24.6 done.
+- Run on this machine: the new tests, `pack-release` and `smoke-tarball` tests (21 of 21), the whole `npm test` after `bump-round` (first run: 1745 tests, 1742 pass, 1 fail, 2 skipped, 701 s: the docs test `test/dump-limit-docs.test.mjs` pinned the round 287 clause in the live «Next up»; it now reads the status archives too, as the round 285 one does; the file runs green alone; second whole run after `bump-round`: 1745 tests, 1743 pass, 0 fail, 2 skipped, 732 s on 1 core), `check-build`. NOT run: Windows (only the next `tarball` run on GitHub shows whether its leg goes on or stops at a new step), Node 18 and 20, macOS, `npm run smoke`, the mutant lists.
 
 ## Round 289 — C24.4: the old package names said once (v0.0.293)
 

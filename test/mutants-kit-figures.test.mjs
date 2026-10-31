@@ -16,8 +16,9 @@ const prefixes = [...new Set(list.map((m) => m.id.replace(/\d+$/, '')))];
 const itemC = () => { const item = statusText().split('\n').find((l) => l.startsWith('20. **Long commands')); return item.slice(item.indexOf('(c) Mutants'), item.indexOf('(d) If a wait')); };
 const header = () => read(LIST).split('\n').filter((l) => l.startsWith('//')).slice(0, 4).join('\n');
 
-test('the list has the prefixes AUDIT-7 counted (a new prefix must reach the docs: this number moves with it)', () => {
-  assert.deepEqual(prefixes.sort(), ['K-ARC-', 'K-BMP-', 'K-CMN-', 'K-DEL-', 'K-DMP-', 'K-INT-', 'K-MAN-', 'K-PNL-', 'K-REC-', 'K-VER-']);
+// round 294 (C25.3) added K-LDR- and K-PKG-
+test('the list has the prefixes AUDIT-7 counted plus the two of C25.3 (a new prefix must reach the docs: this number moves with it)', () => {
+  assert.deepEqual(prefixes.sort(), ['K-ARC-', 'K-BMP-', 'K-CMN-', 'K-DEL-', 'K-DMP-', 'K-INT-', 'K-LDR-', 'K-MAN-', 'K-PKG-', 'K-PNL-', 'K-REC-', 'K-VER-']);
 });
 
 test('docs/README.md names every prefix of the list', () => {
