@@ -1,7 +1,18 @@
-<!-- CHANGELOG_FINGERPRINT: seq=308 file=CHICLA_PROJECT_STATUS-308.md app_sha256_12=065d37032ef1 changelog_sha256_12=8f7830dd875d (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=309 file=CHICLA_PROJECT_STATUS-309.md app_sha256_12=065d37032ef1 changelog_sha256_12=4fa9e33f0357 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 304: C24.7) -->
 # Changelog
 
 Archived rounds (nothing deleted): `CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now., `CHANGELOG-archive-rounds-220-230.md`, `CHANGELOG-archive-rounds-231-241.md`, `CHANGELOG-archive-rounds-242-253.md`, `CHANGELOG-archive-rounds-254-263.md`, `CHANGELOG-archive-rounds-264-275.md`, `CHANGELOG-archive-rounds-276-286.md`
+
+## Round 304 — C24.7: the CI of round 303 was red: `run-tests --list` cut on macOS; two build folders had been committed (v0.0.308)
+
+- Task (the person in this session, after sending the CI logs of round 303 and answering «sim» and «faz a ronda 304»; D-304a to D-304c, Claude's labels, taken on delegation): the run of 2 Nov 2026 was red on Ubuntu and macOS (Node 18, 20, 22; Windows, `tarball`, `pack-chicla` and `bench` green). Two causes, none in the code of round 303.
+- Cause 1 (macOS, Node 18 and 20 only): test 1790 got the `--list` of `scripts/run-tests.mjs` cut at about 8 KB (the list is 8232 bytes; it ended at `win-quote-bare-command.t`), because the script ended with `process.exit(main(...))` and exit can drop what is still queued on a pipe. Hypothesis from the log and the code, not reproduced here (this sandbox is Linux).
+- Cause 2 (every Ubuntu and macOS job): test 1749 found `two packages` in `ci/package/README.md` and `stage2/chicla/README.md`. Neither is in the delivery zip nor in `FILES.manifest`; they are in the GitHub checkout, so they were committed (outputs of `build-chicla.mjs --out …`; `.gitignore` had no build folder). The test is right and is not touched.
+- Test first: `test/test-sets.test.mjs` (one new test: `run-tests.mjs` has no `process.exit(` and ends with `process.exitCode = main(`; red with the script of round 303, green after).
+- Change: `scripts/run-tests.mjs` (one line: `process.exitCode = main(...)`, same exit codes: bad set 1, `--list` 0); `.gitignore` (`stage/`, `stage2/`, `dist/`, `ci/package/`). No pinned file, the pin did not move.
+- Rodrigo's part (a zip cannot delete files of his repo): `git rm -r --cached ci/package stage2`, push, and look at the CI (steps in the reply).
+- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`.
+- NOT run: the CI (macOS, Node 18 and 20: the only place where the cut shows), the whole `npm run mutants` and `mutants:kit` (no mutant of this round). The results of `npm test`, `check-build` and `npm run smoke` are in the reply.
 
 ## Round 303 — D-C265a amended: `rename-status` also rewrites the process block of the status file (v0.0.307)
 

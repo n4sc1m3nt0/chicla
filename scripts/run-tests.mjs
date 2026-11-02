@@ -54,4 +54,4 @@ function main(argv) {
   const r = spawnSync(process.execPath, ["--test", ...files], { cwd: root, stdio: "inherit" });
   return r.status === 0 ? 0 : 1;
 }
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exit(main(process.argv.slice(2)));
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = main(process.argv.slice(2)); // exitCode, not process.exit: on a pipe (macOS, Node 18/20) exit() cut the --list output at ~8 KB (CI run of 2 Nov 2026)

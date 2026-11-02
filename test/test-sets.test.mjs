@@ -66,6 +66,12 @@ test('CLI: `--list` prints the files of a set, one per line, and runs nothing; a
   for (const bad of [[], ['medium'], ['fast', '--nope']]) { const r = cli(...bad); assert.equal(r.status, 1, JSON.stringify(bad)); assert.match(r.stderr, /usage/i); }
 });
 
+test('run-tests.mjs ends with process.exitCode, never process.exit (exit() cut the --list output on a pipe on macOS, Node 18 and 20)', () => {
+  const src = readFileSync(join(ROOT, 'scripts', 'run-tests.mjs'), 'utf8');
+  assert.doesNotMatch(src, /process\.exit\(/);
+  assert.match(src, /process\.exitCode = main\(/);
+});
+
 test('CLI: it runs the set with `node --test <files>` in the project folder and returns its status (green 0, a failing test 1)', () => {
   const ok = fixture({ 'test/a.test.mjs': "import {test} from 'node:test'; test('a', () => {});", 'test/b.test.mjs': "import {test} from 'node:test'; test('b', () => {});" });
   const bad = fixture({ 'test/a.test.mjs': "import {test} from 'node:test'; import assert from 'node:assert'; test('a', () => assert.equal(1, 2));" });
