@@ -260,7 +260,7 @@ try {
     writeFileSync(join(p.root, "CHANGELOG.md"), `<!-- CHANGELOG_FINGERPRINT: ${FP(7)} -->\n# Chicla changelog\n\n${["1g", "1f", "1e", "1d", "1c"].map(entry).join("")}`);
     const s = run(p.root, "archive-changelog.mjs", "--dry-run", "--keep", "3");
     check(s.status === 0 && /keep 3 rounds \(1g … 1e\); archive 2 rounds \(1c-1d\)/.test(s.stdout), "suffix-only rounds (1g … 1c), as in the real CHANGELOG: order by position; archives 1d and 1c (name 1c-1d)", out(s));
-    check(!existsSync(join(p.root, "CHANGELOG-archive-rounds-1c-1d.md")), "…and --dry-run did not write the archive", "");
+    check(!existsSync(join(p.root, "docs", "archive", "changelog", "CHANGELOG-archive-rounds-1c-1d.md")), "…and --dry-run did not write the archive", "");
   }
 
   // ============================================================================================================

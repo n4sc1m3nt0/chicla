@@ -11,6 +11,8 @@ const RN = "packages/chicla-kit/src/rename-status.mjs", CLI = "packages/chicla-k
 const IM = ["packages/chicla-kit/test/init-name.test.mjs"]; // C26.4: init --name, the templates, update
 const PC = ["test/status-prefix-c263.test.mjs"]; // C26.3: dump, recovery, archive-changelog
 const PF = ["packages/chicla-kit/test/status-prefix.test.mjs"];                       // C26.1: the prefix of the status file
+const GH = ["packages/chicla-kit/test/git-hygiene.test.mjs"]; // C27.2: the git hygiene guard of check-manifest
+const CI = "packages/chicla-kit/src/ci-report.mjs", CIT = ["packages/chicla-kit/test/ci-report.test.mjs"]; // C27.3: chicla ci-report
 const F = "packages/chicla-kit/src/integrity.mjs";
 const LF = ["packages/chicla-kit/test/core-integrity.test.mjs"];                 // the LF rule, the regex, the callers of round 243
 const ST = ["packages/chicla-kit/test/core-integrity-state.test.mjs"];           // the pin, state and fingerprint rules, and verify-delivery, of round 244
@@ -238,4 +240,15 @@ export default [
   x("K-REN-07", CLI, "if (command === \"rename-status\" && opts.name === undefined) return fail(", "if (false) return fail(", RT, "`rename-status` with no name is a failed rename (exit 1) instead of a usage error (exit 2)"),
   x("K-REN-08", RN, "if (cut > 0) target.set(oldFile, st.slice(0, cut).replace(oldRe, `${name}_PROJECT_STATUS`) + st.slice(cut));", "if (false) target.set(oldFile, st.slice(0, cut).replace(oldRe, `${name}_PROJECT_STATUS`) + st.slice(cut));", RT, "the process block of the status file keeps the old name: its session-start command no longer finds the renamed file (round 303)"),
   x("K-REN-09", RN, "st.slice(0, cut).replace(oldRe, `${name}_PROJECT_STATUS`) + st.slice(cut)", "st.replace(oldRe, `${name}_PROJECT_STATUS`)", RT, "the old name is rewritten in the history of the status file too, not only in its process block (round 303)"),
+  // C27.2 (round 306, D153): the git hygiene guard of check-manifest (K-CMN-22 to 25).
+  x("K-CMN-22", CM, "if (existsSync(join(ROOT, \".git\"))) {", "if (false) {", GH, "the git check is never made: a build folder committed by mistake passes (round 303)"),
+  x("K-CMN-23", CM, "f !== \"FILES.manifest\" && !inManifest(f) && isFile(f)", "!inManifest(f) && isFile(f)", GH, "FILES.manifest, which never lists itself, is reported as tracked outside the manifest: every project fails"),
+  x("K-CMN-24", CM, "!inManifest(f) && isFile(f)", "!inManifest(f)", GH, "a tracked file gone from the disk (a pending git rm, the old status file) is reported as outside the manifest"),
+  x("K-CMN-25", CM, "if (r.status !== 0) return { state: \"error\" };", "", GH, "a git that fails (not a repository, a broken worktree pointer) is read as an empty list instead of a skipped check"),
+  // C27.3 (round 307, D154): `chicla ci-report` (K-CIR-01 to 05).
+  x("K-CIR-01", CI, "failed: failing.length > 0 || (fail ?? 0) > 0 || errLine !== null", "failed: failing.length > 0", CIT, "a job with only an ##[error] line (a step died) or a `# fail` count is read as green"),
+  x("K-CIR-02", CI, "else fail = add(fail, v); return; }", "else fail = v; return; }", CIT, "the counts of the suites of one job are not added (Windows runs two): the last suite wins"),
+  x("K-CIR-03", CI, ".replace(/\\u001b\\[[0-9;]*m/g, \"\")", "", CIT, "colour codes stay in the test names"),
+  x("K-CIR-04", CI, "if (top.length) for (const s of top)", "if (false) for (const s of top)", CIT, "the combined log of a job is ignored and only its step files are read"),
+  x("K-CIR-05", CI, "if (bad.length) { result.ok = false;", "if (false) { result.ok = false;", CIT, "a run with failing jobs reports ok"),
 ];

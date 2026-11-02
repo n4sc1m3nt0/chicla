@@ -36,7 +36,7 @@ test('the digest of the `toolchain-digest:` line of CLAUDE.md occurs in no other
   assert.ok(digest, 'CLAUDE.md has no toolchain-digest line');
   const names = read('FILES.manifest').split('\n').map((l) => l.trim().split(/\s+/)[0]).filter((n) => n && !n.startsWith('#') && existsSync(join(root, n)));
   assert.ok(names.length > 100, `the manifest lists ${names.length} files: the reader is wrong`);
-  const history = /^(CHANGELOG(-archive-[^/]*)?\.md|docs\/status-archive-[^/]*\.md)$/;
+  const history = /^(CHANGELOG(-archive-[^/]*)?\.md|docs\/(archive\/status\/)?status-archive-[^/]*\.md)$/;
   const homes = names.filter((n) => !history.test(n) && /\.(md|mjs|json|yml|yaml|txt)$/.test(n) && read(n).includes(digest));
   assert.deepEqual(homes, ['CLAUDE.md'], 'the digest must live in CLAUDE.md only');
 });

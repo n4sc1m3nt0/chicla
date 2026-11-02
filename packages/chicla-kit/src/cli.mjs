@@ -37,13 +37,14 @@ import { resolve } from "node:path";
 import { shouldStyle, styleSummary } from "./ui.mjs";
 
 const SRC = new URL("./", import.meta.url); // C11.1 slice 7 (D92): every core is imported from the kit itself, never through scripts/
-const CORES = { "check-manifest": "check-manifest.mjs", "rename-status": "rename-status.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs", update: "update.mjs" };
+const CORES = { "ci-report": "ci-report.mjs", "check-manifest": "check-manifest.mjs", "rename-status": "rename-status.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs", update: "update.mjs" };
 const HELP = `chicla: the workflow CLI
 
 Usage: chicla <command> [options]
 
 Commands:
   check-manifest   check FILES.manifest against the disk (--write regenerates it)
+  ci-report        read the logs .zip of a GitHub Actions run and print, per job, the failing tests and the first error (<logs.zip>)
   make-delivery    build the delivery .zip of a project (checks, manifest, baseline, zip, verify; --against, --allow-removed)
   verify-delivery  check a delivery .zip: the whole tree, the manifest, no junk or secrets (--against, --allow-removed)
   dump             emergency zip of the whole working directory, no guards (note words, --note, --project-only, --outdir <dir>)
@@ -106,6 +107,7 @@ export async function main(argv, io = {}) {
     if (command === "dump" && a === "--project-only") { opts.projectOnly = true; continue; }
     if (command === "dump" && a === "--outdir") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--outdir needs a folder"); opts.outdir = resolve(cwd, v); continue; }
     if (command === "dump" && !a.startsWith("--")) { opts.words.push(a); continue; }
+    if (command === "ci-report" && !a.startsWith("--")) { if (opts.zip !== undefined) return fail(command, "EUSAGE", "only one zip may be given"); opts.zip = a; continue; }
     if (command === "rename-status" && !a.startsWith("--")) { if (opts.name !== undefined) return fail(command, "EUSAGE", "only one name may be given"); opts.name = a; continue; }
     if (command === "init" && a === "--name") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--name needs a value"); opts.name = v; continue; }
     if ((command === "init" || command === "update") && a === "--agent") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--agent needs a name"); opts.agents.push(v); continue; }
@@ -120,6 +122,7 @@ export async function main(argv, io = {}) {
   if (command === "rename-status" && opts.name === undefined) return fail(command, "EUSAGE", "no name given: chicla rename-status <NAME>");
   if (command === "bump-round" && opts.verify && (opts.refresh || opts.dry || opts.note)) return fail(command, "EUSAGE", "--verify only checks; it cannot be combined with --refresh, --dry-run or --note");
 
+  if (command === "ci-report" && opts.zip === undefined) return fail(command, "EUSAGE", "no logs zip given: chicla ci-report <logs.zip>");
   if (takesZip && opts.zip === undefined) return fail(command, "EUSAGE", command === "make-delivery" ? "no output zip given" : command === "recovery" ? "no dump zip given" : "no zip given");
 
   const file = CORES[command];
@@ -128,6 +131,7 @@ export async function main(argv, io = {}) {
   catch (e) { if (json) stdout.write(`${JSON.stringify({ ok: false, command, code: "ECOMMAND_LOAD" })}\n`); stderr.write(`✗ ECOMMAND_LOAD: cannot load ${file} (${e.code ?? e.message})\n`); return 1; }
   let r;
   if (command === "check-manifest") r = mod.checkManifest({ root: opts.root, write: opts.write });
+  else if (command === "ci-report") r = await mod.ciReport({ zip: resolve(cwd, opts.zip) });
   else if (command === "rename-status") r = mod.renameStatus({ root: opts.root, name: opts.name });
   else if (command === "init") r = mod.initProject({ root: opts.root, agents: opts.agents, name: opts.name });
   else if (command === "update") r = mod.updateProject({ root: opts.root, agents: opts.agents, apply: opts.apply });
@@ -141,7 +145,7 @@ export async function main(argv, io = {}) {
     const regenerateManifest = (root) => { const m = cm.checkManifest({ root, write: true }); return { ok: m.ok, ...cm.renderCheckManifest(m) }; };
     r = mod.bumpRound({ root: opts.root, mode: opts.verify ? "verify" : opts.refresh ? "refresh" : "bump", dry: opts.dry, note: opts.note, regenerateManifest });
   }
-  const { out, err } = command === "check-manifest" ? mod.renderCheckManifest(r) : command === "verify-delivery" ? mod.renderVerifyDelivery(r) : command === "make-delivery" ? mod.renderMakeDelivery(r) : command === "dump" ? mod.renderEmergencyDump(r) : command === "recovery" ? mod.renderRecoveryReport(r) : command === "rename-status" ? mod.renderRenameStatus(r) : command === "init" ? mod.renderInit(r) : command === "update" ? mod.renderUpdate(r) : mod.renderBumpRound(r);
+  const { out, err } = command === "ci-report" ? mod.renderCiReport(r) : command === "check-manifest" ? mod.renderCheckManifest(r) : command === "verify-delivery" ? mod.renderVerifyDelivery(r) : command === "make-delivery" ? mod.renderMakeDelivery(r) : command === "dump" ? mod.renderEmergencyDump(r) : command === "recovery" ? mod.renderRecoveryReport(r) : command === "rename-status" ? mod.renderRenameStatus(r) : command === "init" ? mod.renderInit(r) : command === "update" ? mod.renderUpdate(r) : mod.renderBumpRound(r);
   if (json) {
     const { messages, ...data } = r;
     stdout.write(`${JSON.stringify({ command, ...data })}\n`);

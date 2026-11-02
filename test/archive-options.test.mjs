@@ -64,5 +64,42 @@ test('a count option with no value, or with a bad one, is still the old error (e
 test('without an option the default command still archives the CHANGELOG (the behaviour the check must keep)', () => withProject((dir) => {
   const r = run(dir);
   assert.equal(r.status, 0, r.stderr);
-  assert.ok(readdirSync(dir).some((f) => /^CHANGELOG-archive-rounds-\d/.test(f)), 'an archive file was written');
+  assert.ok(readdirSync(join(dir, 'docs/archive/changelog')).some((f) => /^CHANGELOG-archive-rounds-\d/.test(f)), 'an archive file was written');
+}));
+
+// Round 305 (C27.1, D-305a to D-305d, «confirmo tudo»): the archives of the CHANGELOG live in docs/archive/changelog/, not in the root. Written before the code; red until it.
+const ARCH = 'docs/archive/changelog';
+test('C27.1: the archive goes to docs/archive/changelog/ (the folder is created), never to the root', () => withProject((dir) => {
+  assert.equal(run(dir).status, 0);
+  assert.deepEqual(readdirSync(dir).filter((f) => f.startsWith('CHANGELOG-archive')), [], 'nothing in the root');
+  const files = readdirSync(join(dir, ARCH));
+  assert.equal(files.length, 1);
+  assert.match(files[0], /^CHANGELOG-archive-rounds-.+\.md$/);
+}));
+
+test('C27.1: --dry-run does not create the folder either', () => withProject((dir) => {
+  const before = tree(dir);
+  assert.equal(run(dir, '--dry-run').status, 0);
+  assert.equal(tree(dir), before);
+}));
+
+test('C27.1: the index line of the live CHANGELOG names the archive with its folder, and the archive header says where to grep', () => withProject((dir) => {
+  assert.equal(run(dir).status, 0);
+  const name = readdirSync(join(dir, ARCH))[0];
+  const live = readFileSync(join(dir, 'CHANGELOG.md'), 'utf8');
+  assert.ok(live.includes(`\`${ARCH}/${name}\``), 'the index names the path');
+  assert.ok(readFileSync(join(dir, ARCH, name), 'utf8').includes(`${ARCH}/CHANGELOG-archive-*.md`), 'the header greps in the folder');
+}));
+
+test('C27.1: an archive already in the folder is never overwritten (exit 1, nothing changed)', () => withProject((dir) => {
+  const before = readFileSync(join(dir, 'CHANGELOG.md'), 'utf8');
+  assert.equal(run(dir, '--dry-run').status, 0);
+  const name = (/archive (\d+) rounds \((.+?)\)/.exec(run(dir, '--dry-run').stdout) || [])[2];
+  assert.ok(name, 'the dry run names the rounds');
+  mkdirSync(join(dir, ARCH), { recursive: true });
+  const target = join(dir, ARCH, `CHANGELOG-archive-rounds-${name}.md`);
+  writeFileSync(target, 'precious');
+  assert.equal(run(dir).status, 1);
+  assert.equal(readFileSync(target, 'utf8'), 'precious');
+  assert.equal(readFileSync(join(dir, 'CHANGELOG.md'), 'utf8'), before);
 }));

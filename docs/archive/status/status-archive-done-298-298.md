@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 298-298
+
+Moved out of `CHICLA_PROJECT_STATUS-312.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/archive/status/status-archive-done-*.md`.
+
+- Done: round 298 (2026-11-01; Rodrigo: «temos um problema…», then his answers to D-A, D-B and D-C). C26.1 (D151, M26): the status file carries the project's prefix. `integrity.mjs` has `statusPrefix` (the `status-prefix: <NAME>` line at the start of a line of `CLAUDE.md`; none = CHICLA; invalid or two different lines = null), `statusFileRe`, `statusFileAny` and `DEFAULT_STATUS_PREFIX`; `bump-round.mjs` renames to the project's prefix and refuses (`EBUMP_STATE`, nothing written) an invalid line or a status file of another prefix; `check-manifest.mjs` sees a change of prefix as one rename; this project's `CLAUDE.md` says `status-prefix: CHICLA`. `status-prefix.test.mjs` (13; 10 red first); five kit mutants (K-INT-42 to 44, K-BMP-18, K-CMN-21) red, the 83 of the three files as listed; docs `integrity.md` and `state-file.md`. Three sources, the pin did not move. NOT done yet: `init` and the templates still write CHICLA (C26.4), `panel`, `update`, `verify-delivery` (C26.2), the dump, the recovery and `archive-changelog` (C26.3, the pin moves, G-C11 again).

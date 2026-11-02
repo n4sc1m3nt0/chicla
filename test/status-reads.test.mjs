@@ -19,7 +19,7 @@ test('the helper returns the newest status file by number (-9 before -10), its t
   assert.equal(statusName(d), 'CHICLA_PROJECT_STATUS-10.md');
   assert.equal(statusText(d), 'live 10\n');
   const arch = statusArchives(d);
-  assert.ok(arch.length > 0 && arch.every((f) => /^docs\/status-archive-.*\.md$/.test(f)));
+  assert.ok(arch.length > 0 && arch.every((f) => /^docs\/archive\/status\/status-archive-.*\.md$/.test(f)));
   assert.deepEqual(arch, [...arch].sort());
   assert.equal(statusArchives(join(T, 'nowhere')).length, 0, 'no docs folder, no archives, no throw');
 });
@@ -27,7 +27,7 @@ test('the helper returns the newest status file by number (-9 before -10), its t
 test('a name that was archived is still found: the live file lost the line, the archive has it verbatim, `statusWithArchives` sees it, `statusText` does not (the round 252 accident)', () => {
   const d = join(T, 'b'); cpSync(join(root, 'docs'), join(d, 'docs'), { recursive: true });
   writeFileSync(join(d, 'CHICLA_PROJECT_STATUS-3.md'), '# status\n- Done: round 5. nothing named here\n');
-  writeFileSync(join(d, 'docs/status-archive-done-1-2.md'), '# archive\n- Done: round 2 (plan-a1-integrity, C17.1, AUDIT-4)\n');
+  writeFileSync(join(d, 'docs/archive/status/status-archive-done-1-2.md'), '# archive\n- Done: round 2 (plan-a1-integrity, C17.1, AUDIT-4)\n');
   assert.doesNotMatch(statusText(d), /AUDIT-4/);
   assert.match(statusWithArchives(d), /AUDIT-4/); assert.match(statusWithArchives(d), /round 5/);
 });

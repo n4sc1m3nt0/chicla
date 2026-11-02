@@ -1,10 +1,10 @@
 // Round 250 (C18.2, AUDIT-5 F-2; D-248b confirmed by Rodrigo): `archive-changelog.mjs --rolling` keeps the newest N clauses (default 3) of the
 // «Current version» paragraph and of the «Open decisions» paragraph of the status file, moves the older ones verbatim to
-// docs/status-archive-rolling-<lo>-<hi>.md and leaves one pointer in each paragraph. Written before the code; red until it exists.
+// docs/archive/status/status-archive-rolling-<lo>-<hi>.md and leaves one pointer in each paragraph. Written before the code; red until it exists.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,12 +33,12 @@ function project(text, name = 'CHICLA_PROJECT_STATUS-7.md') {
 }
 const run = (dir, ...a) => spawnSync(process.execPath, [join(dir, 'scripts/archive-changelog.mjs'), ...a], { encoding: 'utf8' });
 const stat = (dir) => readFileSync(join(dir, 'CHICLA_PROJECT_STATUS-7.md'), 'utf8');
-const archives = (dir) => readdirSync(join(dir, 'docs')).filter((f) => f.startsWith('status-archive-rolling-'));
+const archives = (dir) => (existsSync(join(dir, 'docs/archive/status')) ? readdirSync(join(dir, 'docs/archive/status')) : []).filter((f) => f.startsWith('status-archive-rolling-'));
 const line = (t, start) => t.split('\n').find((l) => l.startsWith(start));
 const done = (dir) => rmSync(dir, { recursive: true, force: true });
 const lines = (arch, title) => { const s = arch.split(`\n## ${title}\n`)[1]; return s.split('\n## ')[0].split('\n').filter((l) => l.startsWith('- ')).map((l) => l.slice(2)); };
-const PTR_CV = (names) => `; older rounds archived (nothing deleted): ${names.map((n) => `\`docs/${n}\``).join(', ')}`;
-const PTR_OD = (names) => `(earlier rounds: archived verbatim, nothing deleted: ${names.map((n) => `\`docs/${n}\``).join(', ')})`;
+const PTR_CV = (names) => `; older rounds archived (nothing deleted): ${names.map((n) => `\`docs/archive/status/${n}\``).join(', ')}`;
+const PTR_OD = (names) => `(earlier rounds: archived verbatim, nothing deleted: ${names.map((n) => `\`docs/archive/status/${n}\``).join(', ')})`;
 
 test('--rolling keeps the newest 3 clauses of each paragraph, archives the older ones verbatim, and archive + live rebuild the original', () => {
   const dir = project(status()); const before = stat(dir);
@@ -48,7 +48,7 @@ test('--rolling keeps the newest 3 clauses of each paragraph, archives the older
   const live = stat(dir), name = 'status-archive-rolling-5-7.md';
   assert.equal(line(live, '**Current version:**'), CV_HEAD + CV_CLAUSES.slice(0, 3).join('; ') + PTR_CV([name]) + CV_CLOSE);
   assert.equal(line(live, '**Open decisions:**'), OD_HEAD + OD_ENTRIES.slice(0, 3).join(' ') + ' ' + PTR_OD([name]));
-  const arch = readFileSync(join(dir, 'docs', name), 'utf8');
+  const arch = readFileSync(join(dir, 'docs/archive/status', name), 'utf8');
   assert.deepEqual(lines(arch, 'Current version clauses'), CV_CLAUSES.slice(3), 'moved clauses, verbatim, one per line');
   assert.deepEqual(lines(arch, 'Open decisions entries'), OD_ENTRIES.slice(3), 'moved entries, verbatim, one per line');
   // rebuild: take the pointer out, put the archived text back
@@ -103,9 +103,9 @@ test('a second batch adds to the one pointer of each paragraph (never a second p
   assert.equal(line(live, '**Open decisions:**'), OD_HEAD + OD_ENTRIES.slice(0, 2).join(' ') + ' ' + PTR_OD(names));
   assert.equal(live.split('older rounds archived').length, 2); assert.equal(live.split('earlier rounds: archived').length, 2);
   // an archive with the name the run would use is refused, nothing changes
-  const dir2 = project(status()); writeFileSync(join(dir2, 'docs/status-archive-rolling-5-7.md'), 'x'); const b2 = stat(dir2);
+  const dir2 = project(status()); mkdirSync(join(dir2, 'docs/archive/status'), { recursive: true }); writeFileSync(join(dir2, 'docs/archive/status/status-archive-rolling-5-7.md'), 'x'); const b2 = stat(dir2);
   const r2 = run(dir2, '--rolling'); assert.equal(r2.status, 1); assert.match(r2.stderr, /already exists/);
-  assert.equal(stat(dir2), b2); assert.equal(readFileSync(join(dir2, 'docs/status-archive-rolling-5-7.md'), 'utf8'), 'x');
+  assert.equal(stat(dir2), b2); assert.equal(readFileSync(join(dir2, 'docs/archive/status/status-archive-rolling-5-7.md'), 'utf8'), 'x');
   done(dir); done(dir2);
 });
 
@@ -117,7 +117,7 @@ test('it refuses, changing nothing, when --keep-clauses is not an integer >= 1, 
   const r = run(dir, '--rolling'); assert.equal(r.status, 1); assert.match(r.stderr, /exactly one/);
   const dir2 = project(status(CV_HEAD + 'round 9: a; round 8: b; round 7: c; a clause with no number; round 5: e' + CV_CLOSE)); const b2 = stat(dir2);
   const r2 = run(dir2, '--rolling', '--keep-clauses', '2'); assert.equal(r2.status, 0, r2.stderr);
-  assert.ok(readFileSync(join(dir2, 'docs', archives(dir2)[0]), 'utf8').includes('a clause with no number'));
+  assert.ok(readFileSync(join(dir2, 'docs/archive/status', archives(dir2)[0]), 'utf8').includes('a clause with no number'));
   assert.notEqual(stat(dir2), b2);
   done(dir); done(dir2);
 });
@@ -130,8 +130,8 @@ test('the real status file keeps both paragraphs short, and instruction 6 names 
     assert.ok(Buffer.byteLength(l) <= 6000, `${start} is ${Buffer.byteLength(l)} bytes; run node scripts/archive-changelog.mjs --rolling`);
   }
   assert.match(s.split('\n').find((l) => l.startsWith('6. **History is never deleted.**')), /--rolling/);
-  const docs = readdirSync(join(ROOT, 'docs'));
+  const docs = readdirSync(join(ROOT, 'docs/archive/status'));
   const arch = docs.filter((f) => /^status-archive-rolling-.*\.md$/.test(f));
   assert.ok(arch.length >= 1);
-  for (const f of arch) assert.ok(s.includes(f), `${f} is not named in the status file`);
+  for (const f of arch) assert.ok(s.includes(`docs/archive/status/${f}`), `${f} is not named, with its folder, in the status file`);
 });

@@ -9,7 +9,7 @@
 // FILES.manifest lists the path of every source file of the project. The
 // check FAILS if a listed path no longer exists (lost file) and
 // only WARNS if there is a new file that is not listed (forgot to
-// regenerate). Runs on `prebuild`. Regenerate every round, AFTER all
+// regenerate), EXCEPT a file git tracks (C27.2: a `.git` is present and `git ls-files` lists it): that fails with EMANIFEST_TRACKED. Runs on `prebuild`. Regenerate every round, AFTER all
 // changes and BEFORE creating the zip.
 //
 // C11.1 slice 5b (D84): this is the CORE, in the kit package; scripts/check-manifest.mjs is a thin wrapper that imports it and prints and exits as the entry point.
@@ -18,6 +18,7 @@
 // so the kit CLI imports and runs the very same code (no child process).
 import { readdirSync, readFileSync, writeFileSync, existsSync, statSync, openSync, fstatSync, closeSync } from "node:fs";
 import { join, resolve, relative } from "node:path";
+import { spawnSync } from "node:child_process";
 import { crc32, parseManifest, serializeManifest } from "./pinned/manifest.mjs";
 import { SKIP_NAMES, PYTHON_DIRS, isSecretEnv, isSecretFileName, loadPolicy, policyAllows, policySkips, detectSecret, SCAN_LIMIT } from "./pinned/policy.mjs";
 import { checkLf, statusFileAny, statusFileRe, statusPrefix } from "./integrity.mjs"; // C17.1: the status-file name and the LF rule are shared (docs/plan-a1-integrity.md); C26.1: the name carries the prefix of CLAUDE.md
@@ -28,17 +29,28 @@ const nfc = (f) => f.normalize("NFC");
 // W2 — what NEVER enters the manifest (and therefore never a delivery zip, which is built from the manifest): the rules live in src/pinned/policy.mjs (C6.1),
 // shared with verify-delivery-zip.mjs.
 
+// C27.2 (D153): the files git tracks, read with `git ls-files -z` (NUL-separated and unquoted, so «ç» and spaces arrive as they are). Only called when the project has a `.git`.
+// A git that is missing or fails (not a repository, `safe.directory`, a broken worktree pointer) is a SKIPPED check, never a failure: the guard must not break a machine that cannot ask.
+function gitTracked(root, bin) {
+  const env = { ...process.env }; for (const k of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"]) delete env[k]; // a hook's variables must not point git elsewhere
+  const r = spawnSync(bin, ["-c", "core.quotepath=off", "ls-files", "-z"], { cwd: root, env, encoding: "buffer", maxBuffer: 256 * 1024 * 1024, timeout: 30000 });
+  if (r.error) return { state: "unavailable" };
+  if (r.status !== 0) return { state: "error" };
+  return { state: "ok", files: r.stdout.toString("utf8").split("\0").filter(Boolean) };
+}
+
 /**
  * Checks (or, with `write`, regenerates) FILES.manifest of the project at `root`.
+ * `git` (C27.2, a binary name; default `git`) is only for the tests.
  * Returns { ok, code, mode, messages, ... }: `code` is null when ok, else a stable code (EPOLICY_*, EMANIFEST_COLLISION, EMANIFEST_LOST, EMANIFEST_*);
  * `messages` is [{ stream: "out" | "err", text }] in the order the script prints them (see `renderCheckManifest`). Never prints, exits or throws.
  */
-export function checkManifest({ root, write = false } = {}) {
+export function checkManifest({ root, write = false, git = "git" } = {}) {
   const ROOT = resolve(root ?? ".");
   const MANIFEST = join(ROOT, "FILES.manifest");
   const messages = [];
   const say = (stream, text) => messages.push({ stream, text });
-  const result = { ok: true, code: null, mode: write ? "write" : "check", root: ROOT, messages };
+  const result = { ok: true, code: null, mode: write ? "write" : "check", root: ROOT, messages, git: { state: "none" }, trackedOutside: [] };
   const stop = (code, text) => { say("err", text); result.ok = false; result.code = code; return result; };
 
   // A root that is missing or is not a folder is a clean error, not an ENOENT from the walk (and `--write` must not create anything there).
@@ -153,6 +165,23 @@ export function checkManifest({ root, write = false } = {}) {
     say("err", "\nProbable cause: a folder was replaced by a partial version. Restore these files BEFORE continuing.\n");
     result.ok = false; result.code = "EMANIFEST_LOST";
     return result;
+  }
+  // C27.2 (D153): git hygiene. Only in check mode and only when the project has a `.git` (a delivery zip or a copy has none: nothing is checked there).
+  // A file git TRACKS that is on the disk and not in the manifest is a mistake the warning above never stopped (round 303: `ci/package/` and `stage2/`, build output
+  // committed by mistake). A tracked file that is gone from the disk (a pending `git rm`, the old status file) is not flagged.
+  if (existsSync(join(ROOT, ".git"))) {
+    const g = gitTracked(ROOT, git);
+    result.git = { state: g.state };
+    if (g.state === "ok") {
+      result.git.tracked = g.files.length;
+      const inManifest = (f) => listedSet.has(nfc(f)); // (its own name: the K-CMN-15 anchor above must stay unique)
+      const isFile = (f) => { try { return statSync(join(ROOT, f)).isFile(); } catch { return false; } };
+      result.trackedOutside = g.files.filter((f) => f !== "FILES.manifest" && !inManifest(f) && isFile(f)).sort(); // the manifest never lists itself (SKIP_FILES)
+      if (result.trackedOutside.length) {
+        const t = result.trackedOutside;
+        return stop("EMANIFEST_TRACKED", `\n✗ EMANIFEST_TRACKED: ${t.length} file(s) tracked by git are not in FILES.manifest:\n  ${t.slice(0, 15).join("\n  ")}${t.length > 15 ? `\n  … and ${t.length - 15} more` : ""}\n  Build output committed by mistake? \`git rm -r --cached <path>\` and name the folder in .gitignore. A real source file? regenerate with node scripts/check-manifest.mjs --write.`);
+      }
+    }
   }
   say("out", `✓ no file lost (${listed.length} in the manifest, ${current.length} on disk)`);
   return result;

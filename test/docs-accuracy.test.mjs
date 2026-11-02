@@ -179,7 +179,7 @@ test('C16.7: item 6, the Map (item 4), docs/state-file.md and docs/README.md nam
   const snap = s.slice(s.indexOf('\n## Snapshot\n'), s.indexOf('\n## Next up\n'));
   const idx = snap.match(/^- Archived «Done» lines \(nothing deleted\): (.*)$/m);
   assert.ok(idx, 'the Snapshot has its index line');
-  const files = [...idx[1].matchAll(/`(docs\/status-archive-done-[^`]+\.md)`/g)].map((m) => m[1]);
+  const files = [...idx[1].matchAll(/`(docs\/archive\/status\/status-archive-done-[^`]+\.md)`/g)].map((m) => m[1]);
   assert.ok(files.length >= 1);
   for (const f of files) assert.ok(existsSync(join(root, f)), `${f} is named in the index and does not exist`);
   assert.match(read('ROADMAP.md'), /^\| C16\.7 \|[^\n]*S · feito \(round 241/m);

@@ -23,17 +23,18 @@ test('the live CHANGELOG keeps at most 21 round headings and the archives hold t
   const c = read('CHANGELOG.md');
   const heads = c.split('\n').filter((l) => /^## Round /.test(l));
   assert.ok(heads.length <= 21, `${heads.length} round headings`);
-  const archives = readdirSync(root).filter((f) => /^CHANGELOG-archive-rounds-.*\.md$/.test(f));
+  assert.deepEqual(readdirSync(root).filter((f) => /^CHANGELOG-archive/.test(f)), [], 'C27.1: no archive of the CHANGELOG in the root');
+  const archives = readdirSync(join(root, 'docs/archive/changelog')).filter((f) => /^CHANGELOG-archive-rounds-.*\.md$/.test(f));
   assert.ok(archives.length >= 2, 'a second archive file is expected');
-  for (const a of archives) assert.ok(c.includes(a), `${a} is not named in the CHANGELOG header`);
+  for (const a of archives) assert.ok(c.includes(`docs/archive/changelog/${a}`), `${a} is not named, with its folder, in the CHANGELOG header`);
 });
 
-test('every archived «Previous» block and «Done» line is in an archive file under docs/ (nothing deleted)', () => {
-  const docs = readdirSync(join(root, 'docs'));
+test('every archived «Previous» block and «Done» line is in an archive file under docs/archive/status/ (nothing deleted)', () => {
+  const docs = readdirSync(join(root, 'docs/archive/status'));
   assert.ok(docs.some((f) => /^status-archive-previous-.*\.md$/.test(f)));
   assert.ok(docs.some((f) => /^status-archive-done-.*\.md$/.test(f)));
   const s = read(statusName());
-  for (const f of docs.filter((f) => /^status-archive-(previous|done)-/.test(f))) assert.ok(s.includes(f), `${f} is not named in the status file`);
+  for (const f of docs.filter((f) => /^status-archive-(previous|done)-/.test(f))) assert.ok(s.includes(`docs/archive/status/${f}`), `${f} is not named, with its folder, in the status file`);
 });
 
 test('item 20 names the timing measured on 2026-10-26: test:fast 213 s for 1472 tests, and the whole npm test 477 s for 1530', () => {

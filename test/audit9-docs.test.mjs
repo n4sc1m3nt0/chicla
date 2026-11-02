@@ -2,7 +2,7 @@
 // Written before the docs; red until they exist. Docs only: no source, the pin does not move. It reads the status file AND its archives (the lesson of AUDIT-6 F-3).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { statusWithArchives } from './status-text.mjs';
@@ -53,8 +53,9 @@ test('ROADMAP: decision D150 and milestone M25 with the three cards; docs/README
   assert.ok(/AUDIT-9/.test(read('docs/README.md')), 'docs/README.md does not list AUDIT-9');
 });
 
-test('the status file (the newest one) or its archives name the audit and the cards of M25; the CHANGELOG has round 291 on top', () => {
+test('the status file (the newest one) or its archives name the audit and the cards of M25; the CHANGELOG or its archives (docs/archive/changelog/) have round 291', () => {
   const s = statusWithArchives();
   assert.ok(s.includes('AUDIT-9') && s.includes('C25.1'), 'the status file or its archives name the audit and C25.1');
-  assert.match(read('CHANGELOG.md'), /^## Round 291 /m);
+  const all = [read('CHANGELOG.md'), ...readdirSync(join(root, 'docs/archive/changelog')).map((f) => read(`docs/archive/changelog/${f}`))].join('\n'); // the diet moves old rounds (round 308 moved 287-297)
+  assert.match(all, /^## Round 291 /m);
 });

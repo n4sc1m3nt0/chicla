@@ -1,0 +1,16 @@
+# Status file archive — rolling paragraphs, rounds 296-303
+
+Moved out of `CHICLA_PROJECT_STATUS-311.md` verbatim by `scripts/archive-changelog.mjs --rolling`. Nothing was edited or deleted.
+Each line is one clause or entry, newest first; put them after the ones kept in the file, joined with «; » («Current version») or one space («Open decisions»), and the paragraph is rebuilt.
+Find a round with `grep -n "round 12" docs/status-archive-rolling-*.md`.
+
+## Current version clauses
+
+- round 303: D-C265a amended: `chicla rename-status` also says the new name in the process block of the status file (everything above «Current version»: the session-start command and the name of the file); the history from that line down keeps its bytes; `rename-status.mjs` and the help text of `cli.mjs`; `packages/chicla-kit/test/rename-status.test.mjs` (first test changed, red first); two kit mutants K-REN-08 and 09; the pin did not move
+- round 302: C26.5: the new core `rename-status.mjs` and `chicla rename-status <NAME>` (the file, the two `file=`, the `status-prefix:` line, the old name in the instruction files, the manifest; never history; all or nothing); `packages/chicla-kit/test/rename-status.test.mjs` (7); seven kit mutants K-REN-01 to 07 (new prefix); M26 closed; the pin did not move
+- round 301: C26.4: `init.mjs` (`--name`; the folder in capitals; ENAME; the line `status-prefix:`; `forName`), `update.mjs` (templates read through the project's name) and `cli.mjs` (`--name`); `packages/chicla-kit/test/init-name.test.mjs` (7, 5 red first); six kit mutants K-INI-01 to 05 (new prefix) and K-UPD-04; the pin did not move
+- round 300: C26.3: `emergency-dump.mjs` (its own reader, D7), `pinned/recovery-report.mjs` (an older status file of any prefix is not «removed»; THE PIN MOVED 24014f880e9e → 15e4ef5d0602) and `archive-changelog.mjs` read the status-file prefix; `test/status-prefix-c263.test.mjs` (8, 6 red first); five kit mutants K-DMP-50/51, K-REC-50, K-ARC-50/51; G-C11 open again
+- round 299: C26.2: `panel.mjs`, `update.mjs` and `verify-delivery.mjs` read the status-file prefix (`update` leaves the `status-prefix:` line out of its comparison and keeps it on `--apply`; `verify-delivery` takes it from the zip's own `CLAUDE.md`); `packages/chicla-kit/test/status-prefix-readers.test.mjs` (7, 6 red first); four kit mutants and the new prefix `K-UPD-`; three sources, the pin did not move
+- round 298: C26.1: the status file carries the project's prefix (`status-prefix:` in `CLAUDE.md`, none = CHICLA): `integrity.mjs`, `bump-round.mjs`, `check-manifest.mjs`; `packages/chicla-kit/test/status-prefix.test.mjs` (13, 10 red first); five kit mutants; three sources, the pin did not move; `init` and the other readers still use the Chicla name until C26.2 to C26.4
+- round 297: G-C17 closed and recorded, docs only: the runbook, README, ROADMAP and this file; `test/published-chicla-021-docs.test.mjs` 8 red first; no source, the pin did not move
+- round 296: C25.5: `winLine` leaves a bare command name bare (the quoted `"npm"` of C25.1 probably broke `npm.cmd`'s `%~dp0` on Windows; inferred), the smoke stops with `EINIT`; `K-PKG-08`; `test/win-quote-bare-command.test.mjs` (5, 3 red first); two scripts, the pin did not move; Windows not run

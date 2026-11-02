@@ -25,15 +25,15 @@ check(r.status === 0 && /only 3 rounds \(2, 1b, 1\)/.test(r.stdout), "1, 1b, 2: 
 const original = write(["2b", "2", "1c", "1b", "1"]);
 r = run("--dry-run", "--keep", "3");
 check(r.status === 0 && /keep 3 rounds \(2b … 1c\); archive 2 rounds \(1-1b\)/.test(r.stdout), "dry-run: keeps 2b, 2, 1c; archives 1b and 1 (name 1-1b)");
-check(readFileSync(join(T, "CHANGELOG.md"), "utf8") === original && !readdirSync(T).some((f) => f.startsWith("CHANGELOG-archive")), "dry-run wrote nothing");
+check(readFileSync(join(T, "CHANGELOG.md"), "utf8") === original && !existsSync(join(T, "docs")), "dry-run wrote nothing (no archive, no folder)");
 r = run("--keep", "3");
-const arch = join(T, "CHANGELOG-archive-rounds-1-1b.md");
-check(r.status === 0 && existsSync(arch), "archive CHANGELOG-archive-rounds-1-1b.md created");
+const arch = join(T, "docs", "archive", "changelog", "CHANGELOG-archive-rounds-1-1b.md");
+check(r.status === 0 && existsSync(arch), "archive docs/archive/changelog/CHANGELOG-archive-rounds-1-1b.md created");
 const live = readFileSync(join(T, "CHANGELOG.md"), "utf8"), moved = readFileSync(arch, "utf8");
-check(!/^## Round (1b|1)\b/m.test(live) && /^## Round 1c\b/m.test(live) && /Archived rounds \(nothing deleted\): `CHANGELOG-archive-rounds-1-1b\.md`/.test(live), "live CHANGELOG has only 2b, 2, 1c and the index line");
+check(!/^## Round (1b|1)\b/m.test(live) && /^## Round 1c\b/m.test(live) && /Archived rounds \(nothing deleted\): `docs\/archive\/changelog\/CHANGELOG-archive-rounds-1-1b\.md`/.test(live), "live CHANGELOG has only 2b, 2, 1c and the index line");
 const liveNoIndex = live.replace(/^Archived rounds .*\n\n/m, ""), body = moved.slice(moved.search(/^## Round 1b\b/m)); // (the archive header also contains the text "## Round " in an example)
 check(liveNoIndex + body === original, "live (without index) + archive (without header) rebuilds the original byte for byte");
-check(run("--keep", "3").status === 0 && readdirSync(T).filter((f) => f.startsWith("CHANGELOG-archive")).length === 1, "second run: nothing to archive, nothing overwritten");
+check(run("--keep", "3").status === 0 && readdirSync(join(T, "docs", "archive", "changelog")).length === 1, "second run: nothing to archive, nothing overwritten");
 
 // 3. C16.4: the status-file mode (--status): «Previous» blocks to docs/, verbatim, one index paragraph, the cold-start text unchanged
 {
@@ -46,9 +46,9 @@ check(run("--keep", "3").status === 0 && readdirSync(T).filter((f) => f.startsWi
   r = run("--status", "--dry-run", "--keep-previous", "2");
   check(r.status === 0 && /archive 2 blocks \(5-6\)/.test(r.stdout) && readFileSync(join(T, "CHICLA_PROJECT_STATUS-3.md"), "utf8") === sText, "--status --dry-run: would archive 6 and 5, wrote nothing");
   r = run("--status", "--keep-previous", "2");
-  const sArch = join(T, "docs/status-archive-previous-5-6.md");
+  const sArch = join(T, "docs/archive/status/status-archive-previous-5-6.md");
   const sLive = readFileSync(join(T, "CHICLA_PROJECT_STATUS-3.md"), "utf8");
-  check(r.status === 0 && existsSync(sArch) && readFileSync(sArch, "utf8").endsWith(blk("6") + blk("5")), "--status: docs/status-archive-previous-5-6.md holds blocks 6 and 5 verbatim");
+  check(r.status === 0 && existsSync(sArch) && readFileSync(sArch, "utf8").endsWith(blk("6") + blk("5")), "--status: docs/archive/status/status-archive-previous-5-6.md holds blocks 6 and 5 verbatim");
   check(sLive.replace(/^\*\*Archived «Previous» blocks.*\n\n/m, "") === head + blk("8") + blk("7") + tail, "the status file keeps 8 and 7 and the rest byte for byte (index paragraph aside)");
   check(sLive.slice(sLive.indexOf("**Fingerprint:**"), sLive.indexOf("**Last updated")) === sText.slice(sText.indexOf("**Fingerprint:**"), sText.indexOf("**Last updated")), "the cold-start text is unchanged");
   check(readFileSync(join(T, "CHANGELOG.md"), "utf8") === before, "--status left CHANGELOG.md alone");
@@ -63,9 +63,9 @@ check(run("--keep", "3").status === 0 && readdirSync(T).filter((f) => f.startsWi
   r = run("--rolling", "--dry-run", "--keep-clauses", "2");
   check(r.status === 0 && /archive 2 clauses/.test(r.stdout) && /archive 2 entries/.test(r.stdout) && readFileSync(join(T, "CHICLA_PROJECT_STATUS-3.md"), "utf8") === sText, "--rolling --dry-run: would archive 2 clauses and 2 entries, wrote nothing");
   r = run("--rolling", "--keep-clauses", "2");
-  const ra = join(T, "docs/status-archive-rolling-6-7.md"), live2 = readFileSync(join(T, "CHICLA_PROJECT_STATUS-3.md"), "utf8");
-  check(r.status === 0 && existsSync(ra) && readFileSync(ra, "utf8").includes("- round 7: c\n- round 6: d\n") && readFileSync(ra, "utf8").includes("- (round 7: c)\n- (round 6: d)\n"), "--rolling: docs/status-archive-rolling-6-7.md holds clauses 7 and 6 and entries 7 and 6 verbatim");
-  check(live2 === mk([...cvc.slice(0, 2)], ode.slice(0, 2)).replace(").\n\n## Next up", "; older rounds archived (nothing deleted): `docs/status-archive-rolling-6-7.md`).\n\n## Next up").replace(/\n$/, " (earlier rounds: archived verbatim, nothing deleted: `docs/status-archive-rolling-6-7.md`)\n"), "the two paragraphs keep 9 and 8 plus one pointer each; the rest is as before");
+  const ra = join(T, "docs/archive/status/status-archive-rolling-6-7.md"), live2 = readFileSync(join(T, "CHICLA_PROJECT_STATUS-3.md"), "utf8");
+  check(r.status === 0 && existsSync(ra) && readFileSync(ra, "utf8").includes("- round 7: c\n- round 6: d\n") && readFileSync(ra, "utf8").includes("- (round 7: c)\n- (round 6: d)\n"), "--rolling: docs/archive/status/status-archive-rolling-6-7.md holds clauses 7 and 6 and entries 7 and 6 verbatim");
+  check(live2 === mk([...cvc.slice(0, 2)], ode.slice(0, 2)).replace(").\n\n## Next up", "; older rounds archived (nothing deleted): `docs/archive/status/status-archive-rolling-6-7.md`).\n\n## Next up").replace(/\n$/, " (earlier rounds: archived verbatim, nothing deleted: `docs/archive/status/status-archive-rolling-6-7.md`)\n"), "the two paragraphs keep 9 and 8 plus one pointer each; the rest is as before");
 }
 // 5. C19.1: an unknown argument is an error and changes nothing; --help prints the usage
 {

@@ -1,9 +1,9 @@
-// Round 241 (C16.7, D139): `archive-changelog.mjs --snapshot` moves the old lines of the status file's Snapshot to docs/status-archive-done-<lo>-<hi>.md,
+// Round 241 (C16.7, D139): `archive-changelog.mjs --snapshot` moves the old lines of the status file's Snapshot to docs/archive/status/status-archive-done-<lo>-<hi>.md,
 // verbatim, keeps the newest ones and leaves one index line. Written before the code; red until it exists.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,7 +35,7 @@ function project(text, name = 'CHICLA_PROJECT_STATUS-7.md') {
 }
 const run = (dir, ...a) => spawnSync(process.execPath, [join(dir, 'scripts/archive-changelog.mjs'), ...a], { encoding: 'utf8' });
 const stat = (dir) => readFileSync(join(dir, 'CHICLA_PROJECT_STATUS-7.md'), 'utf8');
-const archives = (dir) => readdirSync(join(dir, 'docs')).filter((f) => f.startsWith('status-archive-done-'));
+const archives = (dir) => (existsSync(join(dir, 'docs/archive/status')) ? readdirSync(join(dir, 'docs/archive/status')) : []).filter((f) => f.startsWith('status-archive-done-'));
 const bullets = (t) => t.slice(t.indexOf('## Snapshot'), t.indexOf('\n## Next up')).split('\n').filter((l) => l.startsWith('- '));
 const done = (dir) => rmSync(dir, { recursive: true, force: true });
 
@@ -45,10 +45,10 @@ test('--snapshot --keep-done 3: keeps the 3 newest lines, archives the other 4 v
   assert.equal(r.status, 0, r.stderr);
   assert.deepEqual(archives(dir), ['status-archive-done-3-6.md']);
   const moved = [B[6], B[5], B[4], B[3]].join('\n') + '\n';
-  assert.ok(readFileSync(join(dir, 'docs/status-archive-done-3-6.md'), 'utf8').endsWith(moved), 'verbatim at the end of the archive');
+  assert.ok(readFileSync(join(dir, 'docs/archive/status/status-archive-done-3-6.md'), 'utf8').endsWith(moved), 'verbatim at the end of the archive');
   const live = stat(dir);
-  assert.deepEqual(bullets(live), [B[9], B[8], B[7].split('\n')[0], '- Archived «Done» lines (nothing deleted): `docs/status-archive-done-3-6.md`']);
-  const idx = '- Archived «Done» lines (nothing deleted): `docs/status-archive-done-3-6.md`\n';
+  assert.deepEqual(bullets(live), [B[9], B[8], B[7].split('\n')[0], '- Archived «Done» lines (nothing deleted): `docs/archive/status/status-archive-done-3-6.md`']);
+  const idx = '- Archived «Done» lines (nothing deleted): `docs/archive/status/status-archive-done-3-6.md`\n';
   assert.equal(live.replace(idx, ''), before.replace(moved, ''), 'live without the index = before without the moved lines');
   done(dir);
 });
@@ -79,17 +79,17 @@ test('--dry-run writes nothing; nothing to archive when there are no more lines 
 test('a second batch makes a second archive and appends to the index; an existing archive is never overwritten', () => {
   const dir = project(status(ORDER));
   assert.equal(run(dir, '--snapshot', '--keep-done', '5').status, 0); // archives 4 and 3
-  const first = readFileSync(join(dir, 'docs/status-archive-done-3-4.md'), 'utf8');
+  const first = readFileSync(join(dir, 'docs/archive/status/status-archive-done-3-4.md'), 'utf8');
   writeFileSync(join(dir, 'CHICLA_PROJECT_STATUS-7.md'), stat(dir).replace('- Done: round 9', '- Done: round 11.\n- Done: round 10.\n- Done: round 9'));
   assert.equal(run(dir, '--snapshot', '--keep-done', '5').status, 0); // archives 6 and 5 (the two oldest of the kept ones)
   assert.deepEqual(archives(dir).sort(), ['status-archive-done-3-4.md', 'status-archive-done-5-6.md']);
-  assert.equal(readFileSync(join(dir, 'docs/status-archive-done-3-4.md'), 'utf8'), first, 'the first archive is untouched');
+  assert.equal(readFileSync(join(dir, 'docs/archive/status/status-archive-done-3-4.md'), 'utf8'), first, 'the first archive is untouched');
   const live = stat(dir);
   assert.equal([...live.matchAll(/^- Archived «Done» lines/gm)].length, 1, 'one index line');
-  assert.match(live, /status-archive-done-3-4\.md`, `docs\/status-archive-done-5-6\.md`/);
-  const blocked = project(status([9, 8, 7, 6])); writeFileSync(join(blocked, 'docs/status-archive-done-6-7.md'), 'precious');
+  assert.match(live, /status-archive-done-3-4\.md`, `docs\/archive\/status\/status-archive-done-5-6\.md`/);
+  const blocked = project(status([9, 8, 7, 6])); mkdirSync(join(blocked, 'docs/archive/status'), { recursive: true }); writeFileSync(join(blocked, 'docs/archive/status/status-archive-done-6-7.md'), 'precious');
   const b = stat(blocked); const r = run(blocked, '--snapshot', '--keep-done', '2');
-  assert.equal(r.status, 1); assert.equal(stat(blocked), b); assert.equal(readFileSync(join(blocked, 'docs/status-archive-done-6-7.md'), 'utf8'), 'precious');
+  assert.equal(r.status, 1); assert.equal(stat(blocked), b); assert.equal(readFileSync(join(blocked, 'docs/archive/status/status-archive-done-6-7.md'), 'utf8'), 'precious');
   done(dir); done(blocked);
 });
 
@@ -97,7 +97,7 @@ test('it refuses, changing nothing: a loose paragraph or a blank line among the 
   const cases = {
     'a loose paragraph': status([9, 8, 'A loose paragraph.', 7, 6]),
     'a blank line between lines': status([9, 8, '', 7, 6]),
-    'an index that is not the last line': status([9, '- Archived «Done» lines (nothing deleted): `docs/status-archive-done-1-2.md`', 8, 7, 6]),
+    'an index that is not the last line': status([9, '- Archived «Done» lines (nothing deleted): `docs/archive/status/status-archive-done-1-2.md`', 8, 7, 6]),
     'no Snapshot': HEAD + '## Next up\n\nnext.\n',
   };
   for (const [name, text] of Object.entries(cases)) {

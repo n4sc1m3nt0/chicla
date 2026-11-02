@@ -109,7 +109,7 @@ test('a real (not dry) --refresh prints the lines too and still ends ok; the sta
   assert.equal(r.ok, true, JSON.stringify(r.messages)); assert.equal(r.code, null);
   assert.equal(limitLines(r).length, 1); assert.match(renderBumpRound(r).out, /6 «Previous» blocks/);
   assert.ok(readdirSync(p).includes(st), 'the number was kept');
-  assert.equal(readdirSync(join(p, 'docs')).filter((f) => /status-archive-previous-/.test(f)).length, readdirSync(join(ROOT, 'docs')).filter((f) => /status-archive-previous-/.test(f)).length, 'no archive file was written');
+  assert.equal(readdirSync(join(p, 'docs/archive/status')).filter((f) => /status-archive-previous-/.test(f)).length, readdirSync(join(ROOT, 'docs/archive/status')).filter((f) => /status-archive-previous-/.test(f)).length, 'no archive file was written');
   const v = bumpRound({ root: p, mode: 'verify' });
   assert.deepEqual(limitLines(v), []); assert.equal(v.limits, undefined);
 });

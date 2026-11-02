@@ -89,7 +89,7 @@ const project = (claude, statusNames) => {
   return d;
 };
 const run = (d, ...a) => spawnSync(process.execPath, [join(d, 'scripts/archive-changelog.mjs'), ...a], { encoding: 'utf8' });
-const archives = (d) => readdirSync(join(d, 'docs')).filter((f) => f.startsWith('status-archive-previous-'));
+const archives = (d) => (existsSync(join(d, 'docs/archive/status')) ? readdirSync(join(d, 'docs/archive/status')) : []).filter((f) => f.startsWith('status-archive-previous-'));
 
 test('archive-changelog --status: archives the old «Previous» blocks of the status file of the prefix in CLAUDE.md', () => {
   const d = project(rules('status-prefix: ACME'), ['ACME_PROJECT_STATUS-7.md']);

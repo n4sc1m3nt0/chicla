@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 297-297
+
+Moved out of `CHICLA_PROJECT_STATUS-311.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 297 (2026-11-01; Rodrigo: «fecha o g-c17», after publishing). G-C17 closed by Rodrigo and recorded, docs only: `docs/release.md` «Published: chicla 0.2.1» (what he pasted: the tarball of run `41237566907`, 30 files, sha256 `554cbbc7…abf6` equal to `npm pack chicla@0.2.1`, `recovery`, `RECOVER/` and `init` tried from the installed package, tag, release, `chicla@0.2.0` deprecated) and three runbook fixes found while publishing (`npm login` on `E401`; a recovery test project needs `FILES.manifest`; download into an empty `dist/`); README says 0.2.1 is published; ROADMAP G-C17 and C24.1; `test/published-chicla-021-docs.test.mjs` (8, red first), `release-021-docs` relaxed (it said «open»). Also seen in the logs of the round 296 CI (all jobs green; Windows `tarball` 9 of 9): C25.5's inferred cause was right. No source, the pin did not move. Not seen by Claude: the registry and GitHub themselves; G-C8 is open.
