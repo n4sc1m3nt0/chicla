@@ -25,18 +25,18 @@ test('docs/release.md: «Releasing chicla 0.2.1» sits above the 0.2.0 runbook, 
   assert.ok(sec.indexOf('npm publish') < sec.indexOf('npm deprecate chicla@0.2.0'), 'deprecate 0.2.0 only after 0.2.1 is on npm');
 });
 
-test('ROADMAP: C24.1 is done, and G-C17 is an OPEN gate that is Rodrigo\'s', () => {
+test('ROADMAP: C24.1 is done, and G-C17 is a gate that is Rodrigo\'s (open when this was written, CLOSED by him in round 297)', () => {
   const r = read('ROADMAP.md');
   assert.match(row(r, '| C24.1 |'), /feito|done/i);
   const g = row(r, '| G-C17 ');
   assert.ok(g, 'no G-C17 row in ROADMAP');
   assert.match(g, /0\.2\.1/);
-  assert.match(g, /\| open \|?\s*$/);
+  assert.match(g, /\| open \|?\s*$|CLOSED by Rodrigo \(2026-11-01/);
 });
 
-test('the status file lists G-C17 as open, and the status file or its archives say C24.1 is done', () => {
+test('the status file lists G-C17 (open, then CLOSED by Rodrigo in round 297), and the status file or its archives say C24.1 is done', () => {
   const live = readFileSync(join(root, readFileSyncName()), 'utf8');
-  assert.match(row(live, '| G-C17 '), /\| open/);
+  assert.match(row(live, '| G-C17 '), /\| (open|CLOSED by Rodrigo \(2026-11-01)/);
   assert.ok(/C24\.1[^\n]*(done|`recovery` runs)/.test(statusWithArchives()), 'C24.1 is not recorded as done');
 });
 

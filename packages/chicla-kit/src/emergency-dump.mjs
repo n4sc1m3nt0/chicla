@@ -224,7 +224,11 @@ async function dump(o, say) {
   const changelog = readP("CHANGELOG.md");
   const afterRound = (changelog.match(/^## Round (\S+)/m) ?? [])[1] ?? "unknown";
   const fpSeq = (changelog.split("\n", 1)[0].match(/seq=(\d+)/) ?? [])[1] ?? "?";
-  const statusFile = projectFiles.map((f) => projRel(f.rel)).find((r) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(r)) ?? "(not found)";
+  // C26.3 (D151): the status file is <PREFIX>_PROJECT_STATUS-N.md, the PREFIX one line of CLAUDE.md (`status-prefix: <PREFIX>`, none = CHICLA). The dump keeps its OWN reader (D7: it imports nothing of the kit);
+  // an invalid or conflicting line gives no name, never a guess.
+  const prefixes = [...new Set([...(projectFiles.some((f) => projRel(f.rel) === "CLAUDE.md") ? readP("CLAUDE.md") : "").matchAll(/^status-prefix:[ \t]*(.*?)[ \t]*\r?$/gm)].map((m) => m[1]))];
+  const prefix = !prefixes.length ? "CHICLA" : prefixes.length === 1 && /^[A-Z][A-Z0-9_]*$/.test(prefixes[0]) ? prefixes[0] : null;
+  const statusFile = prefix === null ? "(not found)" : projectFiles.map((f) => projRel(f.rel)).find((r) => new RegExp(`^${prefix}_PROJECT_STATUS-\\d+\\.md$`).test(r)) ?? "(not found)";
   const appVersion = (() => { try { return JSON.parse(readP("package.json")).version ?? "?"; } catch { return "?"; } })(); // app version = "version" in the root package.json (D13)
   const manifestPath = project ? join(WORK, project.dir, "FILES.manifest") : null;
   const manifestList = manifestPath && existsSync(manifestPath) ? safe("manifest", () => parseManifest(readFileSync(manifestPath, "utf8")).map((e) => e.path), []) /* v1 or v2; a bad manifest is recorded, never fatal */ : [];

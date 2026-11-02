@@ -126,7 +126,7 @@ test('every exported function of verify-delivery.mjs has a mutant inside it, and
   }
   const all = (list ?? []).filter((m) => m.file.endsWith('/verify-delivery.mjs'));
   const text = all.map((m) => m.find).join('\n');
-  for (const rule of ['package.json', 'tsbuildinfo', 'prior !== trueName', '0x800', 'detectSecret', 'z.crc32', 'listedSet', 'haveSet', 'CHANGELOG.md', 'm[1] !== n', 'allowSet', 'STATUS_FILE_RE', 'leftAll', 'GIT_RM_MAX', 'out.length', 'crc32(out)', '0xffff']) {
+  for (const rule of ['package.json', 'tsbuildinfo', 'prior !== trueName', '0x800', 'detectSecret', 'z.crc32', 'listedSet', 'haveSet', 'CHANGELOG.md', 'm[1] !== n', 'allowSet', 'statusFileAny', 'leftAll', 'GIT_RM_MAX', 'out.length', 'crc32(out)', '0xffff']) {
     assert.ok(text.includes(rule), `no mutant touches «${rule}»`);
   }
 });

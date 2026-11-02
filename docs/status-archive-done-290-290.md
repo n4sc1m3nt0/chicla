@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 290-290
+
+Moved out of `CHICLA_PROJECT_STATUS-304.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/status-archive-done-*.md`.
+
+- Done: round 290 (2026-10-30; Rodrigo: «corrige agora», after reading the logs of the first CI run, which Claude read: Ubuntu 1737 and macOS 1725 tests and Windows `chicla-zip` 777 and `chicla-kit` 341, 0 fail; `pack-chicla` built `chicla-0.2.1.tgz` (134509 bytes, sha256 `fd85ea57…cd0e8`); `tarball` 9 of 9 on Ubuntu and macOS; Windows `ETARBALL: pack-release failed (exit 1)`). C24.6 (D149, M24): `scripts/pack-release.mjs` ran `execFileSync('npm', ...)` and on Windows `npm` is a `.cmd` that only a shell starts (cause read in the code, not confirmed on Windows): now `shell: WIN` with each argument quoted on Windows only; `scripts/smoke-test-tarball.mjs` ETARBALL carries the reason (code and message of `pack-release`, or the first line printed). Tests first: `test/windows-npm-spawn.test.mjs` (6, 5 red first; the pack-here test with a space in the path was green before and stays a guard). Two scripts, no pinned file, the pin did not move. Not run: Windows (the next CI run shows it), Node 18 and 20, macOS, `npm run smoke`, the mutant lists.

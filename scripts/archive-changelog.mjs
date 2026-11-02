@@ -6,7 +6,7 @@
 //   node scripts/archive-changelog.mjs                   moves
 //   node scripts/archive-changelog.mjs --keep 12         keeps the 12 most recent
 //
-//   node scripts/archive-changelog.mjs --status         the same for the «Previous (round N)» blocks of CHICLA_PROJECT_STATUS-N.md (C16.4):
+//   node scripts/archive-changelog.mjs --status         the same for the «Previous (round N)» blocks of <PREFIX>_PROJECT_STATUS-N.md (C16.4):
 //                                                      keeps the 5 newest (--keep-previous N), moves the rest verbatim to
 //                                                      docs/status-archive-previous-<lo>-<hi>.md and leaves one index paragraph;
 //                                                      it touches the status file only, never CHANGELOG.md (add --dry-run to look).
@@ -25,6 +25,16 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 
 import { join, resolve } from "node:path";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
+
+// C26.3 (D151): the status file is <PREFIX>_PROJECT_STATUS-N.md and the PREFIX is the `status-prefix: <PREFIX>` line of CLAUDE.md (none = CHICLA). This script is copied alone, so it reads the line itself
+// (the same rule as `integrity.mjs`): an invalid or conflicting line gives no prefix and so no file, never a guess.
+const PREFIX = (() => {
+  let text = ""; try { text = readFileSync(join(ROOT, "CLAUDE.md"), "utf8"); } catch { /* no CLAUDE.md: the legacy name */ }
+  const values = [...new Set([...text.matchAll(/^status-prefix:[ \t]*(.*?)[ \t]*\r?$/gm)].map((m) => m[1]))];
+  if (!values.length) return "CHICLA";
+  return values.length === 1 && /^[A-Z][A-Z0-9_]*$/.test(values[0]) ? values[0] : null;
+})();
+const statusFiles = () => (PREFIX === null ? [] : readdirSync(ROOT).filter((f) => new RegExp(`^${PREFIX}_PROJECT_STATUS-\\d+\\.md$`).test(f)));
 const args = process.argv.slice(2);
 // C19.1 (AUDIT-6 F-2): an argument the script does not know is an error, never «archive for real» (`--help` did that in round 251). Value options take the next word as their value.
 const USAGE = "usage: node scripts/archive-changelog.mjs [--dry-run] [--keep N] | --status [--keep-previous N] | --snapshot [--keep-done N] | --rolling [--keep-clauses N]   (the header of this file says what each does; --help prints this)";
@@ -45,8 +55,8 @@ if (!Number.isInteger(KEEP) || KEEP < 3) fail("--keep must be an integer >= 3.")
 if (args.includes("--status")) {
   const KP = args.includes("--keep-previous") ? Number(args[args.indexOf("--keep-previous") + 1]) : 5;
   if (!Number.isInteger(KP) || KP < 1) fail("--keep-previous must be an integer >= 1.");
-  const files = readdirSync(ROOT).filter((f) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f));
-  if (files.length !== 1) fail(`expected exactly one CHICLA_PROJECT_STATUS-N.md in the root, found ${files.length}; nothing was changed.`);
+  const files = statusFiles();
+  if (files.length !== 1) fail(`expected exactly one ${PREFIX ?? "<PREFIX>"}_PROJECT_STATUS-N.md in the root, found ${files.length}; nothing was changed.`);
   const sPath = join(ROOT, files[0]);
   const sBuf = readFileSync(sPath);
   const sText = sBuf.toString("utf8");
@@ -86,8 +96,8 @@ if (args.includes("--status")) {
 if (args.includes("--rolling")) {
   const KC = args.includes("--keep-clauses") ? Number(args[args.indexOf("--keep-clauses") + 1]) : 3;
   if (!Number.isInteger(KC) || KC < 1) fail("--keep-clauses must be an integer >= 1.");
-  const files = readdirSync(ROOT).filter((f) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f));
-  if (files.length !== 1) fail(`expected exactly one CHICLA_PROJECT_STATUS-N.md in the root, found ${files.length}; nothing was changed.`);
+  const files = statusFiles();
+  if (files.length !== 1) fail(`expected exactly one ${PREFIX ?? "<PREFIX>"}_PROJECT_STATUS-N.md in the root, found ${files.length}; nothing was changed.`);
   const sPath = join(ROOT, files[0]);
   const sBuf = readFileSync(sPath);
   const text = sBuf.toString("utf8");
@@ -173,8 +183,8 @@ if (args.includes("--rolling")) {
 if (args.includes("--snapshot")) {
   const KD = args.includes("--keep-done") ? Number(args[args.indexOf("--keep-done") + 1]) : 10;
   if (!Number.isInteger(KD) || KD < 1) fail("--keep-done must be an integer >= 1.");
-  const files = readdirSync(ROOT).filter((f) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f));
-  if (files.length !== 1) fail(`expected exactly one CHICLA_PROJECT_STATUS-N.md in the root, found ${files.length}; nothing was changed.`);
+  const files = statusFiles();
+  if (files.length !== 1) fail(`expected exactly one ${PREFIX ?? "<PREFIX>"}_PROJECT_STATUS-N.md in the root, found ${files.length}; nothing was changed.`);
   const sPath = join(ROOT, files[0]);
   const sBuf = readFileSync(sPath);
   const text = sBuf.toString("utf8");

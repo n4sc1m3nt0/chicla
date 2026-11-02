@@ -4,7 +4,7 @@ Project memory for coding agents that survives sessions, accounts and usage limi
 
 An agent forgets everything between sessions. Chicla makes the repository itself the memory: a status file, fingerprints that prove the files belong together, a verified delivery zip, and an emergency dump that can restore the work when a session is cut off.
 
-> **Status: released.** The package to install is `chicla`: `0.2.0` is published on npm (tag `chicla-v0.2.0`, with a GitHub release; the owner published it on 2026-10-29), and the tree is at `0.2.1`, prepared and waiting for the owner (gate G-C17: `recovery` starts from the installed package, `init` writes `package.json`, the dump carries `RECOVER/`). The old names `chicla-zip` and `chicla-kit` (`0.1.x`) are deprecated on npm; their folders here are private source. The runbook is in [`docs/release.md`](docs/release.md) and only the owner publishes it. The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). The licence is decided (Apache-2.0).
+> **Status: released.** The package to install is `chicla`: `0.2.1` is published on npm (tag `chicla-v0.2.1`, with a GitHub release; the owner published it on 2026-11-01, gate G-C17: `recovery` starts from the installed package, `init` writes `package.json`, the dump carries `RECOVER/`). `0.2.0` is deprecated on npm (its `recovery` does not start); it was published on 2026-10-29 with the tag `chicla-v0.2.0`. The old names `chicla-zip` and `chicla-kit` (`0.1.x`) are deprecated on npm; their folders here are private source. The runbook is in [`docs/release.md`](docs/release.md) and only the owner publishes it. The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). The licence is decided (Apache-2.0).
 
 ## What is in here
 
@@ -45,7 +45,8 @@ Full details, options and known limits: [`packages/chicla-zip/README.md`](packag
 ## chicla-kit: the `chicla` command
 
 ```
-chicla init [--json] [--root <dir>]
+chicla init [--name <NAME>] [--json] [--root <dir>]
+chicla rename-status <NAME> [--json] [--root <dir>]
 chicla check-manifest [--write] [--json] [--root <dir>]
 chicla bump-round [--verify | [--refresh] [--dry-run] [--note <text>]] [--json] [--root <dir>]
 chicla verify-delivery <zip> [--against <zip>]... [--allow-removed <path>]... [--json] [--root <dir>]

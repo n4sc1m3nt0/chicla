@@ -12,7 +12,7 @@
 //      decompressed): EMANIFEST_SIZE (checked first) / EMANIFEST_CRC32. FILES.baseline.json is exempt (it hashes the manifest, so the manifest cannot hold
 //      its crc; its seal and 5c cover it). A v1 manifest has no crc32/size: only paths are compared;
 //   4. it contains junk (node_modules, .next, .git, __MACOSX, .DS_Store, tsbuildinfo);
-//   5. CLAUDE.md or CHICLA_PROJECT_STATUS-N.md is missing, or the N of the status
+//   5. CLAUDE.md or <PREFIX>_PROJECT_STATUS-N.md (the prefix is the line of the zip's own CLAUDE.md, C26.2) is missing, or the N of the status
 //      file does not match seq= in the fingerprint of CHANGELOG.md;
 //   5b. the zip contains files that must NEVER leave the project: .env with secrets, Python artefacts (src/pinned/policy.mjs);
 //   3c. (C8.2) every entry decodes (stored or deflate, read here, no `unzip`) and matches the central directory's size and crc32: EZIP_DATA; a non-ASCII
@@ -36,7 +36,7 @@ import { resolve } from "node:path";
 import { BASELINE_FILE, parseBaseline } from "./pinned/baseline.mjs";
 import { neverShipReason as neverShip, loadPolicy, policyAllows, detectSecret } from "./pinned/policy.mjs";
 import { parseManifest, leaf } from "./pinned/manifest.mjs";
-import { STATUS_FILE_RE, checkIntegrity } from "./integrity.mjs";
+import { checkIntegrity, statusFileAny, statusFileRe, statusPrefix } from "./integrity.mjs";
 
 const JUNK = /(^|\/)(node_modules|\.next|\.git|__MACOSX)\/|(^|\/)\.DS_Store$|\.tsbuildinfo$/;
 // Names are read from the zip's central directory, in Node, and NOT from `unzip -Z1`: macOS `unzip` writes every
@@ -218,7 +218,7 @@ export function verifyDelivery({ zip, against = [], allowRemoved = [], root } = 
     // A rule whose file is not in the zip is skipped (D-242c); a failing row becomes a problem that starts with EINTEGRITY_<ID>. The --against uploads are never held to them.
     const view = { names: files, read: (f) => { try { return bytesOf(zip, f); } catch { return null; } } }; // an unreadable entry is already EZIP_DATA above
     for (const r of checkIntegrity(view, { sha256: (b) => createHash("sha256").update(b).digest("hex") })) if (!r.ok) problems.push(`EINTEGRITY_${r.id.toUpperCase()}: ${r.label}${r.file ? ` [${r.file}]` : ""}`);
-    const status = files.filter((f) => STATUS_FILE_RE.test(f));
+    const status = files.filter((f) => statusFileRe(statusPrefix(view)).test(f));
     if (status.length === 1 && set.has("CHANGELOG.md")) {
       const n = status[0].match(/-(\d+)\.md$/)[1];
       let first = ""; try { first = read(zip, "CHANGELOG.md").split("\n", 1)[0]; } catch { /* reported as EZIP_DATA above */ }
@@ -231,7 +231,7 @@ export function verifyDelivery({ zip, against = [], allowRemoved = [], root } = 
       const prevFiles = listUnwrapped(prev), prevSet = new Set(prevFiles);
       for (const f of prevFiles) if (!JUNK.test(f) && !neverShipReason(f) && !set.has(f)) leftAll.add(f);
       const lost = prevFiles.filter((f) => !JUNK.test(f) && !neverShipReason(f) && !set.has(f) && !allowSet.has(f));
-      const real = lost.filter((f) => !STATUS_FILE_RE.test(f));
+      const real = lost.filter((f) => !statusFileAny.test(f)); // an old status file is not lost, whatever its prefix (a change of prefix is a rename, C26.1)
       if (real.length) problems.push(`${real.length} file(s) that existed in ${leaf(prev)} and are NO LONGER in this zip: ${real.slice(0, 15).join(", ")}${real.length > 15 ? " …" : ""}`);
       else say("out", `✓ nothing lost vs ${leaf(prev)}`);
     }

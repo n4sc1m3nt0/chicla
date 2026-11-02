@@ -21,7 +21,7 @@ const tpl = (n) => readFileSync(join(KIT, 'templates', n), 'utf8');
 
 const T = () => mkdtempSync(join(tmpdir(), 'chicla-update-'));
 const done = (d) => rmSync(d, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 });
-const fresh = (agents = []) => { const d = T(); assert.equal(initProject({ root: d, agents }).ok, true); return d; };
+const fresh = (agents = []) => { const d = T(); assert.equal(initProject({ name: 'CHICLA', root: d, agents }).ok, true); return d; };
 const read = (d, f) => readFileSync(join(d, f), 'utf8');
 const snapshot = (d) => Object.fromEntries(readdirSync(d, { recursive: true }).map((f) => { try { return [f, readFileSync(join(d, f), 'utf8')]; } catch { return [f, null]; } }));
 const run = async (args, cwd) => { let out = '', err = ''; const status = await main(args, { stdout: { write: (s) => { out += s; } }, stderr: { write: (s) => { err += s; } }, cwd }); return { status, out, err }; };

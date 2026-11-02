@@ -5,22 +5,39 @@
 // from `bump-round`. The module has no crypto either: the caller passes `sha256(Buffer) -> hex`. A rule whose file is absent is skipped (D-242c), a file that is there but malformed is a failing row.
 // A row is { id: "lf" | "pin" | "state" | "fingerprint", file, label, ok }; `verify-delivery` turns a failing row into a problem that starts with EINTEGRITY_<ID>.
 
-/** The one status-file name: CHICLA_PROJECT_STATUS-<N>.md, in the project root. */
+/** The legacy status-file name, CHICLA_PROJECT_STATUS-<N>.md: what a project without a `status-prefix:` line has. Kept for the readers that move to the prefix in C26.2 and C26.3. */
 export const STATUS_FILE_RE = /^CHICLA_PROJECT_STATUS-\d+\.md$/;
 
-/** The files that must have LF line endings only (CRLF broke the manifest in round 155 and passed every check for CLAUDE.md until round 233), plus the status file, which is any name of STATUS_FILE_RE. */
+// C26.1 (D151): the status file is <PREFIX>_PROJECT_STATUS-<N>.md and the PREFIX is one line of CLAUDE.md, `status-prefix: <PREFIX>`, at the start of a line (read like the toolchain pin).
+// No line: the legacy name CHICLA. A value that is not capital letters, digits and _ (starting with a letter), or two different lines: null, never a guess.
+export const DEFAULT_STATUS_PREFIX = "CHICLA";
+const PREFIX_OK = /^[A-Z][A-Z0-9_]*$/;
+/** The prefix of the project in a view: "CHICLA" when CLAUDE.md is missing or has no line, the value of the line, or null when the line is invalid or the lines disagree. */
+export function statusPrefix(view) {
+  const claude = view.names.includes("CLAUDE.md") ? view.read("CLAUDE.md") : null;
+  if (!claude) return DEFAULT_STATUS_PREFIX;
+  const values = [...new Set([...claude.toString("utf8").matchAll(/^status-prefix:[ \t]*(.*?)[ \t]*\r?$/gm)].map((m) => m[1]))];
+  if (!values.length) return DEFAULT_STATUS_PREFIX;
+  return values.length === 1 && PREFIX_OK.test(values[0]) ? values[0] : null;
+}
+/** The status-file name of a prefix, as a regex over a root-relative name; null (or anything invalid) matches nothing. */
+export const statusFileRe = (prefix) => (typeof prefix === "string" && PREFIX_OK.test(prefix) ? new RegExp(`^${prefix}_PROJECT_STATUS-\\d+\\.md$`) : /$^/);
+/** The generic shape (any valid prefix): for a name LISTED in an older FILES.manifest, so a change of prefix is a rename and not a lost file. */
+export const statusFileAny = /^[A-Z][A-Z0-9_]*_PROJECT_STATUS-\d+\.md$/;
+
+/** The files that must have LF line endings only (CRLF broke the manifest in round 155 and passed every check for CLAUDE.md until round 233), plus the status file of the project's prefix (`statusFileRe`). */
 export const LF_FILES = Object.freeze(["CLAUDE.md", "AGENTS.md", "GEMINI.md", ".github/copilot-instructions.md", "CHANGELOG.md", "version.mjs", "FILES.manifest", "FILES.baseline.json"]);
 
-const isLfFile = (name) => LF_FILES.includes(name) || STATUS_FILE_RE.test(name);
+const isLfFile = (name, statusRe) => LF_FILES.includes(name) || statusRe.test(name);
 
 /**
  * The LF rule over a view: one row { id: "lf", file, label, ok } for each file of the list that is in `names` and can be read, in the order of `names`.
  * `skip` leaves files out (the ones a `--write` is about to regenerate). A bare CR inside a line is not CRLF; only the two bytes CR LF are.
  */
 export function checkLf(view, { skip = [] } = {}) {
-  const rows = [];
+  const rows = [], statusRe = statusFileRe(statusPrefix(view));
   for (const file of view.names) {
-    if (!isLfFile(file) || skip.includes(file)) continue;
+    if (!isLfFile(file, statusRe) || skip.includes(file)) continue;
     const bytes = view.read(file);
     if (!bytes) continue;
     rows.push({ id: "lf", file, label: `${file} has LF line endings (no CRLF)`, ok: !bytes.includes("\r\n") });
@@ -55,8 +72,10 @@ export function checkPin(view, sha256) {
 
 /** The state rule and the fingerprint rows (the labels and their order are `bump-round --verify`'s). Not exactly one status file: one failing `state` row and no fingerprint rows. No app file or no CHANGELOG: no fingerprint rows. */
 export function checkState(view, sha256, { appFile = "version.mjs" } = {}) {
-  const st = view.names.filter((f) => STATUS_FILE_RE.test(f));
-  if (st.length !== 1) return [{ id: "state", file: "", label: `there must be exactly 1 CHICLA_PROJECT_STATUS-N.md in the root (found ${st.length})`, ok: false }];
+  const prefix = statusPrefix(view);
+  if (prefix === null) return [{ id: "state", file: "CLAUDE.md", label: "CLAUDE.md: the `status-prefix:` line must give one name of capital letters, digits and _, starting with a letter", ok: false }];
+  const st = view.names.filter((f) => statusFileRe(prefix).test(f));
+  if (st.length !== 1) return [{ id: "state", file: "", label: `there must be exactly 1 ${prefix}_PROJECT_STATUS-N.md in the root (found ${st.length})`, ok: false }];
   const [name] = st, [app, cl, stBuf] = [appFile, "CHANGELOG.md", name].map((f) => (view.names.includes(f) ? view.read(f) : null));
   if (!app || !cl || !stBuf) return [];
   const seq = +name.match(/-(\d+)\.md$/)[1], appL = lineOf(app, 3), clL = lineOf(cl, 1), a = appL.match(FP), c = clL.match(FP), paras = [...stBuf.toString("utf8").matchAll(PARA)];

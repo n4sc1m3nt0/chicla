@@ -160,7 +160,7 @@ async function recover(o, put) {
   let added = [], modified = [], removed = [];
   let against;
   let baseCollisions = [];
-  const isStatus = (p) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(p);
+  const isStatus = (p) => /^[A-Z][A-Z0-9_]*_PROJECT_STATUS-\d+\.md$/.test(p); // C26.3 (D151): a status file of ANY prefix (it is renumbered every round, so an older one is not a loss)
   // embedded baseline (C9.6), read from the dump itself; only used when no --baseline zip was given
   let embedded = null;
   if (!baselineZip && existsSync(join(root, BASELINE_FILE))) {

@@ -20,7 +20,7 @@ import { readdirSync, readFileSync, writeFileSync, existsSync, statSync, openSyn
 import { join, resolve, relative } from "node:path";
 import { crc32, parseManifest, serializeManifest } from "./pinned/manifest.mjs";
 import { SKIP_NAMES, PYTHON_DIRS, isSecretEnv, isSecretFileName, loadPolicy, policyAllows, policySkips, detectSecret, SCAN_LIMIT } from "./pinned/policy.mjs";
-import { STATUS_FILE_RE as STATUS_RE, checkLf } from "./integrity.mjs"; // C17.1: the status-file regex and the LF rule are shared (docs/plan-a1-integrity.md)
+import { checkLf, statusFileAny, statusFileRe, statusPrefix } from "./integrity.mjs"; // C17.1: the status-file name and the LF rule are shared (docs/plan-a1-integrity.md); C26.1: the name carries the prefix of CLAUDE.md
 
 const SKIP_FILES = new Set([".DS_Store", "FILES.manifest"]); // and every `*.tsbuildinfo` (D-245a, as `isJunkName` in policy.mjs)
 const nfc = (f) => f.normalize("NFC");
@@ -136,10 +136,11 @@ export function checkManifest({ root, write = false } = {}) {
   // Round 1r: names are compared in NFC (a manifest written on macOS has NFD; the git checkout on Linux brings NFC).
   // Only the COMPARISON is normalised: the names printed and those `--write` writes are the true ones from the disk.
   const have = new Set(current.map(nfc));
-  // The status file is renamed every round (CHICLA_PROJECT_STATUS-N.md -> -N+1, instruction 8):
-  // that is a deliberate rename, not a loss, as long as exactly one status file exists now.
-  const statusNow = current.filter((f) => STATUS_RE.test(f));
-  const lost = listed.filter((f) => !have.has(nfc(f)) && !(STATUS_RE.test(f) && statusNow.length === 1));
+  // The status file is renamed every round (<PREFIX>_PROJECT_STATUS-N.md -> -N+1, instruction 8):
+  // that is a deliberate rename, not a loss, as long as exactly one status file exists now. A LISTED name may carry another prefix (C26.1: the project changed it), so it is matched by shape.
+  const claudeView = { names: current.includes("CLAUDE.md") ? ["CLAUDE.md"] : [], read: (f) => { try { return readFileSync(join(ROOT, f)); } catch { return null; } } };
+  const statusNow = current.filter((f) => statusFileRe(statusPrefix(claudeView)).test(f));
+  const lost = listed.filter((f) => !have.has(nfc(f)) && !(statusFileAny.test(f) && statusNow.length === 1));
   const listedSet = new Set(listed.map(nfc));
   const added = current.filter((f) => !listedSet.has(nfc(f)));
   result.listed = listed.length; result.lost = lost; result.added = added;

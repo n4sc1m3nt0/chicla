@@ -6,6 +6,11 @@
 // Entry shape and rules: the header of `scripts/mutants.mjs`. Paths are relative to the project root. The shape and the anchors are held by `test/mutants-kit-list.test.mjs`.
 // HONEST NOTE: the 26 hand mutants of rounds 243 and 244 existed only as counts in the CHANGELOG, so this list is RECONSTRUCTED from the guarantees of the module (one mutant per rule or per leg),
 // not copied from them. Later slices (archive-changelog, check-manifest, bump-round, verify-delivery) get ids K-ARC-, K-CMN-, K-BMP-, K-VER- (K-MAN- is the crc32 of manifest.mjs). Slice 7 (C19.5, round 261): check-manifest.mjs, 20 entries; its 4 survivors were closed in C19.6 (round 262, core-check-manifest-gaps.test.mjs). Slice 8 (C19.5, round 263): verify-delivery.mjs, K-VER-01 and up.
+const PR = ["packages/chicla-kit/test/status-prefix-readers.test.mjs"], UP = "packages/chicla-kit/src/update.mjs"; // C26.2: the readers of the prefix
+const RN = "packages/chicla-kit/src/rename-status.mjs", CLI = "packages/chicla-kit/src/cli.mjs", RT = ["packages/chicla-kit/test/rename-status.test.mjs"]; // C26.5: rename-status
+const IM = ["packages/chicla-kit/test/init-name.test.mjs"]; // C26.4: init --name, the templates, update
+const PC = ["test/status-prefix-c263.test.mjs"]; // C26.3: dump, recovery, archive-changelog
+const PF = ["packages/chicla-kit/test/status-prefix.test.mjs"];                       // C26.1: the prefix of the status file
 const F = "packages/chicla-kit/src/integrity.mjs";
 const LF = ["packages/chicla-kit/test/core-integrity.test.mjs"];                 // the LF rule, the regex, the callers of round 243
 const ST = ["packages/chicla-kit/test/core-integrity-state.test.mjs"];           // the pin, state and fingerprint rules, and verify-delivery, of round 244
@@ -45,8 +50,8 @@ export default [
   m("K-INT-06", "ok: !bytes", "ok: bytes", LF, "checkLf: the verdict is inverted (CRLF passes, LF fails)"),
   m("K-INT-07", " || skip.includes(file)", " || false", LF, "checkLf: `skip` is ignored (a --write would fail on the files it is about to regenerate)"),
   m("K-INT-08", "if (!bytes) continue;", "", LF, "checkLf: an absent or unreadable file is not skipped (it throws)"),
-  m("K-INT-09", "!isLfFile(file) || ", "", LF, "checkLf: every file of the view is checked, not only the list"),
-  m("K-INT-10", " || STATUS_FILE_RE.test(name);", ";", LF, "isLfFile: the status file is no longer held to LF"),
+  m("K-INT-09", "!isLfFile(file, statusRe) || ", "", LF, "checkLf: every file of the view is checked, not only the list"),
+  m("K-INT-10", " || statusRe.test(name);", ";", LF, "isLfFile: the status file is no longer held to LF"),
 
   // ---- the toolchain map and the pin (C17.2) ----
   m("K-INT-11", ", \"zipkit.mjs\": \"packages/chicla-zip/src/zipkit.mjs\"", "", ST, "TOOLCHAIN loses zipkit.mjs: the pin stops covering the reader"),
@@ -154,7 +159,7 @@ export default [
   x("K-CMN-11", CM, "{ skip: write ? [\"FILES.manifest\", \"FILES.baseline.json\"] : [] }", "{ skip: [] }", CMV, "`--write` stops on the CRLF of the two files it is about to regenerate"),
   x("K-CMN-12", CM, "existsSync(MANIFEST) ? [...current, \"FILES.manifest\"] : current", "current", CMV, "the LF rule no longer looks at FILES.manifest itself"),
   x("K-CMN-13", CM, "const k = nfc(f), first", "const k = f, first", CMV, "two names that differ only in NFC/NFD are not seen as a collision"),
-  x("K-CMN-14", CM, "!have.has(nfc(f)) && !(STATUS_RE.test(f) && statusNow.length === 1)", "!have.has(nfc(f)) && !(STATUS_RE.test(f) && statusNow.length >= 1)", CMG, "two status files on disk count as a rename, not as a lost one"),
+  x("K-CMN-14", CM, "!have.has(nfc(f)) && !(statusFileAny.test(f) && statusNow.length === 1)", "!have.has(nfc(f)) && !(statusFileAny.test(f) && statusNow.length >= 1)", CMG, "two status files on disk count as a rename, not as a lost one"),
   x("K-CMN-15", CM, "!listedSet.has(nfc(f))", "!listedSet.has(f)", CMG, "a name on disk in NFD (macOS) is reported as new beside its NFC spelling in the manifest"),
   x("K-CMN-16", CM, "result.ok = false; result.code = \"EMANIFEST_LOST\";", "result.code = \"EMANIFEST_LOST\";", CMV, "a lost file prints but the result stays ok"),
   x("K-CMN-17", CM, "result.manifestMissing = true;\n", "", CMV, "a missing FILES.manifest is no longer flagged in the result"),
@@ -177,7 +182,7 @@ export default [
   v("K-VER-13", "[\"CLAUDE.md\", \"CHANGELOG.md\"]", "[\"CLAUDE.md\"]", "a zip without CHANGELOG.md passes", undefined, VDX),
   v("K-VER-14", "if (!m || m[1] !== n)", "if (!m)", "a status file number that disagrees with the CHANGELOG seq= passes", undefined, VDX),
   v("K-VER-15", "&& !allowSet.has(f));", ");", "`--allow-removed` is ignored", undefined, VDA),
-  v("K-VER-16", "const real = lost.filter((f) => !STATUS_FILE_RE.test(f));", "const real = lost;", "a status file renamed by the round counts as a lost file", undefined, VDA),
+  v("K-VER-16", "const real = lost.filter((f) => !statusFileAny.test(f));", "const real = lost;", "a status file renamed by the round counts as a lost file", undefined, VDA),
   v("K-VER-17", "if (!problems.length && leftAll.size)", "if (leftAll.size)", "the `git rm` hint is printed for a zip that is rejected", undefined, [...VDG, ...VDA]),
   v("K-VER-18", "all.length > GIT_RM_MAX", "all.length >= GIT_RM_MAX", "exactly 30 names get no `git rm` command (the limit is 'more than 30')", undefined, VDG),
   v("K-VER-19", "\\u001f\\u007f]", "\\u001f]", "a DEL character in a name is printed in the `git rm` line", undefined, VDG),
@@ -199,4 +204,38 @@ export default [
   x("K-PKG-08", "scripts/win-quote.mjs", "(BARE.test(String(cmd)) ? String(cmd) : quoteWin(cmd))", "(false ? String(cmd) : quoteWin(cmd))", ["test/win-quote-bare-command.test.mjs"], "the command name `npm` is put in quotes on Windows: npm.cmd then finds its files in the current folder (the EINSTALL of the CI of round 295, C25.5)"),
   x("K-LDR-01", LD, "if (hasSibling()) return importer(SIBLING.href);", "if (false) return importer(SIBLING.href);", PK, "a zipkit.mjs beside the loader (the single package) is no longer tried first"),
   x("K-LDR-02", LD, "if (!missingPackage(e)) throw e;", "if (false) throw e;", PK, "any error of the `chicla-zip` import, not only «not installed», is hidden by the monorepo fallback"),
+  // C26.1 (round 298, D151): the prefix of the status file (`status-prefix:` in CLAUDE.md) and what follows it: K-INT-42 to 44, K-BMP-18, K-CMN-21 (the ids of the file they target).
+  x("K-INT-42", F, "return values.length === 1 && PREFIX_OK.test(values[0]) ? values[0] : null;", "return values[0];", PF, "an invalid or conflicting `status-prefix:` is used as the name instead of refused"),
+  x("K-INT-43", F, "if (!values.length) return DEFAULT_STATUS_PREFIX;", "if (!values.length) return null;", PF, "a CLAUDE.md without the line no longer means the legacy CHICLA: every existing project would be refused"),
+  x("K-BMP-18", BR, "const newName = `${s.prefix}_PROJECT_STATUS-${seq}.md`;", "const newName = `CHICLA_PROJECT_STATUS-${seq}.md`;", PF, "bump-round renames the status file to the Chicla name whatever the project's prefix is (the bug Rodrigo found)"),
+  x("K-CMN-21", CM, "statusFileAny.test(f) && statusNow.length === 1", "statusFileAny.test(f)", PF, "a listed status file counts as renamed even with two status files now"),
+  x("K-INT-44", F, "const rows = [], statusRe = statusFileRe(statusPrefix(view));", "const rows = [], statusRe = statusFileRe(\"CHICLA\");", PF, "the LF rule looks only at the legacy name: CRLF in the status file of another prefix goes unseen"),
+  // C26.2 (round 299, D151): the readers that moved to the prefix: the panel, `update` and `verify-delivery` (tests: status-prefix-readers.test.mjs).
+  x("K-PNL-30", P, "const names = all.filter((n) => statusFileRe(d.prefix).test(n));", "const names = all.filter((n) => /^CHICLA_PROJECT_STATUS-\\d+\\.md$/.test(n));", PR, "the panel looks only for the legacy name: a project of another prefix shows no status file"),
+  x("K-UPD-01", UP, "const own = [...new Set(lines(mine).filter(isPrefixLine))]; if (!own.length) return tpl;", "const own = []; if (!own.length) return tpl;", PR, "`update --apply` drops the project's `status-prefix:` line: the status file is no longer found and the refresh fails"),
+  x("K-UPD-02", UP, "[noPrefix(mine), noPrefix(tpl)] : [mine, tpl]", "[mine, tpl] : [mine, tpl]", PR, "the project's `status-prefix:` line is shown as a difference from the template: CLAUDE.md is never up to date"),
+  x("K-UPD-03", UP, "!readdirSync(root).some((f) => statusFileAny.test(f))", "!readdirSync(root).some((f) => /^CHICLA_PROJECT_STATUS-\\d+\\.md$/.test(f))", PR, "a project of another prefix with no instruction file is refused as no project"),
+  // C26.3 (round 300, D151): the last readers of the status-file name (tests: test/status-prefix-c263.test.mjs).
+  x("K-DMP-50", D, "prefixes.length === 1 && /^[A-Z][A-Z0-9_]*$/.test(prefixes[0]) ? prefixes[0] : null;", "prefixes[0];", PC, "the dump takes an invalid or conflicting `status-prefix:` as the name instead of saying «(not found)»"),
+  x("K-DMP-51", D, "const prefix = !prefixes.length ? \"CHICLA\"", "const prefix = !prefixes.length ? null", PC, "a project with no `status-prefix:` line is no longer the legacy CHICLA in the dump"),
+  x("K-REC-50", R, "/^[A-Z][A-Z0-9_]*_PROJECT_STATUS-\\d+\\.md$/.test(p);", "/^CHICLA_PROJECT_STATUS-\\d+\\.md$/.test(p);", PC, "the recovery reports the older status file of a project with another prefix as removed"),
+  x("K-ARC-50", AC, "return values.length === 1 && /^[A-Z][A-Z0-9_]*$/.test(values[0]) ? values[0] : null;", "return values[0];", PC, "archive-changelog takes an invalid or conflicting `status-prefix:` as the name"),
+  x("K-ARC-51", AC, "if (!values.length) return \"CHICLA\";", "if (!values.length) return null;", PC, "archive-changelog refuses every project without the line: the legacy name no longer works"),
+  // C26.4 (round 301, D151): `init` names the status file, the templates say it, `update` reads them the same way (tests: packages/chicla-kit/test/init-name.test.mjs).
+  x("K-INI-01", IJ, "if (typeof nm !== \"string\" || !NAME_RE.test(nm)) return", "if (typeof nm !== \"string\") return", IM, "init accepts a name that is not capitals, digits and `_` starting with a letter (a folder `2026-app` gives a status file the readers cannot find)"),
+  x("K-INI-02", IJ, "export const forName = (text, name) => text.replaceAll(`${SOURCE_NAME}_PROJECT_STATUS`, `${name}_PROJECT_STATUS`);", "export const forName = (text, name) => text;", IM, "the templates are written with the Chicla name whatever the project is called: the fingerprint `file=` and every instruction point at a file that does not exist"),
+  x("K-INI-03", IJ, "if (f === \"CLAUDE.md\" && nm !== SOURCE_NAME) text = withLine(text, nm);", "if (f === \"CLAUDE.md\" && false) text = withLine(text, nm);", IM, "init does not write the `status-prefix:` line: every project of another name has a status file nobody finds"),
+  x("K-INI-04", IJ, "...readdirSync(root).filter((f) => statusFileAny.test(f))])];", "...readdirSync(root).filter((f) => /^CHICLA_PROJECT_STATUS-\\d+\\.md$/.test(f))])];", IM, "init does not refuse a folder that already has a status file of another prefix: two status files in one project"),
+  x("K-INI-05", IJ, ".toUpperCase().replace(/[^A-Z0-9]/g, \"_\")", ".toUpperCase().replace(/[^A-Z0-9]/, \"_\")", IM, "only the first odd character of the folder name becomes `_`: the name is refused or wrong for a folder like `my app.v2`"),
+  x("K-UPD-04", UP, "tpl = pre === null ? raw : forName(raw, pre);", "tpl = raw;", IM, "`update` compares the templates with the Chicla name: a project of any other name is never up to date and `--apply` would write the wrong name back"),
+  // C26.5 (round 302, D151): `chicla rename-status` (tests: packages/chicla-kit/test/rename-status.test.mjs).
+  x("K-REN-01", RN, "if (typeof name !== \"string\" || !NAME_RE.test(name)) return fail(", "if (typeof name !== \"string\") return fail(", RT, "rename-status accepts a name that is not capitals, digits and `_` starting with a letter: the status file is no longer found"),
+  x("K-REN-02", RN, "if (old === name) return {", "if (false) return {", RT, "renaming to the name the project already has is no longer «already»: it rewrites everything"),
+  x("K-REN-03", RN, "let t = text(f).replace(oldRe, `${name}_PROJECT_STATUS`);", "let t = text(f);", RT, "the instruction files keep saying the old name of the status file"),
+  x("K-REN-04", RN, "if (f === \"CLAUDE.md\") t = withLine(t, name);", "if (false) t = withLine(t, name);", RT, "CLAUDE.md keeps the old `status-prefix:` line: the renamed status file is not found"),
+  x("K-REN-05", RN, "if (mine.length !== 1 || all.length !== 1) return fail(", "if (mine.length !== 1) return fail(", RT, "a project with a second status file of another prefix is renamed anyway"),
+  x("K-REN-06", RN, "if (existsSync(join(root, newFile)) && newFile !== oldFile) rmSync(join(root, newFile), { force: true });", "if (false) rmSync(join(root, newFile), { force: true });", RT, "a failed rename leaves the new status file next to the restored old one"),
+  x("K-REN-07", CLI, "if (command === \"rename-status\" && opts.name === undefined) return fail(", "if (false) return fail(", RT, "`rename-status` with no name is a failed rename (exit 1) instead of a usage error (exit 2)"),
+  x("K-REN-08", RN, "if (cut > 0) target.set(oldFile, st.slice(0, cut).replace(oldRe, `${name}_PROJECT_STATUS`) + st.slice(cut));", "if (false) target.set(oldFile, st.slice(0, cut).replace(oldRe, `${name}_PROJECT_STATUS`) + st.slice(cut));", RT, "the process block of the status file keeps the old name: its session-start command no longer finds the renamed file (round 303)"),
+  x("K-REN-09", RN, "st.slice(0, cut).replace(oldRe, `${name}_PROJECT_STATUS`) + st.slice(cut)", "st.replace(oldRe, `${name}_PROJECT_STATUS`)", RT, "the old name is rewritten in the history of the status file too, not only in its process block (round 303)"),
 ];

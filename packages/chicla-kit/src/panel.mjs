@@ -1,9 +1,10 @@
 // C11.5 slice c (D93 (a)): the navigable panel of the kit CLI, opened by `chicla` with NO arguments on an interactive terminal (cli.mjs decides: stdout and stdin are TTYs, `shouldStyle`).
-// It only READS: the highest-numbered CHICLA_PROJECT_STATUS-N.md of the project and the newest chicla-round*.zip NEXT TO the project; it writes nothing. Zero dependencies (D3).
+// It only READS: the highest-numbered <PREFIX>_PROJECT_STATUS-N.md of the project (the prefix is the `status-prefix:` line of CLAUDE.md, C26.2) and the newest chicla-round*.zip NEXT TO the project; it writes nothing. Zero dependencies (D3).
 // Keys: → / Tab next page, ← previous, r re-read, q or Ctrl-C leave. Streams are injected by the caller (`stdin`, `stdout`), so tests never need a real TTY.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { box, pad, paint, table, truncate } from "./ui.mjs";
+import { statusFileRe, statusPrefix } from "./integrity.mjs";
 
 export const PAGES = ["Status", "Gates", "Decisions", "Delivery"];
 const clean = (s) => s.replace(/\*\*/g, "").replace(/`/g, "").trim();
@@ -12,8 +13,10 @@ const section = (text, head) => { const m = text.match(new RegExp(`^## ${head}[^
 
 /** Reads what the panel shows; every part that is missing or unreadable is null (or an empty list). Never writes, never throws. */
 export function readPanelData(root) {
-  const d = { root, statusFile: null, version: null, updated: null, next: null, gates: [], delivery: null };
-  const names = attempt(() => readdirSync(root).filter((n) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(n))) ?? [];
+  const d = { root, prefix: null, statusFile: null, version: null, updated: null, next: null, gates: [], delivery: null };
+  const all = attempt(() => readdirSync(root)) ?? [];
+  d.prefix = statusPrefix({ names: all, read: (f) => attempt(() => readFileSync(join(root, f))) });
+  const names = all.filter((n) => statusFileRe(d.prefix).test(n));
   d.statusFile = names.sort((a, b) => parseInt(a.match(/\d+/)[0], 10) - parseInt(b.match(/\d+/)[0], 10)).pop() ?? null;
   const text = d.statusFile === null ? null : attempt(() => readFileSync(join(root, d.statusFile), "utf8"));
   if (text !== null) {
@@ -42,7 +45,7 @@ const gateSummary = (gates, on) => {
   return [paint(`${closed} closed`, "green", on), paint(`${open} open`, "yellow", on), ...(other ? [`${other} other`] : [])].join(", ");
 };
 const statusLines = (d, inner, on) => {
-  if (d.statusFile === null) return ["no status file (CHICLA_PROJECT_STATUS-<N>.md) in this folder"];
+  if (d.statusFile === null) return [`no status file (${d.prefix ?? "<PREFIX>"}_PROJECT_STATUS-<N>.md) in this folder${d.prefix === null ? ": the status-prefix line of CLAUDE.md is not valid" : ""}`];
   const ver = d.version?.match(/Current version:\s*(\S+)/), upd = d.updated?.match(/^Last updated \(round ([^)]*)\):\s*(\d{4}-\d{2}-\d{2})\.?\s*(.*)$/);
   return [...field("File", d.statusFile, inner, on), ...field("Version", ver ? ver[1] : d.version ?? "no «Current version» line", inner, on),
     ...(upd ? [...field("Round", upd[1], inner, on), ...field("Updated", upd[2], inner, on)] : []), paint(pad("Gates", LABEL), "dim", on) + gateSummary(d.gates, on), "",

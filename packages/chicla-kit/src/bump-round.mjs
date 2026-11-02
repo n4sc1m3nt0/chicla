@@ -17,7 +17,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, writeFileSync, renameSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { FP, LF_FILES, PARA, PIN_RE, STATUS_FILE_RE, TOOLCHAIN, checkIntegrity, lineOf, tailFrom, toolchainDigest as digestOf } from "./integrity.mjs";
+import { FP, LF_FILES, PARA, PIN_RE, TOOLCHAIN, checkIntegrity, lineOf, statusFileRe, statusPrefix, tailFrom, toolchainDigest as digestOf } from "./integrity.mjs";
 
 // --- Chicla configuration -------------------------------------------------------------------------------
 // APP_FILE is the "app leg" of the fingerprint: a small, stable file that changes every round (the version).
@@ -65,14 +65,19 @@ function statusProblem(s) {
   return null;
 }
 
+// C26.1 (D151): the prefix of the status file is the `status-prefix:` line of CLAUDE.md (integrity.mjs); no line is the legacy CHICLA, an invalid one is null.
+const prefixOf = (P) => statusPrefix({ names: existsSync(P("CLAUDE.md")) ? ["CLAUDE.md"] : [], read: (f) => { try { return readFileSync(P(f)); } catch { return null; } } });
+
 function readState(ROOT, P) {
   const names = readdirSync(ROOT);
-  const st = names.filter((f) => STATUS_FILE_RE.test(f));
+  const prefix = prefixOf(P);
+  if (prefix === null) stop("EBUMP_STATE", "CLAUDE.md: the `status-prefix:` line must give one name of capital letters, digits and _, starting with a letter (and only one name). I wrote nothing.");
+  const st = names.filter((f) => statusFileRe(prefix).test(f));
   const apOk = existsSync(P(APP_FILE));
-  if (st.length !== 1) stop("EBUMP_STATE", `there must be exactly 1 CHICLA_PROJECT_STATUS-N.md in the root (found ${st.length}).`);
+  if (st.length !== 1) stop("EBUMP_STATE", `there must be exactly 1 ${prefix}_PROJECT_STATUS-N.md in the root (found ${st.length}).`);
   if (!apOk) stop("EBUMP_STATE", `${APP_FILE} is missing (the "app" leg of the fingerprint; see APP_FILE at the top of packages/chicla-kit/src/bump-round.mjs).`);
   if (!names.includes("CHANGELOG.md")) stop("EBUMP_STATE", "CHANGELOG.md is missing from the root.");
-  const s = { statusName: st[0], seq: +st[0].match(/-(\d+)\.md$/)[1], appName: APP_FILE, app: readFileSync(P(APP_FILE)), cl: readFileSync(P("CHANGELOG.md")), stBuf: readFileSync(P(st[0])) };
+  const s = { prefix, statusName: st[0], seq: +st[0].match(/-(\d+)\.md$/)[1], appName: APP_FILE, app: readFileSync(P(APP_FILE)), cl: readFileSync(P("CHANGELOG.md")), stBuf: readFileSync(P(st[0])) };
   s.stTxt = s.stBuf.toString("utf8");
   if (!Buffer.from(s.stTxt, "utf8").equals(s.stBuf)) stop("EBUMP_STATE", `${s.statusName} is not valid UTF-8; not rewriting it, to avoid corrupting it.`);
   s.appFp = lineOf(s.app, 3).match(FP); s.clFp = lineOf(s.cl, 1).match(FP);
@@ -106,7 +111,7 @@ function archiveLimits(s) {
 
 // A view of the disk for the shared rules (integrity.mjs): the names that exist among the ones the rules read, and a reader that never throws.
 const diskView = (P) => {
-  const names = [...new Set([...LF_FILES, ...Object.values(TOOLCHAIN), APP_FILE, ...readdirSync(P(".")).filter((f) => STATUS_FILE_RE.test(f))])].filter((f) => existsSync(P(f)));
+  const names = [...new Set([...LF_FILES, ...Object.values(TOOLCHAIN), APP_FILE, ...readdirSync(P(".")).filter((f) => statusFileRe(prefixOf(P)).test(f))])].filter((f) => existsSync(P(f)));
   return { names, read: (f) => { try { return readFileSync(P(f)); } catch { return null; } } };
 };
 const toolchainDigest = (P) => digestOf(diskView(P), sha256) ?? stop("EBUMP_STATE", "a file the toolchain pin covers is missing or unreadable; I cannot rewrite the pin.");
@@ -153,7 +158,7 @@ export function bumpRound({ root, mode = "bump", dry = false, note = "", regener
 
     const seq = mode === "bump" ? s.seq + 1 : s.seq;
     result.nextSeq = seq;
-    const newName = `CHICLA_PROJECT_STATUS-${seq}.md`;
+    const newName = `${s.prefix}_PROJECT_STATUS-${seq}.md`;
     const appChanged = s.hApp !== s.appFp[3];
     const core = `seq=${seq} file=${newName} app_sha256_12=${s.hApp} changelog_sha256_12=${s.hCl}`;
     const tag = `(bump-round.mjs: app hash ${appChanged ? "CHANGED" : "unchanged"}, changelog hash recomputed${note ? "; " + note : ""})`;

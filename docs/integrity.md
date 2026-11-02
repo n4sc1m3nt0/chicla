@@ -13,7 +13,11 @@ One module, `packages/chicla-kit/src/integrity.mjs`, holds the rules that say wh
 
 | Export | What it is |
 | --- | --- |
-| `STATUS_FILE_RE` | The one status-file name, `CHICLA_PROJECT_STATUS-<N>.md` in the root. |
+| `STATUS_FILE_RE` | The legacy status-file name, `CHICLA_PROJECT_STATUS-<N>.md` in the root: what a project without a `status-prefix:` line has (C26.1). |
+| `DEFAULT_STATUS_PREFIX` | `CHICLA`, the prefix of a project whose `CLAUDE.md` has no `status-prefix:` line. |
+| `statusPrefix` | The prefix of a view: the value of the `status-prefix: <NAME>` line at the start of a line of `CLAUDE.md` (capital letters, digits and `_`, starting with a letter), `CHICLA` when there is no line, `null` when the value is invalid or two lines disagree (never a guess). |
+| `statusFileRe` | The regex of one prefix, `<PREFIX>_PROJECT_STATUS-<N>.md` in the root; `null` or an invalid prefix matches nothing. |
+| `statusFileAny` | The generic shape (any valid prefix), for a name LISTED in an older `FILES.manifest`: a change of prefix is a rename, not a lost file. |
 | `LF_FILES` | The files that must have LF line endings only (below), plus the status file. |
 | `checkLf` | The LF rule over a view; `skip` leaves out files a `--write` is about to regenerate. |
 | `TOOLCHAIN` | RECOVER/ name to source path of the five files the pin covers. |

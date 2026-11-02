@@ -1,0 +1,16 @@
+# Status file archive — rolling paragraphs, rounds 286-295
+
+Moved out of the «Current version» line of `CHICLA_PROJECT_STATUS-303.md` verbatim, by hand (round 298: `scripts/archive-changelog.mjs --rolling` archived 0 clauses of this line, which was over 4096 bytes; its parenthesis closes after the first clause, so the script sees one). Nothing was edited or deleted; each clause is one line, newest first.
+
+## Current version
+
+- round 295: C25.4: `scripts/failure-reason.mjs` and `smoke-test-tarball.mjs` print the line that says what failed (the Windows `EINSTALL` showed only a Node stack header); `K-PKG-07`; `test/smoke-failure-reason.test.mjs` (6, red first); two scripts, the pin did not move; Windows not run)
+- round 294: C25.3: eight hand mutants for the M24 code in the kit list (AUDIT-9 F-9), each RED alone; `test/mutants-kit-m25.test.mjs` (2, red first); no source edited, the pin did not move)
+- round 293: C25.2: docs only (README pin sentence, generated `CLAUDE.md` note on `package.json`, runbook sha256 step, M24 heading); `test/audit9-docs-c252.test.mjs` (4, red first); the pin did not move)
+- round 292: C25.1: `scripts/win-quote.mjs` and `smoke-test-tarball.mjs` quote the Windows command lines (AUDIT-9 F-1, F-5); `test/smoke-tarball-win-quote.test.mjs` (6, red first); two scripts, the pin did not move; Windows not run)
+- round 291: AUDIT-9 after M24, docs only (`docs/audits/AUDIT-9.md`, D150, M25 with C25.1 to C25.3), no source, the pin did not move)
+- round 290: C24.6: `pack-release.mjs` starts `npm` through a shell on Windows (arguments quoted) and `smoke-test-tarball.mjs` shows why a build or pack failed; found by the first CI run of the `tarball` job; `test/windows-npm-spawn.test.mjs` (6, 5 red first); two scripts, the pin did not move; Windows not run)
+- round 289: C24.4 (AUDIT-8 F-5): `SECURITY.md`, the root README, `docs/README.md`, the two old READMEs, the header and first `--help` line of `cli.mjs` and the `EZIP_WRITE` text say once that `chicla-zip` and `chicla-kit` are gone as packages; the `NEXT:` limit of `recovery` is written down; `test/stale-package-words-docs.test.mjs` (10, red first); two unpinned sources, the pin did not move)
+- round 288: C24.3 (AUDIT-8 F-4): `scripts/smoke-test-tarball.mjs` installs the packed tarball alone, offline, and drives nine steps (`init`, `bump-round --verify`, `make-delivery`, `verify-delivery`, `dump`, `RECOVER/` in the dump, `recovery`, `chicla-zip`, `chicla/zip`); CI job `tarball` on Ubuntu, macOS and Windows (the Windows leg reported, not blocking); `test/smoke-tarball.test.mjs` (8, red first); one source file; the pin did not move
+- round 287: C24.5 REVERSED and fixed (AUDIT-8 F-2): Rodrigo reverted D-283b; `emergency-dump.mjs` looks for the five pinned files beside its own module first, so a dump made by the installed package carries `RECOVER/` (the installed-alone test asserts the five files byte for byte, the marker hashes and no warning, red first); one source file; the pin did not move; the round 286 documentation of the limit is removed
+- round 286: C24.5 (AUDIT-8 F-2, D-283b): docs only, no source, the pin did not move: the missing `RECOVER/` in a dump made by the installed package is a documented known limit (`packages/chicla/README.md`, `SECURITY.md`, the kit README row of `chicla dump`); `test/dump-limit-docs.test.mjs` (3, red first)

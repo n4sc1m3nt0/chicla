@@ -39,7 +39,7 @@ test('resolveAgents: known names give their files (deduplicated, in the order of
 test('core: --agent gemini and copilot add exactly their two files to the seven (the six and package.json, C24.2); byte for byte the templates; the folder .github is created', () => {
   const d = T();
   try {
-    const r = initProject({ root: d, agents: ['gemini', 'copilot'] });
+    const r = initProject({ name: 'CHICLA', root: d, agents: ['gemini', 'copilot'] });
     assert.equal(r.ok, true, JSON.stringify(r));
     assert.deepEqual(tree(d), ['.github/', '.github/copilot-instructions.md', 'AGENTS.md', 'CHANGELOG.md', 'CHICLA_PROJECT_STATUS-1.md', 'CLAUDE.md', 'FILES.manifest', 'GEMINI.md', 'package.json', 'version.mjs']); // C24.2: package.json is one of the files init writes
     assert.equal(readFileSync(join(d, 'GEMINI.md'), 'utf8'), tpl('GEMINI.md'));
@@ -51,7 +51,7 @@ test('core: --agent gemini and copilot add exactly their two files to the seven 
 test('core: the project is usable at once: bump-round --verify and check-manifest pass, the manifest lists the agent files, a round closes', () => {
   const d = T();
   try {
-    assert.equal(initProject({ root: d, agents: ['gemini', 'copilot'] }).ok, true);
+    assert.equal(initProject({ name: 'CHICLA', root: d, agents: ['gemini', 'copilot'] }).ok, true);
     const v = bumpRound({ root: d, mode: 'verify', regenerateManifest: regen }); assert.equal(v.ok, true, JSON.stringify(v));
     const m = checkManifest({ root: d, write: false }); assert.equal(m.ok, true, JSON.stringify(m));
     const list = readFileSync(join(d, 'FILES.manifest'), 'utf8');
@@ -63,9 +63,9 @@ test('core: the project is usable at once: bump-round --verify and check-manifes
 test('core: claude and codex are accepted and add nothing (their files are in the default set); no agent is the same as before', () => {
   const a = T(), b = T(), c = T();
   try {
-    assert.equal(initProject({ root: a, agents: ['claude', 'codex'] }).ok, true);
-    assert.equal(initProject({ root: b }).ok, true);
-    assert.equal(initProject({ root: c, agents: [] }).ok, true);
+    assert.equal(initProject({ name: 'CHICLA', root: a, agents: ['claude', 'codex'] }).ok, true);
+    assert.equal(initProject({ name: 'CHICLA', root: b }).ok, true);
+    assert.equal(initProject({ name: 'CHICLA', root: c, agents: [] }).ok, true);
     assert.deepEqual(tree(a), tree(b)); assert.deepEqual(tree(c), tree(b));
     assert.ok(!tree(a).includes('GEMINI.md'));
   } finally { done(a); done(b); done(c); }
@@ -74,7 +74,7 @@ test('core: claude and codex are accepted and add nothing (their files are in th
 test('core: an unknown agent is EAGENT and nothing is written (not even the default files)', () => {
   const d = T();
   try {
-    const r = initProject({ root: d, agents: ['gemini', 'vim'] });
+    const r = initProject({ name: 'CHICLA', root: d, agents: ['gemini', 'vim'] });
     assert.equal(r.ok, false); assert.equal(r.code, 'EAGENT');
     assert.deepEqual(tree(d), []);
   } finally { done(d); }
@@ -84,11 +84,11 @@ test('core: an existing agent file refuses the whole run (EEXIST) and writes not
   const d = T(), e = T();
   try {
     writeFileSync(join(d, 'GEMINI.md'), 'mine\n');
-    const r = initProject({ root: d, agents: ['gemini'] });
+    const r = initProject({ name: 'CHICLA', root: d, agents: ['gemini'] });
     assert.equal(r.ok, false); assert.equal(r.code, 'EEXIST'); assert.ok(r.existing.includes('GEMINI.md'));
     assert.deepEqual(tree(d), ['GEMINI.md']); assert.equal(readFileSync(join(d, 'GEMINI.md'), 'utf8'), 'mine\n');
     mkdirSync(join(e, '.github/workflows'), { recursive: true }); writeFileSync(join(e, '.github/workflows/ci.yml'), 'x\n');
-    assert.equal(initProject({ root: e, agents: ['copilot'] }).ok, true);
+    assert.equal(initProject({ name: 'CHICLA', root: e, agents: ['copilot'] }).ok, true);
     assert.equal(readFileSync(join(e, '.github/workflows/ci.yml'), 'utf8'), 'x\n');
     assert.ok(existsSync(join(e, '.github/copilot-instructions.md')));
   } finally { done(d); done(e); }
@@ -98,10 +98,10 @@ test('core: a copilot-instructions.md that exists already refuses the run, and a
   const d = T(), e = T(), tpls = T();
   try {
     mkdirSync(join(d, '.github')); writeFileSync(join(d, '.github/copilot-instructions.md'), 'mine\n');
-    const r = initProject({ root: d, agents: ['copilot'] });
+    const r = initProject({ name: 'CHICLA', root: d, agents: ['copilot'] });
     assert.equal(r.code, 'EEXIST'); assert.deepEqual(tree(d), ['.github/', '.github/copilot-instructions.md']);
     for (const f of readdirSync(join(KIT, 'templates'))) if (f !== 'copilot-instructions.md') writeFileSync(join(tpls, f), tpl(f)); // the template of the agent is missing: the run fails after the default files
-    const w = initProject({ root: e, agents: ['copilot'], templates: pathToFileURL(tpls + '/') });
+    const w = initProject({ name: 'CHICLA', root: e, agents: ['copilot'], templates: pathToFileURL(tpls + '/') });
     assert.equal(w.ok, false); assert.equal(w.code, 'EWRITE');
     assert.deepEqual(tree(e), [], 'the folder is as it was, .github included');
   } finally { done(d); done(e); done(tpls); }
@@ -124,10 +124,10 @@ test('templates: the agent files carry the same rules as AGENTS.md (one body), n
 test('cli: `chicla init --agent gemini --agent copilot --root <dir>` creates them (0); the project passes bump-round --verify; --json lists the files', async () => {
   const d = T(), e = T();
   try {
-    const r = await run(['init', '--agent', 'gemini', '--agent', 'copilot', '--root', d], d);
+    const r = await run(['init', '--name', 'CHICLA', '--agent', 'gemini', '--agent', 'copilot', '--root', d], d);
     assert.equal(r.status, 0, r.err); assert.ok(existsSync(join(d, 'GEMINI.md')) && existsSync(join(d, '.github/copilot-instructions.md')));
     assert.equal((await run(['bump-round', '--verify', '--root', d], d)).status, 0);
-    const j = await run(['init', '--agent', 'gemini', '--json', '--root', e], e); const o = JSON.parse(j.out);
+    const j = await run(['init', '--name', 'CHICLA', '--agent', 'gemini', '--json', '--root', e], e); const o = JSON.parse(j.out);
     assert.equal(o.ok, true); assert.ok(o.created.includes('GEMINI.md'));
   } finally { done(d); done(e); }
 });
@@ -135,10 +135,10 @@ test('cli: `chicla init --agent gemini --agent copilot --root <dir>` creates the
 test('cli: an unknown agent is a usage error (2) with code EAGENT and writes nothing; --agent with no value, or on another command, is usage (2)', async () => {
   const d = T();
   try {
-    const r = await run(['init', '--agent', 'vim', '--json', '--root', d], d);
+    const r = await run(['init', '--name', 'CHICLA', '--agent', 'vim', '--json', '--root', d], d);
     assert.equal(r.status, 2); assert.equal(JSON.parse(r.out).code, 'EAGENT'); assert.deepEqual(tree(d), []);
-    assert.equal((await run(['init', '--agent', '--root', d], d)).status, 2);
-    assert.equal((await run(['init', '--agent'], d)).status, 2);
+    assert.equal((await run(['init', '--name', 'CHICLA', '--agent', '--root', d], d)).status, 2);
+    assert.equal((await run(['init', '--name', 'CHICLA', '--agent'], d)).status, 2);
     assert.equal((await run(['check-manifest', '--agent', 'gemini', '--root', d], d)).status, 2);
     assert.deepEqual(tree(d), []);
   } finally { done(d); }

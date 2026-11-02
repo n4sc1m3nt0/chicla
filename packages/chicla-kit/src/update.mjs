@@ -9,12 +9,18 @@ import { dirname, join } from "node:path";
 import { AGENTS, resolveAgents } from "./agents.mjs";
 import { bumpRound } from "./bump-round.mjs";
 import { checkManifest, renderCheckManifest } from "./check-manifest.mjs";
+import { forName } from "./init.mjs";
+import { statusFileAny, statusPrefix } from "./integrity.mjs";
 
 const TEMPLATES = new URL("../templates/", import.meta.url);
 const MAX_DIFF_LINES = 2000; // the templates are about 60 lines; a file far bigger than that is not an instruction file worth a quadratic diff
 const regenerateManifest = (root) => { const m = checkManifest({ root, write: true }); return { ok: m.ok, ...renderCheckManifest(m) }; };
 const kind = (p) => { try { const s = lstatSync(p); return s.isFile() ? "file" : "other"; } catch { return "none"; } };
 const lines = (s) => s.replace(/\r\n/g, "\n").split("\n");
+// C26.2 (D151): the `status-prefix:` line of CLAUDE.md is the PROJECT's (it names its status file), not the template's: it is left out of the comparison and the diff, and kept when the file is replaced.
+const isPrefixLine = (l) => /^status-prefix:/.test(l);
+const noPrefix = (s) => lines(s).filter((l) => !isPrefixLine(l)).join("\n").replace(/\n{3,}/g, "\n\n");
+const keepPrefix = (mine, tpl) => { const own = [...new Set(lines(mine).filter(isPrefixLine))]; if (!own.length) return tpl; const [head, ...rest] = lines(tpl).filter((l) => !isPrefixLine(l)); return [head, ...own, ...rest].join("\n"); };
 
 /** Lines only the project has are `-`, lines only the template has are `+`, in file order; no context lines. @returns {string | null} null when a file is too big to diff */
 export function lineDiff(mine, theirs) {
@@ -45,20 +51,23 @@ export function updateProject({ root, agents = [], apply = [], templates = TEMPL
   const ra = resolveAgents(agents);
   if (!ra.ok) return fail("EAGENT", ra.message);
   const set = Object.entries(AGENTS).filter(([k, a]) => a.default || ra.agents.includes(k) || kind(join(root, a.file)) !== "none").map(([, a]) => a); // matrix order
-  if (!set.some((a) => kind(join(root, a.file)) !== "none") && !readdirSync(root).some((f) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(f))) return fail("ENOPROJECT", "no chicla project here (no instruction file and no status file); `chicla init` starts one");
+  if (!set.some((a) => kind(join(root, a.file)) !== "none") && !readdirSync(root).some((f) => statusFileAny.test(f))) return fail("ENOPROJECT", "no chicla project here (no instruction file and no status file); `chicla init` starts one");
   const bad = apply.filter((f) => !set.some((a) => a.file === f));
   if (bad.length) return fail("EAPPLY", `cannot apply ${bad.map((f) => `«${String(f).slice(0, 60)}»`).join(", ")}: only the instruction files of ${set.map((a) => a.file).join(", ")} can be replaced`);
   const other = set.filter((a) => kind(join(root, a.file)) === "other").map((a) => a.file);
   if (other.length) return fail("ENOFILE", `${other.join(", ")} exists but is not a regular file; nothing was changed`);
 
   const files = [];
+  // C26.4: the templates say <NAME>_PROJECT_STATUS for the project's own name (an invalid or conflicting line gives none: then they are compared as they are)
+  const pre = statusPrefix({ names: readdirSync(root), read: (f) => { try { return readFileSync(join(root, f)); } catch { return null; } } });
   for (const a of set) {
-    const tpl = readFileSync(new URL(a.template, templates), "utf8");
+    const raw = readFileSync(new URL(a.template, templates), "utf8"), tpl = pre === null ? raw : forName(raw, pre);
     const p = join(root, a.file);
     if (kind(p) === "none") { files.push({ file: a.file, state: "missing", tpl }); continue; }
-    const mine = readFileSync(p, "utf8");
-    if (lines(mine).join("\n") === lines(tpl).join("\n")) files.push({ file: a.file, state: "same", tpl });
-    else files.push({ file: a.file, state: "differs", diff: lineDiff(mine, tpl), tpl });
+    const mine = readFileSync(p, "utf8"), isClaude = a.file === "CLAUDE.md";
+    const [m2, t2] = isClaude ? [noPrefix(mine), noPrefix(tpl)] : [mine, tpl], tpl2 = isClaude ? keepPrefix(mine, tpl) : tpl;
+    if (lines(m2).join("\n") === lines(t2).join("\n")) files.push({ file: a.file, state: "same", tpl: tpl2 });
+    else files.push({ file: a.file, state: "differs", diff: lineDiff(m2, t2), tpl: tpl2 });
   }
 
   const todo = files.filter((f) => apply.includes(f.file) && f.state !== "same");

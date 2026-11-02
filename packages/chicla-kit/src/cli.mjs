@@ -2,7 +2,8 @@
 // `chicla`, the CLI of the kit (C11.1). Slices 1 to 4b: the dispatcher and SIX subcommands, `check-manifest`, `bump-round`, `verify-delivery`, `make-delivery`, `dump` and `recovery`; each runs the same
 // code as its script in scripts/ (the script imports nothing from here; this file imports the script's core). Zero dependencies (D3).
 //
-//   chicla init [--agent <name>]... [--json] [--root <dir>]   (C12.1, C12.6, C12.7: starts a project: CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs, FILES.manifest; never overwrites)
+//   chicla init [--agent <name>]... [--name <NAME>] [--json] [--root <dir>]   (C12.1, C12.6, C12.7: starts a project: CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs, FILES.manifest; never overwrites)
+//   chicla rename-status <NAME> [--json] [--root <dir>]   (C26.5: renames the status file of an existing project: the file, the `file=` of the fingerprint lines, the `status-prefix:` line, the name in the instruction files and in the process block of the status file, the manifest; never the history; all or nothing)
 //   chicla update [--agent <name>]... [--apply <file>]... [--json] [--root <dir>]   (C11.3: compares the instruction files with the kit's templates and shows the diff; writes only the files named with --apply)
 //   chicla check-manifest [--write] [--json] [--root <dir>]
 //   chicla bump-round [--verify | [--refresh] [--dry-run] [--note <text>]] [--json] [--root <dir>]
@@ -36,7 +37,7 @@ import { resolve } from "node:path";
 import { shouldStyle, styleSummary } from "./ui.mjs";
 
 const SRC = new URL("./", import.meta.url); // C11.1 slice 7 (D92): every core is imported from the kit itself, never through scripts/
-const CORES = { "check-manifest": "check-manifest.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs", update: "update.mjs" };
+const CORES = { "check-manifest": "check-manifest.mjs", "rename-status": "rename-status.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs", update: "update.mjs" };
 const HELP = `chicla: the workflow CLI
 
 Usage: chicla <command> [options]
@@ -48,6 +49,7 @@ Commands:
   dump             emergency zip of the whole working directory, no guards (note words, --note, --project-only, --outdir <dir>)
   recovery         recover an emergency dump: extract, verify, compare, write RECOVERY_DIFF.md (<dump.zip>, --baseline <zip>, --out <dir>)
   update           compare the instruction files of a project with this kit's templates and show the diff; writes nothing unless --apply <file> names a file (--agent <name>, --apply <file>)
+  rename-status    rename the status file of an existing project to <NAME>_PROJECT_STATUS-N.md: the file, the fingerprint lines, the status-prefix line, the name in the instruction files and in the process block of the status file, the manifest; never the history; all or nothing (<NAME>)
   init             start a project: CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs and FILES.manifest, consistent; refuses if any exists, never overwrites
   bump-round       close a round: bump N -> N+1 (default), --refresh (keep N), --dry-run (write nothing), --verify (only check), --note <text>
 
@@ -58,6 +60,7 @@ Options:
   --out <dir>, --baseline <zip>, --toolchain-digest <hex>, --trust-toolchain   (recovery) where to extract; the last delivery zip; the pinned digest and the override for a RECOVER/ copy
   --verify         (bump-round) only check, write nothing; not combinable with --refresh, --dry-run, --note
   --refresh, --dry-run, --note <text>   (bump-round) see above; --note also gives the note of a dump
+  --name <NAME>    (init) the status-file prefix: <NAME>_PROJECT_STATUS-1.md; capital letters, digits and _, starting with a letter; default: the folder name in capitals (refused if that is not valid)
   --agent <name>   (init, update) also write (update: also compare) the instruction file of an agent of the matrix: gemini (GEMINI.md), copilot (.github/copilot-instructions.md); claude and codex are in the default set; repeatable
   --apply <file>   (update) replace that instruction file with the template (the confirmation; a missing one is created); repeatable; state files cannot be named
   --against <zip>, --allow-removed <path>   (verify-delivery, make-delivery) a previous zip that must lose nothing (repeatable); a removal that is approved
@@ -103,6 +106,8 @@ export async function main(argv, io = {}) {
     if (command === "dump" && a === "--project-only") { opts.projectOnly = true; continue; }
     if (command === "dump" && a === "--outdir") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--outdir needs a folder"); opts.outdir = resolve(cwd, v); continue; }
     if (command === "dump" && !a.startsWith("--")) { opts.words.push(a); continue; }
+    if (command === "rename-status" && !a.startsWith("--")) { if (opts.name !== undefined) return fail(command, "EUSAGE", "only one name may be given"); opts.name = a; continue; }
+    if (command === "init" && a === "--name") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--name needs a value"); opts.name = v; continue; }
     if ((command === "init" || command === "update") && a === "--agent") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--agent needs a name"); opts.agents.push(v); continue; }
     if (command === "update" && a === "--apply") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--apply needs a file name"); opts.apply.push(v); continue; }
     if (command === "check-manifest" && a === "--write") { opts.write = true; continue; }
@@ -112,6 +117,7 @@ export async function main(argv, io = {}) {
     if ((command === "bump-round" || command === "dump") && a === "--note") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--note needs a text"); opts.note = v; continue; }
     return fail(command, "EUSAGE", `unknown option or argument «${a.slice(0, 40)}»`);
   }
+  if (command === "rename-status" && opts.name === undefined) return fail(command, "EUSAGE", "no name given: chicla rename-status <NAME>");
   if (command === "bump-round" && opts.verify && (opts.refresh || opts.dry || opts.note)) return fail(command, "EUSAGE", "--verify only checks; it cannot be combined with --refresh, --dry-run or --note");
 
   if (takesZip && opts.zip === undefined) return fail(command, "EUSAGE", command === "make-delivery" ? "no output zip given" : command === "recovery" ? "no dump zip given" : "no zip given");
@@ -122,7 +128,8 @@ export async function main(argv, io = {}) {
   catch (e) { if (json) stdout.write(`${JSON.stringify({ ok: false, command, code: "ECOMMAND_LOAD" })}\n`); stderr.write(`✗ ECOMMAND_LOAD: cannot load ${file} (${e.code ?? e.message})\n`); return 1; }
   let r;
   if (command === "check-manifest") r = mod.checkManifest({ root: opts.root, write: opts.write });
-  else if (command === "init") r = mod.initProject({ root: opts.root, agents: opts.agents });
+  else if (command === "rename-status") r = mod.renameStatus({ root: opts.root, name: opts.name });
+  else if (command === "init") r = mod.initProject({ root: opts.root, agents: opts.agents, name: opts.name });
   else if (command === "update") r = mod.updateProject({ root: opts.root, agents: opts.agents, apply: opts.apply });
   else if (command === "recovery") r = await mod.recoveryReport({ dump: resolve(cwd, opts.zip), baseline: opts.baseline, out: opts.out, toolchainDigest: opts.digest, trustToolchain: opts.trust });
   else if (command === "dump") r = await mod.emergencyDump({ work: opts.root, outdir: opts.outdir, note: opts.note || opts.words.join(" "), projectOnly: opts.projectOnly });
@@ -134,7 +141,7 @@ export async function main(argv, io = {}) {
     const regenerateManifest = (root) => { const m = cm.checkManifest({ root, write: true }); return { ok: m.ok, ...cm.renderCheckManifest(m) }; };
     r = mod.bumpRound({ root: opts.root, mode: opts.verify ? "verify" : opts.refresh ? "refresh" : "bump", dry: opts.dry, note: opts.note, regenerateManifest });
   }
-  const { out, err } = command === "check-manifest" ? mod.renderCheckManifest(r) : command === "verify-delivery" ? mod.renderVerifyDelivery(r) : command === "make-delivery" ? mod.renderMakeDelivery(r) : command === "dump" ? mod.renderEmergencyDump(r) : command === "recovery" ? mod.renderRecoveryReport(r) : command === "init" ? mod.renderInit(r) : command === "update" ? mod.renderUpdate(r) : mod.renderBumpRound(r);
+  const { out, err } = command === "check-manifest" ? mod.renderCheckManifest(r) : command === "verify-delivery" ? mod.renderVerifyDelivery(r) : command === "make-delivery" ? mod.renderMakeDelivery(r) : command === "dump" ? mod.renderEmergencyDump(r) : command === "recovery" ? mod.renderRecoveryReport(r) : command === "rename-status" ? mod.renderRenameStatus(r) : command === "init" ? mod.renderInit(r) : command === "update" ? mod.renderUpdate(r) : mod.renderBumpRound(r);
   if (json) {
     const { messages, ...data } = r;
     stdout.write(`${JSON.stringify({ command, ...data })}\n`);

@@ -1,7 +1,65 @@
-<!-- CHANGELOG_FINGERPRINT: seq=301 file=CHICLA_PROJECT_STATUS-301.md app_sha256_12=065d37032ef1 changelog_sha256_12=43e27cea6f65 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=308 file=CHICLA_PROJECT_STATUS-308.md app_sha256_12=065d37032ef1 changelog_sha256_12=8f7830dd875d (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now., `CHANGELOG-archive-rounds-220-230.md`, `CHANGELOG-archive-rounds-231-241.md`, `CHANGELOG-archive-rounds-242-253.md`, `CHANGELOG-archive-rounds-254-263.md`, `CHANGELOG-archive-rounds-264-275.md`, `CHANGELOG-archive-rounds-276-286.md`
+
+## Round 303 — D-C265a amended: `rename-status` also rewrites the process block of the status file (v0.0.307)
+
+- Task (the person in this session, after a review of M26: «I'd go with option 1», then «yes go ahead»; D-C265c, a label of Claude's, amends D-C265a): the status file is not all history. Its process block, everything above the `**Current version:**` line, has the session-start command (`ls <NAME>_PROJECT_STATUS-*.md`) and the name of the file; after a rename they still said the old name and found nothing.
+- Test first: `packages/chicla-kit/test/rename-status.test.mjs` (the first test changed, red: «the process block still says the old name»; the file is split at `**Current version:**`; above it only the old name becomes the new one, from it down the bytes are the same, history line included).
+- Change: `src/rename-status.mjs` (the process block of the status file, as a whole name like the instruction files; the status file is written under its old name and then renamed, so the list of changed files maps it to the new name; a status file with no such line gets no rewrite), `src/cli.mjs` (help text only). Two kit mutants K-REN-08 (the block keeps the old name) and K-REN-09 (the history is rewritten too), each RED alone. `README.md` of the kit, `docs/state-file.md`, ROADMAP C26.5 row. Two sources; the pin did not move.
+- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`.
+- NOT run: the CI, macOS, Windows, Node 18 and 20, `npm run smoke`, the whole `npm run mutants` and `mutants:kit` (only K-REN-08 and 09, alone); no use in a real project of another name. The result of the whole `npm test` is in the reply.
+
+## Round 302 — C26.5: `chicla rename-status <NAME>`; M26 is closed (v0.0.306)
+
+- Task (Rodrigo: «avança»; D-C265a «Confirmo a sugestão»: the old name is rewritten only in the instruction files that exist, never in the status file, the CHANGELOG or the archives; D-C265b «Confirmo a sugestão»: the same name is «already» (exit 0), an invalid name is ENAME).
+- Test first: `packages/chicla-kit/test/rename-status.test.mjs` (7, red because the module did not exist).
+- Change: new core `src/rename-status.mjs` (the status file keeps its bytes; the `file=` of CHANGELOG.md line 1 and version.mjs; the `status-prefix:` line, none for CHICLA; the old name, as a whole name, in the instruction files; `bump-round --refresh` regenerates the manifest and must pass; ENAME, ESTATE, ENOROOT, EWRITE with every file put back), `cli.mjs` (the command, one positional name, usage error 2). Seven kit mutants K-REN-01 to 07 (each RED alone; new prefix `K-REN-` in `docs/README.md` and the figures test); `README.md`, `packages/chicla-kit/README.md`, `docs/state-file.md`. The pin did not move.
+- M26 (D151) is closed: C26.1 to C26.5. No card is left «por fazer» in the ROADMAP.
+- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`.
+- NOT run: the CI, macOS, Windows, Node 18 and 20, `npm run smoke`, the whole `npm run mutants` and `mutants:kit`; no use in a real project of another name. The result of the whole `npm test` is in the reply.
+
+## Round 301 — C26.4: `chicla init` names the status file; the templates say it (v0.0.305)
+
+- Task (Rodrigo: «avança»; D-C264a «Separa: C26.4 = init + templates; C26.5 = rename-status» and D-C264b «Confirmo: recusa e pede --name»).
+- Test first: `packages/chicla-kit/test/init-name.test.mjs` (7; 5 red first; 2 guards: a project named CHICLA is byte for byte the template, and `update` of a fresh project).
+- Change: `init.mjs` (`--name`, else the folder in capitals; ENAME for a name that is not capitals, digits and `_` starting with a letter; the line `status-prefix:` after the first line of CLAUDE.md, none for CHICLA; `forName` writes the templates as `<NAME>_PROJECT_STATUS`; a status file of any prefix is EEXIST), `update.mjs` (the templates are read through the project's name), `cli.mjs` (`--name`, usage error without a value). No template file was edited. Six kit mutants (K-INI-01 to 05, K-UPD-04, each RED alone; new prefix `K-INI-` in `docs/README.md` and the figures test); `docs/state-file.md`. Legacy tests that expect the Chicla name from `init` now ask for it (`name: 'CHICLA'` / `--name CHICLA`; the `moved()` helper of `status-prefix-readers.test.mjs` uses `init --name`). Three sources; the pin did not move.
+- ROADMAP: C26.5 is a new card (`chicla rename-status`), it closes M26.
+- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`.
+- NOT run: the CI, macOS, Windows, Node 18 and 20, `npm run smoke` (the tarball tests call `init`), the whole `npm run mutants` and `mutants:kit`. The result of the whole `npm test` is in the reply.
+
+## Round 300 — C26.3: the dump, the recovery and `archive-changelog` read the status-file prefix; the pin moves (v0.0.304)
+
+- Task (Rodrigo: «avança»; D-C, touch the pinned `recovery-report` and repeat G-C11, was confirmed in round 298; no decision was open).
+- Test first: `test/status-prefix-c263.test.mjs` (8; 6 red first; 2 guards: the legacy name in the dump and in the recovery).
+- Change: `emergency-dump.mjs` (own reader; the marker's `statusFile` is the one of the prefix, «(not found)» for an invalid or conflicting line or a file of another prefix; CLAUDE.md read only if present), `pinned/recovery-report.mjs` (an older status file of any prefix is not «removed»), `scripts/archive-changelog.mjs` (reads the line itself; all three modes). Five kit mutants (K-DMP-50, K-DMP-51, K-REC-50, K-ARC-50, K-ARC-51, each RED alone); `docs/state-file.md`. Three sources. THE PIN MOVED: `toolchain-digest` 24014f880e9e → 15e4ef5d0602; `RECOVER/` of a new dump differs from the old one. **G-C11 is open again (Rodrigo's).**
+- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`. The rolling archive moved the round 297 «Open decisions» entry, so one assertion of `test/published-chicla-021-docs.test.mjs` (a historical fact) now reads the live file plus its archives, like its neighbours.
+- NOT run: the CI, macOS, Windows, Node 18 and 20, `npm run smoke`, the whole `npm run mutants` and `mutants:kit`; no dump or recovery by hand. The whole `npm test` ran once (1811 tests: 1 red, the test above, fixed and that file rerun alone: 8 pass); it was not rerun whole.
+
+## Round 299 — C26.2: the panel, `update` and `verify-delivery` read the status-file prefix (v0.0.303)
+
+- Task (Rodrigo: «avança», after confirming D-298a): the second slice of M26 (D151). Claude read the verify (seq 303, passed), asked D-298a and the next task first (CLAUDE.md), then worked.
+- Test first: `packages/chicla-kit/test/status-prefix-readers.test.mjs` (7; 6 red first; the green one guards that a project with no line gets the template as it is through `update --apply`).
+- Change: `panel.mjs` (the status file of the `status-prefix:` line; an invalid line finds none), `update.mjs` (any status file makes a project; the line is left out of the comparison and the diff and kept when CLAUDE.md is replaced), `verify-delivery.mjs` (prefix from the zip's own CLAUDE.md; an old status file of any prefix is not lost: a second delivery of an `ACME` project failed before). Mutants K-PNL-30, K-UPD-01 to 03 (all RED alone), K-VER-16 anchor moved; new prefix `K-UPD-` in `docs/README.md` and the figures test; `docs/state-file.md`. Three sources; the pin did not move.
+- Found, not fixed: the `seq` cross-check of `verify-delivery` (its prefix-aware filter) has no mutant that goes red (the integrity fingerprint rule fails first), so the entry was dropped; `STATUS_FILE_RE` is now used only by tests; `update` with no CLAUDE.md in a project of another prefix would recreate it without the line (the refresh then refuses, all or nothing).
+- Housekeeping (item 6): `--status --keep-previous 4`, `--snapshot --keep-done 9`, `--rolling --keep-clauses 2`.
+- NOT run: the CI, macOS, Windows, Node 18 and 20, `npm run smoke`, the whole `npm run mutants` and `mutants:kit`. The result of the whole `npm test` is in the reply.
+
+## Round 298 — C26.1: the status file carries the project's prefix (v0.0.302)
+
+- Task (Rodrigo: he installed `chicla` in another project and saw `CHICLA_PROJECT_STATUS-N.md` there, not `<PROJECT>_PROJECT_STATUS-N.md`). Claude found the name fixed in `init`, the templates and every reader (nine kit files and `archive-changelog.mjs`), so the fix is four slices (M26, D151): C26.1 the shared rule, `bump-round` and `check-manifest` (this round); C26.2 `panel`, `update`, `verify-delivery`; C26.3 `emergency-dump`, `recovery-report` (the pin moves, G-C11 again) and `archive-changelog`; C26.4 `init` (folder name in capitals, `--name`) and the templates, LAST, so no round writes a name that another tool refuses. D-A, D-B, D-C confirmed by Rodrigo (2026-11-01); D-298a (the line lives in `CLAUDE.md`, beside the pin) is Claude's call on delegation.
+- Test first: `packages/chicla-kit/test/status-prefix.test.mjs` (13; 10 red first, 3 green before the code: the purity of `integrity.mjs`, the bump of the real project and the two-files guard of the manifest).
+- Change: `integrity.mjs` (`statusPrefix`, `statusFileRe`, `statusFileAny`, `DEFAULT_STATUS_PREFIX`; no `status-prefix:` line = CHICLA, so every project that exists keeps working), `bump-round.mjs` (renames to the project's prefix; an invalid or conflicting line, or a status file of another prefix: `EBUMP_STATE`, nothing written), `check-manifest.mjs` (a change of prefix is one rename, not a lost file), `CLAUDE.md` (`status-prefix: CHICLA`), `docs/integrity.md`, `docs/state-file.md`, five kit mutants (K-INT-42 to 44, K-BMP-18, K-CMN-21) and two stale anchors fixed (K-INT-09, K-INT-10, K-CMN-14). Three source files; the pin did not move. Until C26.4 `chicla init` still writes the Chicla name.
+- Housekeeping (item 6): `--status`, `--snapshot`, `--rolling`; and by hand, verbatim, the clauses of rounds 286 to 295 of the «Current version» line (`docs/status-archive-rolling-286-295.md`): that line was 4438 bytes and `--rolling` archives 0 clauses of it (its parenthesis closes after the first clause, so the script sees one; not fixed, a finding). The first whole `npm test` after the bump showed it: 8 red, all the limit tests (the real tree must be within every limit).
+- Run before the bump: the new test file; the 83 kit mutants of `integrity`, `bump-round` and `check-manifest` (81 red, 2 survivors already explained); `npm run test:fast` (5 red caused by this round: the docs of the exports, the mutant list anchors and ids; fixed, those files green again). The whole `npm test` after the bump: 1796 tests, 8 red (the limit above), fixed; it is run again and its result is in the reply. NOT run: the CI, macOS, Windows, Node 18 and 20, `npm run smoke`, the whole `npm run mutants`.
+
+## Round 297 — G-C17 closed: `chicla` 0.2.1 published and recorded (v0.0.301)
+
+- Task (Rodrigo: «fecha o g-c17», after publishing `chicla` 0.2.1 himself). First Claude read the logs of the round 296 CI he sent: all 14 jobs green (Ubuntu and macOS 1775 tests, 0 fail, Node 18, 20, 22; Windows `chicla-zip` 777 of 816 and `chicla-kit` 341 of 341; `tarball` 9 of 9 on all three systems, so the Windows cause inferred in C25.5 was right; `bench` 1.1x). Then, step by step with him, the release; this round records it. Docs only: no source, no pinned file, the pin did not move.
+- Test first: `test/published-chicla-021-docs.test.mjs` (8, all red): the «Published: chicla 0.2.1» section (who, when, run, commit, sha256, what he tried from the installed package, what went differently, what Claude did not see), ROADMAP G-C17 and C24.1, the status gate row and the round 297 line, README. `release-021-docs` relaxed (it said the gate is open).
+- Change: `docs/release.md` (new section; step 1 uses an empty `dist/`, step 2 a project with `package.json` AND `FILES.manifest`, step 4 `npm login` on `E401`), `README.md`, `ROADMAP.md`, the status file, `package.json` 0.0.301. Housekeeping (item 6): `--status` on the status file.
+- NOT run by Claude: the CI of this tree, `npm test`, `npm run smoke`, the mutant lists. What happened on npm and GitHub is in his pasted output only; G-C8 (Windows on a real machine) stays open.
 
 ## Round 296 — C25.5: the Windows `npm` is started bare (v0.0.300)
 
