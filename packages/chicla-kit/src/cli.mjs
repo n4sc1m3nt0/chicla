@@ -2,6 +2,7 @@
 // `chicla`, the CLI of the kit (C11.1). Slices 1 to 4b: the dispatcher and SIX subcommands, `check-manifest`, `bump-round`, `verify-delivery`, `make-delivery`, `dump` and `recovery`; each runs the same
 // code as its script in scripts/ (the script imports nothing from here; this file imports the script's core). Zero dependencies (D3).
 //
+//   chicla ci-report <logs.zip> [--allow <text>]... [--json]   (C27.3, C28.3: per job the failing tests and the first error of a GitHub Actions logs zip; --allow names jobs that may fail)
 //   chicla init [--agent <name>]... [--name <NAME>] [--json] [--root <dir>]   (C12.1, C12.6, C12.7: starts a project: CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs, FILES.manifest; never overwrites)
 //   chicla rename-status <NAME> [--json] [--root <dir>]   (C26.5: renames the status file of an existing project: the file, the `file=` of the fingerprint lines, the `status-prefix:` line, the name in the instruction files and in the process block of the status file, the manifest; never the history; all or nothing)
 //   chicla update [--agent <name>]... [--apply <file>]... [--json] [--root <dir>]   (C11.3: compares the instruction files with the kit's templates and shows the diff; writes only the files named with --apply)
@@ -44,7 +45,7 @@ Usage: chicla <command> [options]
 
 Commands:
   check-manifest   check FILES.manifest against the disk (--write regenerates it)
-  ci-report        read the logs .zip of a GitHub Actions run and print, per job, the failing tests and the first error (<logs.zip>)
+  ci-report        read the logs .zip of a GitHub Actions run and print, per job, the failing tests and the first error (<logs.zip> [--allow <text>]...: a job whose name has the text may fail or be unjudged and is not counted; exit 1 if a job failed or anything was not judged)
   make-delivery    build the delivery .zip of a project (checks, manifest, baseline, zip, verify; --against, --allow-removed)
   verify-delivery  check a delivery .zip: the whole tree, the manifest, no junk or secrets (--against, --allow-removed)
   dump             emergency zip of the whole working directory, no guards (note words, --note, --project-only, --outdir <dir>)
@@ -94,7 +95,7 @@ export async function main(argv, io = {}) {
   // the options: --json and the command word are common; each command knows its own
   const opts = { root: cwd, write: false, verify: false, refresh: false, dry: false, note: "", zip: undefined, against: [], allowRemoved: [], projectOnly: false, outdir: undefined, words: [], out: undefined, baseline: undefined, digest: undefined, trust: false };
   const at = args.indexOf(command), takesZip = command === "verify-delivery" || command === "make-delivery" || command === "recovery";
-  opts.agents = []; opts.apply = [];
+  opts.agents = []; opts.apply = []; opts.allow = [];
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (i === at || a === "--json") continue;
@@ -107,6 +108,7 @@ export async function main(argv, io = {}) {
     if (command === "dump" && a === "--project-only") { opts.projectOnly = true; continue; }
     if (command === "dump" && a === "--outdir") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--outdir needs a folder"); opts.outdir = resolve(cwd, v); continue; }
     if (command === "dump" && !a.startsWith("--")) { opts.words.push(a); continue; }
+    if (command === "ci-report" && a === "--allow") { const v = args[++i]; if (v === undefined || v === "" || v.startsWith("--")) return fail(command, "EUSAGE", "--allow needs a non-empty text (a part of a job name)"); opts.allow.push(v); continue; }
     if (command === "ci-report" && !a.startsWith("--")) { if (opts.zip !== undefined) return fail(command, "EUSAGE", "only one zip may be given"); opts.zip = a; continue; }
     if (command === "rename-status" && !a.startsWith("--")) { if (opts.name !== undefined) return fail(command, "EUSAGE", "only one name may be given"); opts.name = a; continue; }
     if (command === "init" && a === "--name") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--name needs a value"); opts.name = v; continue; }
@@ -131,7 +133,7 @@ export async function main(argv, io = {}) {
   catch (e) { if (json) stdout.write(`${JSON.stringify({ ok: false, command, code: "ECOMMAND_LOAD" })}\n`); stderr.write(`✗ ECOMMAND_LOAD: cannot load ${file} (${e.code ?? e.message})\n`); return 1; }
   let r;
   if (command === "check-manifest") r = mod.checkManifest({ root: opts.root, write: opts.write });
-  else if (command === "ci-report") r = await mod.ciReport({ zip: resolve(cwd, opts.zip) });
+  else if (command === "ci-report") r = await mod.ciReport({ zip: resolve(cwd, opts.zip), allow: opts.allow });
   else if (command === "rename-status") r = mod.renameStatus({ root: opts.root, name: opts.name });
   else if (command === "init") r = mod.initProject({ root: opts.root, agents: opts.agents, name: opts.name });
   else if (command === "update") r = mod.updateProject({ root: opts.root, agents: opts.agents, apply: opts.apply });

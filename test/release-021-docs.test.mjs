@@ -11,8 +11,9 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const read = (f) => readFileSync(join(root, f), 'utf8');
 const row = (text, start) => text.split('\n').find((l) => l.startsWith(start)) ?? '';
 
-test('packages/chicla is 0.2.1 (npm cannot publish 0.2.0 twice) and the 0.2.0 README line about the move stays true', () => {
-  assert.equal(JSON.parse(read('packages/chicla/package.json')).version, '0.2.1');
+test('packages/chicla is 0.2.1 or later (npm cannot publish 0.2.0 twice; it is 0.3.0 since round 316, see release-030-docs.test.mjs)', () => {
+  const [a, b, c] = JSON.parse(read('packages/chicla/package.json')).version.split('.').map(Number);
+  assert.ok(a > 0 || b > 2 || (b === 2 && c >= 1), 'older than 0.2.1');
 });
 
 test('docs/release.md: «Releasing chicla 0.2.1» sits above the 0.2.0 runbook, says why, and keeps the rule that only Rodrigo publishes', () => {

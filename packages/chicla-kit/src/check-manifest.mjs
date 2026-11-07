@@ -39,6 +39,46 @@ function gitTracked(root, bin) {
   return { state: "ok", files: r.stdout.toString("utf8").split("\0").filter(Boolean) };
 }
 
+// C29.1 (AUDIT-11 F-1): the files git tracks outside the manifest, GROUPED, and one ready `git rm` line. A FOLDER is named when every tracked file under it that exists is outside the manifest
+// (the top-most such folder); a GLOB `dir/prefix*ext` when two or more of the rest share the directory, the text before the first digit and the extension AND no other tracked file that exists
+// matches it (git's `*` also crosses `/`, so the test is made with `.*`); every other file is named. The command stops tracking (`--cached`: the files stay on disk) and is cut at about CMD_MAX
+// characters (`complete: false`: run the check again for the rest). Pure: it reads nothing but `onDisk`.
+const CMD_PREFIX = "git rm -r -q --cached --ignore-unmatch --", CMD_MAX = 3000;
+const shq = (x) => (/^[A-Za-z0-9_.\/+@%=-]+$/.test(x) ? x : `'${x.replace(/'/g, `'\\''`)}'`);
+const globRe = (g) => new RegExp(`^${g.split("*").map((q) => q.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`);
+function groupTracked(outside, tracked, onDisk) {
+  const out = new Set(outside), dirs = new Map();
+  for (const f of tracked) {
+    if (!onDisk(f)) continue;
+    const segs = f.split("/");
+    for (let i = 1; i < segs.length; i++) { const d = segs.slice(0, i).join("/"), e = dirs.get(d) ?? { all: 0, out: 0 }; e.all++; if (out.has(f)) e.out++; dirs.set(d, e); }
+  }
+  const whole = [...dirs].filter(([, e]) => e.out === e.all).map(([d]) => d).sort((a, b) => a.split("/").length - b.split("/").length || (a < b ? -1 : 1));
+  const top = []; for (const d of whole) if (!top.some((t) => d.startsWith(`${t}/`))) top.push(d);
+  const groups = top.map((d) => ({ path: d, kind: "folder", files: outside.filter((f) => f.startsWith(`${d}/`)).length }));
+  let rest = outside.filter((f) => !top.some((t) => f.startsWith(`${t}/`)));
+  const cand = new Map();
+  for (const f of rest) {
+    const i = f.lastIndexOf("/"), base = f.slice(i + 1), dot = base.lastIndexOf("."), m = /[0-9]/.exec(base);
+    if (!m || dot < 0 || m.index > dot) continue; // a digit before the extension, or no glob
+    const key = `${f.slice(0, i + 1)}${base.slice(0, m.index)}*${base.slice(dot)}`;
+    cand.set(key, (cand.get(key) ?? 0) + 1);
+  }
+  for (const [glob, n] of [...cand].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+    if (n < 2) continue;
+    const re = globRe(glob);
+    if (!tracked.every((f) => !re.test(f) || out.has(f) || !onDisk(f))) continue; // it would take a listed file: no glob, the names stay
+    const hit = rest.filter((f) => re.test(f));
+    groups.push({ path: glob, kind: "glob", files: hit.length });
+    rest = rest.filter((f) => !re.test(f));
+  }
+  for (const f of rest) groups.push({ path: f, kind: "file", files: 1 });
+  groups.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  let command = `${CMD_PREFIX}`, used = 0;
+  for (const g of groups) { const part = ` ${shq(g.path)}`; if (used > 0 && command.length + part.length > CMD_MAX) break; command += part; used++; }
+  return { groups, command: groups.length ? command : null, complete: used === groups.length };
+}
+
 /**
  * Checks (or, with `write`, regenerates) FILES.manifest of the project at `root`.
  * `git` (C27.2, a binary name; default `git`) is only for the tests.
@@ -50,7 +90,7 @@ export function checkManifest({ root, write = false, git = "git" } = {}) {
   const MANIFEST = join(ROOT, "FILES.manifest");
   const messages = [];
   const say = (stream, text) => messages.push({ stream, text });
-  const result = { ok: true, code: null, mode: write ? "write" : "check", root: ROOT, messages, git: { state: "none" }, trackedOutside: [] };
+  const result = { ok: true, code: null, mode: write ? "write" : "check", root: ROOT, messages, git: { state: "none" }, trackedOutside: [], trackedGroups: [], trackedCommand: null, trackedCommandComplete: true };
   const stop = (code, text) => { say("err", text); result.ok = false; result.code = code; return result; };
 
   // A root that is missing or is not a folder is a clean error, not an ENOENT from the walk (and `--write` must not create anything there).
@@ -179,7 +219,12 @@ export function checkManifest({ root, write = false, git = "git" } = {}) {
       result.trackedOutside = g.files.filter((f) => f !== "FILES.manifest" && !inManifest(f) && isFile(f)).sort(); // the manifest never lists itself (SKIP_FILES)
       if (result.trackedOutside.length) {
         const t = result.trackedOutside;
-        return stop("EMANIFEST_TRACKED", `\n✗ EMANIFEST_TRACKED: ${t.length} file(s) tracked by git are not in FILES.manifest:\n  ${t.slice(0, 15).join("\n  ")}${t.length > 15 ? `\n  … and ${t.length - 15} more` : ""}\n  Build output committed by mistake? \`git rm -r --cached <path>\` and name the folder in .gitignore. A real source file? regenerate with node scripts/check-manifest.mjs --write.`);
+        const grp = groupTracked(t, g.files, isFile);
+        result.trackedGroups = grp.groups; result.trackedCommand = grp.command; result.trackedCommandComplete = grp.complete;
+        const few = t.length <= 15; // up to 15 files are named as before; more are summarised by group
+        const list = few ? t : grp.groups.slice(0, 15).map((x) => `${x.files} × ${x.path}${x.kind === "folder" ? "/" : ""}`);
+        const more = !few && grp.groups.length > 15 ? `\n  … and ${grp.groups.length - 15} more group(s)` : "";
+        return stop("EMANIFEST_TRACKED", `\n✗ EMANIFEST_TRACKED: ${t.length} file(s) tracked by git are not in FILES.manifest${few ? "" : `, in ${grp.groups.length} group(s)`}:\n  ${list.join("\n  ")}${more}\n  To stop tracking them (they stay on disk), run:\n    ${grp.command}${grp.complete ? "" : "\n  (that line covers the first groups only: run the check again for the rest)"}\n  A stale copy of something that moved (an old status file, an archive now under docs/archive/)? Delete it instead: the same line without --cached. Build output committed by mistake? Name the folder in .gitignore. A real source file? regenerate with node scripts/check-manifest.mjs --write.`);
       }
     }
   }

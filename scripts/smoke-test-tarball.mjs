@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // C24.3 (AUDIT-8 F-4): install the packed `chicla` tarball ALONE (offline, in an empty folder, nothing else) and drive it as a user would:
-// init, bump-round --verify, make-delivery, verify-delivery, dump, the RECOVER/ files in the dump, recovery, chicla-zip, and `import "chicla/zip"`.
+// init, bump-round --verify, make-delivery, verify-delivery, dump, the RECOVER/ files in the dump, recovery, chicla-zip, `import "chicla/zip"`, and (C28.2) init --name, rename-status and ci-report.
 // It never publishes and never touches the repository: everything happens in a temp folder, removed at the end.
 //   node scripts/smoke-test-tarball.mjs [--tarball <file.tgz>] [--json]
 // With no --tarball it builds and packs the package of this tree (build-chicla.mjs, pack-release.mjs). Every step runs even if an earlier one failed, so one
@@ -106,6 +106,40 @@ step("chicla-zip-library", () => {
   writeFileSync(join(proj, "probe.mjs"), 'import * as z from "chicla/zip"; process.stdout.write([typeof z.writeZip, typeof z.extractZip].join(" "));');
   const r = node(["probe.mjs"], proj);
   return r.status === 0 && r.stdout === "function function" ? true : `import "chicla/zip": ${failureReason(r.stderr || r.stdout)}`;
+});
+
+// C28.2 (AUDIT-10 F-7): the commands added after 0.2.1 (M26, M27), driven from the installed package too. Added at the end; the nine steps above are unchanged.
+const named = join(T, "named");
+mkdirSync(named);
+const statusFiles = (dir) => readdirSync(dir).filter((f) => /_PROJECT_STATUS-\d+\.md$/.test(f));
+step("init-name", () => {
+  const r = bin("chicla", ["init", "--name", "ACME", "--root", named]);
+  if (r.status !== 0) return exit0(r, "init --name");
+  const f = statusFiles(named);
+  if (f.length !== 1 || !f[0].startsWith("ACME_")) return `init --name ACME made: ${f.join(", ") || "no status file"}`;
+  return exit0(bin("chicla", ["bump-round", "--verify", "--root", named]), "bump-round --verify");
+});
+step("rename-status", () => {
+  const r = bin("chicla", ["rename-status", "RENAMED", "--root", named]);
+  if (r.status !== 0) return exit0(r, "rename-status");
+  const f = statusFiles(named);
+  if (f.length !== 1 || !f[0].startsWith("RENAMED_")) return `after rename-status the status files are: ${f.join(", ") || "none"}`;
+  return exit0(bin("chicla", ["bump-round", "--verify", "--root", named]), "bump-round --verify after the rename");
+});
+step("ci-report", () => { // two logs zips built here with the installed chicla-zip: a green run (exit 0) and a red one (exit 1, the failing test named)
+  const logs = join(T, "logs"), good = join(logs, "good"), bad = join(logs, "bad");
+  mkdirSync(good, { recursive: true });
+  mkdirSync(bad, { recursive: true });
+  writeFileSync(join(good, "1_test.txt"), "# tests 2\n# pass 2\n# fail 0\n");
+  writeFileSync(join(bad, "1_test.txt"), "not ok 1 - the broken one\n# tests 2\n# pass 1\n# fail 1\n");
+  const zg = join(logs, "good.zip"), zb = join(logs, "bad.zip");
+  for (const [z, d] of [[zg, good], [zb, bad]]) { const c = bin("chicla-zip", ["create", z, d]); if (c.status !== 0) return exit0(c, "chicla-zip create"); }
+  const g = bin("chicla", ["ci-report", zg, "--json"]);
+  if (g.status !== 0) return exit0(g, "ci-report on a green run");
+  const b = bin("chicla", ["ci-report", zb, "--json"]);
+  if (b.status !== 1) return `ci-report on a red run exited ${b.status}, not 1`;
+  const o = JSON.parse(String(b.stdout).trim().split("\n").pop());
+  return JSON.stringify(o.jobs?.[0]?.failing ?? []).includes("the broken one") ? true : "the failing test is not named in the --json of the red run";
 });
 
 const ok = steps.every((s) => s.ok);

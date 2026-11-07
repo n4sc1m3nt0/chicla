@@ -75,7 +75,7 @@ test('ROADMAP: D138 says A-2 is now planned (the old «A-2 waits» stays as hist
 });
 
 test('the status file (the newest one) names the plan, D144 and C21.1, and says what Rodrigo has to confirm', () => {
-  const s = statusWithArchives(); // file + archives (C19.3): the «Open decisions» clauses of older rounds move to docs/status-archive-rolling-*.md, verbatim (round 279)
+  const s = statusWithArchives(); // file + archives (C19.3): the «Open decisions» clauses of older rounds move to docs/archive/status/status-archive-rolling-*.md, verbatim (round 279)
   assert.ok(s.includes('plan-a2-pins') && s.includes('D144') && s.includes('C21.1'));
   assert.match(s, /D-270a/);
 });

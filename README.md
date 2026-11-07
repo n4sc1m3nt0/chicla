@@ -4,7 +4,7 @@ Project memory for coding agents that survives sessions, accounts and usage limi
 
 An agent forgets everything between sessions. Chicla makes the repository itself the memory: a status file, fingerprints that prove the files belong together, a verified delivery zip, and an emergency dump that can restore the work when a session is cut off.
 
-> **Status: released.** The package to install is `chicla`: `0.2.1` is published on npm (tag `chicla-v0.2.1`, with a GitHub release; the owner published it on 2026-11-01, gate G-C17: `recovery` starts from the installed package, `init` writes `package.json`, the dump carries `RECOVER/`). `0.2.0` is deprecated on npm (its `recovery` does not start); it was published on 2026-10-29 with the tag `chicla-v0.2.0`. The old names `chicla-zip` and `chicla-kit` (`0.1.x`) are deprecated on npm; their folders here are private source. The runbook is in [`docs/release.md`](docs/release.md) and only the owner publishes it. The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). The licence is decided (Apache-2.0).
+> **Status: released.** The package to install is `chicla`: `0.2.1` is published on npm (tag `chicla-v0.2.1`, with a GitHub release; the owner published it on 2026-11-01, gate G-C17: `recovery` starts from the installed package, `init` writes `package.json`, the dump carries `RECOVER/`). `0.2.0` is deprecated on npm (its `recovery` does not start); it was published on 2026-10-29 with the tag `chicla-v0.2.0`. The old names `chicla-zip` and `chicla-kit` (`0.1.x`) are deprecated on npm; their folders here are private source. `0.3.0` is prepared in this tree (the new commands `init --name`, `rename-status` and `ci-report`; version in `packages/chicla/package.json`, runbook in `docs/release.md`) and is not published: gate G-C18 is the owner's. The runbook is in [`docs/release.md`](docs/release.md) and only the owner publishes it. The root package is private. Use everything from this repository. Security: [`SECURITY.md`](SECURITY.md). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md). The licence is decided (Apache-2.0).
 
 ## What is in here
 
@@ -47,7 +47,7 @@ Full details, options and known limits: [`packages/chicla-zip/README.md`](packag
 ```
 chicla init [--name <NAME>] [--json] [--root <dir>]
 chicla rename-status <NAME> [--json] [--root <dir>]
-chicla ci-report <logs.zip> [--json]
+chicla ci-report <logs.zip> [--allow <text>]... [--json]
 chicla check-manifest [--write] [--json] [--root <dir>]
 chicla bump-round [--verify | [--refresh] [--dry-run] [--note <text>]] [--json] [--root <dir>]
 chicla verify-delivery <zip> [--against <zip>]... [--allow-removed <path>]... [--json] [--root <dir>]

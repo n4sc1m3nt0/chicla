@@ -31,6 +31,6 @@ test('ROADMAP: D120 says init now writes package.json; D149 records D-283a and D
 test('the status file says the open decisions are none and the next card is C24.5; its archives name C24.2 as done', () => {
   const f = readdirSync(root).find((n) => /^CHICLA_PROJECT_STATUS-\d+\.md$/.test(n));
   const live = read(f);
-  assert.match(live.split('## Next up')[1].split('## Gates')[0] + statusWithArchives(), /round 285: \*\*none open/); // the clause of round 285 moves to docs/status-archive-rolling-* when the paragraph is archived (item 6)
+  assert.match(live.split('## Next up')[1].split('## Gates')[0] + statusWithArchives(), /round 285: \*\*none open/); // the clause of round 285 moves to docs/archive/status/status-archive-rolling-* when the paragraph is archived (item 6)
   assert.ok(/C24\.2[^\n]*package\.json/.test(statusWithArchives()), 'C24.2 is not recorded');
 });

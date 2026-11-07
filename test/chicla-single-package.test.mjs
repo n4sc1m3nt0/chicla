@@ -22,10 +22,10 @@ const NPM = process.platform === 'win32' ? { shell: true } : {};
 const BUILD = join(root, 'scripts', 'build-chicla.mjs');
 const PACK = join(root, 'scripts', 'pack-release.mjs');
 
-test('packages/chicla/package.json: chicla 0.2.1, two commands, the zip library at chicla/zip, nothing to install with it', () => {
+test('packages/chicla/package.json: chicla 0.3.0 (0.2.1 until round 316), two commands, the zip library at chicla/zip, nothing to install with it', () => {
   const pkg = json('packages/chicla/package.json');
   assert.equal(pkg.name, 'chicla');
-  assert.equal(pkg.version, '0.2.1');
+  assert.equal(pkg.version, '0.3.0');
   assert.equal(pkg.type, 'module');
   assert.equal(pkg.private, undefined);
   assert.deepEqual(pkg.bin, { chicla: 'src/cli.mjs', 'chicla-zip': 'src/zipkit.mjs' });
@@ -109,15 +109,15 @@ test('the three-step chain, then installed ALONE (offline, no other package) in 
     assert.equal(node([BUILD, '--out', join(out, 'stage')]).status, 0);
     const p = node([PACK, join(out, 'stage', 'chicla'), '--out', join(out, 'dist'), '--json']);
     assert.equal(p.status, 0, p.stdout + p.stderr);
-    assert.equal(JSON.parse(p.stdout).file, 'chicla-0.2.1.tgz');
-    const names = execFileSync('tar', ['-tzf', join(out, 'dist', 'chicla-0.2.1.tgz')], { encoding: 'utf8' }).trim().split('\n');
+    assert.equal(JSON.parse(p.stdout).file, 'chicla-0.3.0.tgz');
+    const names = execFileSync('tar', ['-tzf', join(out, 'dist', 'chicla-0.3.0.tgz')], { encoding: 'utf8' }).trim().split('\n');
     for (const f of ['package/LICENSE', 'package/README.md', 'package/package.json', 'package/src/cli.mjs', 'package/src/zipkit.mjs', 'package/src/zipkit-loader.mjs', 'package/src/pinned/recovery-report.mjs', 'package/templates/CLAUDE.md']) assert.ok(names.includes(f), `the tarball lacks ${f}`);
     assert.ok(!names.some((n) => n.startsWith('package/test/')), 'tests are in the tarball');
 
     const proj = join(out, 'proj');
     mkdirSync(proj);
     execFileSync('npm', ['init', '-y'], { cwd: proj, stdio: 'pipe', ...NPM });
-    const inst = spawnSync('npm', ['install', '--offline', '--no-audit', '--no-fund', '--ignore-scripts', join(out, 'dist', 'chicla-0.2.1.tgz')], { cwd: proj, encoding: 'utf8', ...NPM });
+    const inst = spawnSync('npm', ['install', '--offline', '--no-audit', '--no-fund', '--ignore-scripts', join(out, 'dist', 'chicla-0.3.0.tgz')], { cwd: proj, encoding: 'utf8', ...NPM });
     assert.equal(inst.status, 0, inst.stderr);
     assert.deepEqual(readdirSync(join(proj, 'node_modules')).filter((n) => !n.startsWith('.')), ['chicla'], 'nothing else was installed with it');
     const bin = (n) => join(proj, 'node_modules', '.bin', n);

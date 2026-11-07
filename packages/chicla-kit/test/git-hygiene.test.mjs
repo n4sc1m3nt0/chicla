@@ -119,3 +119,81 @@ test('a LOST file is still reported first (EMANIFEST_LOST), the git check does n
   put(dir, 'stage2/x.md'); git(dir, 'add', '-A');
   assert.equal(checkManifest({ root: dir }).code, 'EMANIFEST_LOST');
 });
+
+// Round 320 (C29.1, AUDIT-11 F-1): the message of EMANIFEST_TRACKED said only the first 15 names. Rodrigo's repository had 188 (and a first command that failed in zsh), so the guard now GROUPS the
+// names and prints ONE ready `git rm -r -q --cached --ignore-unmatch -- …` line (it stops tracking and keeps the files on disk). Result fields: `trackedGroups` [{ path, kind: folder|glob|file, files }]
+// sorted by path, `trackedCommand` (null when nothing is outside), `trackedCommandComplete` (false when the line was cut at about 3000 characters: run the check again for the rest).
+// Rules: a FOLDER is named only when every tracked file under it is outside the manifest; a GLOB only when no other tracked file matches it (a listed file must never be taken by it);
+// paths are shell-quoted. Up to 15 outside files are still listed by name, as before; more are summarised by group. Tests assert fields, and run the command for real.
+const OUT_PREFIX = 'git rm -r -q --cached --ignore-unmatch --';
+const runCmd = (dir, cmd) => spawnSync('sh', ['-c', cmd], { cwd: dir, encoding: 'utf8' });
+const NOSH = process.platform === 'win32';
+
+test('C29.1: folders, globs and single files; a listed file is never taken by a folder or a glob; paths are quoted', { skip: !HAS_GIT }, () => {
+  const dir = project({ 'a.txt': 'a\n', 'docs/keep.md': 'k\n', 'docs/note-1.md': 'n\n' });
+  for (const f of ['dist2/a.tgz.sha256', 'dist2/sub/b.txt', 'docs/status-archive-done-1-1.md', 'docs/status-archive-done-2-2.md', 'docs/status-archive-prev-3-3.md', 'docs/note-2.md', 'docs/note-3.md', "it's here.txt"]) put(dir, f);
+  git(dir, 'add', '-A');
+  const r = checkManifest({ root: dir });
+  assert.equal(r.code, 'EMANIFEST_TRACKED');
+  assert.deepEqual(r.trackedGroups, [
+    { path: 'dist2', kind: 'folder', files: 2 },
+    { path: 'docs/note-2.md', kind: 'file', files: 1 },
+    { path: 'docs/note-3.md', kind: 'file', files: 1 },
+    { path: 'docs/status-archive-done-*.md', kind: 'glob', files: 2 },
+    { path: 'docs/status-archive-prev-3-3.md', kind: 'file', files: 1 },
+    { path: "it's here.txt", kind: 'file', files: 1 },
+  ]);
+  assert.equal(r.trackedCommand, `${OUT_PREFIX} dist2 docs/note-2.md docs/note-3.md 'docs/status-archive-done-*.md' docs/status-archive-prev-3-3.md 'it'\\''s here.txt'`);
+  assert.equal(r.trackedCommandComplete, true);
+  assert.ok(renderCheckManifest(r).err.includes(r.trackedCommand), 'the command is printed in the message');
+});
+
+test('C29.1: the command works for real: it stops tracking, keeps the files on disk, leaves the listed ones, and the check then passes', { skip: !HAS_GIT || NOSH }, () => {
+  const dir = project({ 'a.txt': 'a\n', 'docs/keep.md': 'k\n', 'docs/note-1.md': 'n\n' });
+  for (const f of ['dist2/a.tgz.sha256', 'docs/status-archive-done-1-1.md', 'docs/status-archive-done-2-2.md', 'docs/note-2.md', "it's here.txt"]) put(dir, f);
+  git(dir, 'add', '-A');
+  const r = checkManifest({ root: dir });
+  const run = runCmd(dir, r.trackedCommand);
+  assert.equal(run.status, 0, run.stderr);
+  const after = checkManifest({ root: dir });
+  assert.equal(after.ok, true, 'the guard passes after the command');
+  assert.deepEqual(after.trackedOutside, []);
+  assert.equal(spawnSync('git', ['ls-files', 'docs/keep.md', 'docs/note-1.md', 'a.txt'], { cwd: dir, encoding: 'utf8' }).stdout.trim().split('\n').length, 3, 'the listed files are still tracked');
+  assert.ok(checkManifest({ root: dir }).added.includes('dist2/a.tgz.sha256'), 'the files stay on disk (untracked: only a warning)');
+});
+
+test('C29.1: with no tracked file outside the manifest the fields are empty', { skip: !HAS_GIT }, () => {
+  const r = checkManifest({ root: project({ 'a.txt': 'a\n' }) });
+  assert.deepEqual([r.trackedGroups, r.trackedCommand], [[], null]);
+});
+
+test('C29.1: many files: 30 folders of 6 files are summarised (at most 15 group lines, never 180 names) and ONE short command names all 30', { skip: !HAS_GIT }, () => {
+  const dir = project({ 'a.txt': 'a\n' });
+  for (let g = 0; g < 30; g++) for (let k = 0; k < 6; k++) put(dir, `build${String(g).padStart(2, '0')}/f${k}.txt`);
+  git(dir, 'add', '-A');
+  const r = checkManifest({ root: dir });
+  assert.equal(r.trackedOutside.length, 180);
+  assert.equal(r.trackedGroups.length, 30);
+  assert.ok(r.trackedGroups.every((g) => g.kind === 'folder' && g.files === 6));
+  const { err } = renderCheckManifest(r);
+  assert.ok(err.split('\n').length < 40, 'the message stays short');
+  assert.ok(!err.includes('build29/f5.txt'), 'single names are not printed past the limit');
+  assert.ok(r.trackedCommand.includes('build00') && r.trackedCommand.includes('build29'));
+  assert.equal(r.trackedCommandComplete, true);
+});
+
+test('C29.1: a very long list is cut at about 3000 characters (trackedCommandComplete false) and running the command again, a few times, clears it', { skip: !HAS_GIT || NOSH, timeout: 120000 }, () => {
+  const dir = project({ 'a.txt': 'a\n' });
+  const L = (i) => { let s = ''; let k = i; do { s = String.fromCharCode(97 + (k % 26)) + s; k = Math.floor(k / 26); } while (k > 0); return s; }; // letters only: no glob can join them
+  for (let i = 0; i < 120; i++) put(dir, `a-long-folder-name-for-the-test/with-a-long-file-name-${L(i)}-and-more-letters-after-it.txt`.replace('a-long-folder-name-for-the-test/', `d${L(i)}x-long-folder-name-for-the-test-over-and-over/`));
+  git(dir, 'add', '-A');
+  let r = checkManifest({ root: dir });
+  assert.equal(r.trackedOutside.length, 120);
+  assert.equal(r.trackedGroups.length, 120);
+  assert.equal(r.trackedCommandComplete, false);
+  assert.ok(r.trackedCommand.length <= 3300, `the command is ${r.trackedCommand.length} characters`);
+  let rounds = 0;
+  while (!r.ok && rounds < 40) { assert.equal(runCmd(dir, r.trackedCommand).status, 0); rounds++; r = checkManifest({ root: dir }); }
+  assert.equal(r.ok, true);
+  assert.ok(rounds >= 2 && rounds < 40, `it took ${rounds} rounds`);
+});

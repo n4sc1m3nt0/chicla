@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 308-308
+
+Moved out of `CHICLA_PROJECT_STATUS-322.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/archive/status/status-archive-done-*.md`.
+
+- Done: round 308 (2026-11-02; Rodrigo: «avança», then «Confirmo, e avança com C27.4»; D154 confirmed, D155 Claude's label). C27.4 (M27): the archives of the status file go to `docs/archive/status/`. `test/archive-status-folder.test.mjs` first (12; 9 red, the 3 `--dry-run` ones are guards); `scripts/archive-changelog.mjs` (the one source) writes the three kinds there (`STATUS_ARCH`) and the index lines, pointers and grep hints name the path; the 158 files moved (the card said 148). Followed: `test/status-text.mjs`, the archive tests, `audit5-archive`, `status-prefix-c263`, `status-reads`, `docs-accuracy`, `pinned-cost-docs`, the kit test `core-bump-round-limits`, the live status file, `docs/state-file.md`, `docs/README.md`, the smoke script. The «Done» lines, the CHANGELOG and the audits keep the old path as history. The round archived «Previous» 302, «Done» 298 and rolling 305 with the new code, and the CHANGELOG rounds 287-297. The pin did not move. NOT run: the CI, macOS, Windows, Node 18 and 20, the whole `mutants`. The `git mv` is Rodrigo's.

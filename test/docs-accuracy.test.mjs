@@ -186,7 +186,7 @@ test('C16.7: item 6, the Map (item 4), docs/state-file.md and docs/README.md nam
   assert.match(read('docs/audits/AUDIT-4.md'), /C16\.7 done in round 241/);
 });
 
-test('C16.7: the Snapshot of the status file stays short (the old lines live in docs/status-archive-done-*.md): at most 25 lines', () => {
+test('C16.7: the Snapshot of the status file stays short (the old lines live in docs/archive/status/status-archive-done-*.md): at most 25 lines', () => {
   const s = read(statusName());
   const snap = s.slice(s.indexOf('\n## Snapshot\n'), s.indexOf('\n## Next up\n'));
   const n = snap.split('\n').filter((l) => l.startsWith('- ')).length;

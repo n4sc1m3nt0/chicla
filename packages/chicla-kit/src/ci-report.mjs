@@ -1,13 +1,18 @@
 // C27.3 (round 307, D154): `chicla ci-report <logs.zip>` reads the zip of a GitHub Actions run («Download log archive») and says, per job, which tests failed and what the first error was.
 //
-//   chicla ci-report <logs.zip> [--json]     exit 0: no job failed; 1: a job failed, or the zip cannot be read; 2: usage
+//   chicla ci-report <logs.zip> [--allow <text>]... [--json]     exit 0: no job failed and every job was judged; 1: a job failed, something was not judged (C29.3), or the zip cannot be read; 2: usage
 //
 // The work is `ciReport({ zip, maxBytes })`, which never prints, exits or throws (as the other cores). The zip is hostile input: it is read in memory with the kit's own zip reader,
-// never extracted; a name is only a label; a log above `maxBytes` (default 64 MiB) is not read and the job is listed as `unreadable` (a warning, not a verdict).
+// never extracted; a name is only a label; a log above `maxBytes` (default 64 MiB) is not read and the job is listed as `unreadable`: it was NOT JUDGED (C29.3, D-317a: that makes the run not ok, it is no longer «✓»).
 // Layout read: one combined log per job at the top, `<n>_<job>.txt`; if there are none, the per-step files `<job>/<n>_<step>.txt` are joined by job.
 // Per line: the timestamp and colour codes are dropped; `not ok N - name` at the start of a line is a failing test (node --test, TAP); `# tests`, `# pass`, `# fail` are added up over
 // the suites of the job; the first error is the first line of the `error:` block of the first failing test, else the first `##[error]` line. A job `failed` if it has a failing test,
 // a `# fail` above 0 or an `##[error]` line.
+// C28.3 (AUDIT-10 F-2, D-310b): `--allow <text>` (repeatable) names jobs that MAY fail, such as the Windows leg of `tarball` (`continue-on-error`: reported, not promised). A job whose name
+// contains the text (case-sensitive, a part of the name) gets `allowed: true`; if it failed it is still read and printed (name, first error, failing tests) but it does not count and does
+// not change the exit code. An entry with a `.` or `..` segment in its name is no log: it is not read and never becomes a job label (C28.4). `failed` keeps the raw verdict. A typo or a wrong case matches nothing, so the job counts as failed (the safe side). Without the option nothing changes.
+// C29.3 (AUDIT-11 F-3, F-4; D-317a): what was not judged is no green. An `unreadable` job and the log entries beyond `maxLogs` (default 5000, counted in `unjudgedEntries`) end in ECIREPORT_UNJUDGED:
+// exit 1, no «✓» line. `--allow` can allow an unjudged JOB by name; nothing allows entries beyond the cap (they have no name); a job that FAILED keeps ECIREPORT_FAILED (a certain failure outranks a doubt).
 import { loadZipkit } from "./zipkit-loader.mjs";
 
 const MAX_BYTES = 64 * 1024 * 1024, MAX_LOGS = 5000;
@@ -38,16 +43,18 @@ function parseLog(text) {
   return { failing, tests, pass, fail, firstError: testErr ?? errLine, failed: failing.length > 0 || (fail ?? 0) > 0 || errLine !== null };
 }
 
-/** Reads the logs zip. Returns { ok, code, zip, jobs: [{ name, failed, tests, pass, fail, failing, firstError, unreadable }], messages }. Never prints, exits or throws. */
-export async function ciReport({ zip, maxBytes = MAX_BYTES } = {}) {
+/** Reads the logs zip. Returns { ok, code, zip, jobs: [{ name, failed, allowed, tests, pass, fail, failing, firstError, unreadable }], messages }. Never prints, exits or throws. */
+export async function ciReport({ zip, maxBytes = MAX_BYTES, allow = [], maxLogs = MAX_LOGS } = {}) {
   const messages = [], say = (stream, text) => messages.push({ stream, text });
-  const result = { ok: true, code: null, zip, jobs: [], messages };
+  const result = { ok: true, code: null, zip, jobs: [], unjudgedJobs: [], unjudgedEntries: 0, messages };
   const stop = (code, text) => { say("err", `✗ ${code}: ${text}`); result.ok = false; result.code = code; return result; };
+  if (!Array.isArray(allow) || allow.some((a) => typeof a !== "string" || a === "")) return stop("ECIREPORT_ALLOW", "allow must be a list of non-empty texts");
   let z;
   try {
     const { openZip } = await loadZipkit();
     z = openZip(zip);
-    const names = z.entries.filter((e) => !e.isDir && /\.txt$/i.test(e.name)).map((e) => e.name).slice(0, MAX_LOGS);
+    const logs = z.entries.filter((e) => !e.isDir && /\.txt$/i.test(e.name) && !e.name.split("/").some((seg) => seg === "." || seg === "..")).map((e) => e.name); // an entry with a `.` or `..` segment is no log (C28.4, F-9)
+    const names = logs.slice(0, maxLogs); result.unjudgedEntries = logs.length - names.length; // the rest is not read: it is NOT judged (C29.3, F-4)
     const num = (s) => Number(/(?:^|\/)(\d+)_/.exec(s)?.[1] ?? Infinity);
     const top = names.filter((s) => !s.includes("/") && /^\d+_.+\.txt$/i.test(s));
     const groups = new Map(); // job -> [file names]
@@ -65,13 +72,22 @@ export async function ciReport({ zip, maxBytes = MAX_BYTES } = {}) {
 
   if (!result.jobs.length) return stop("ECIREPORT_EMPTY", "the zip has no job log (expected «<n>_<job>.txt» files or one folder per job)");
   for (const j of result.jobs) if (j.unreadable) say("err", `⚠ ${j.name}: a log is above ${maxBytes} bytes or cannot be read; this job was not judged`);
-  const bad = result.jobs.filter((j) => j.failed);
-  for (const j of bad) {
+  if (result.unjudgedEntries) say("err", `⚠ ${result.unjudgedEntries} log entr${result.unjudgedEntries === 1 ? "y" : "ies"} beyond the first ${maxLogs} ${result.unjudgedEntries === 1 ? "was" : "were"} not read: no job in ${result.unjudgedEntries === 1 ? "it" : "them"} was judged`);
+  for (const j of result.jobs) j.allowed = allow.some((t) => j.name.includes(t));
+  result.unjudgedJobs = result.jobs.filter((j) => j.unreadable).map((j) => j.name);
+  const failedJobs = result.jobs.filter((j) => j.failed), bad = failedJobs.filter((j) => !j.allowed), allowedRed = failedJobs.filter((j) => j.allowed);
+  const unjudgedBad = result.jobs.filter((j) => j.unreadable && !j.allowed), allowedUnjudged = result.jobs.filter((j) => j.unreadable && j.allowed);
+  const doubt = unjudgedBad.length + result.unjudgedEntries > 0;
+  const doubtText = `${unjudgedBad.length} job(s) and ${result.unjudgedEntries} log entr${result.unjudgedEntries === 1 ? "y" : "ies"} not judged`;
+  const detail = (j) => {
     const counts = j.tests === null ? "" : ` (${j.fail ?? 0} failed of ${j.tests} tests)`;
-    say("err", `✗ ${j.name}${counts}${j.firstError ? `\n    first error: ${j.firstError}` : ""}${j.failing.length ? `\n    failing:\n${j.failing.slice(0, 15).map((f) => `      ${f}`).join("\n")}${j.failing.length > 15 ? `\n      … and ${j.failing.length - 15} more` : ""}` : ""}`);
-  }
-  if (bad.length) { result.ok = false; result.code = "ECIREPORT_FAILED"; say("err", `✗ ECIREPORT_FAILED: ${bad.length} of ${result.jobs.length} job(s) failed`); }
-  else say("out", `✓ no failing job (${result.jobs.length} job(s) read)`);
+    return `${j.name}${counts}${j.firstError ? `\n    first error: ${j.firstError}` : ""}${j.failing.length ? `\n    failing:\n${j.failing.slice(0, 15).map((f) => `      ${f}`).join("\n")}${j.failing.length > 15 ? `\n      … and ${j.failing.length - 15} more` : ""}` : ""}`;
+  };
+  for (const j of bad) say("err", `✗ ${detail(j)}`);
+  for (const j of allowedRed) say("err", `⚠ ${detail(j)}\n    (allowed to fail: not counted)`);
+  if (bad.length) { result.ok = false; result.code = "ECIREPORT_FAILED"; say("err", `✗ ECIREPORT_FAILED: ${bad.length} of ${result.jobs.length} job(s) failed${allowedRed.length ? ` (${allowedRed.length} more allowed to fail)` : ""}${doubt ? `; also ${doubtText}` : ""}`); }
+  else if (doubt) { result.ok = false; result.code = "ECIREPORT_UNJUDGED"; say("err", `✗ ECIREPORT_UNJUDGED: ${doubtText}; a run that was not fully judged is not known to be green`); }
+  else say("out", `✓ no failing job (${result.jobs.length} job(s) read${allowedRed.length + allowedUnjudged.length ? `; ${allowedRed.length + allowedUnjudged.length} allowed to fail or not judged, see above` : ""})`);
   return result;
 }
 

@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 303-303
+
+Moved out of `CHICLA_PROJECT_STATUS-317.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/archive/status/status-archive-done-*.md`.
+
+- Done: round 303 (2026-11-02; the person in this session: «I'd go with option 1», «yes go ahead»; D-C265c amends D-C265a). `chicla rename-status` (C26.5) rewrote the old name only in the instruction files and left the whole status file alone, but the process block of the status file (above «Current version») has live instructions, the session-start command `ls <NAME>_PROJECT_STATUS-*.md` and the name of the file, which after a rename found nothing. `src/rename-status.mjs` now also says the new name there (a whole name, as in the instruction files); from «Current version» down (Snapshot, Previous, Done, Gates) the status file keeps its bytes, and so do the CHANGELOG body and the archives. `rename-status.test.mjs` (first test changed, red first); mutants K-REN-08 (the block keeps the old name) and K-REN-09 (the history is rewritten too), each RED alone. Two sources; the pin did not move. NOT run: the CI, macOS, Windows, Node 18 and 20, `npm run smoke`, the whole `npm run mutants` and `mutants:kit`.

@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 310-310
+
+Moved out of `CHICLA_PROJECT_STATUS-324.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/archive/status/status-archive-done-*.md`.
+
+- Done: round 310 (2026-11-02; Rodrigo: «avança»; D157 Claude's label). C27.6 (M27): `.github/workflows/ci.yml`: the `pack-chicla` job's `actions/upload-artifact` from v4.6.2 to v6.0.0 (`b7c566a772e6…`). Read at GitHub with `git ls-remote --tags` and the `action.yml` of each commit: v4.6.2 and v5.0.0 say `node20`, v6.0.0 and v7.0.2 say `node24`. `test/ci-actions-node24.test.mjs` now loops over three actions (6 tests; the `upload-artifact` version test red first, the rest already true or guards). The same `ls-remote` confirmed the two commits of round 309 (`checkout` v6.0.0 = `1af3b93b…`, `setup-node` v6.0.0 = `2028fbc5…`), which that round had taken from other repositories. Measured: `npm run test:fast` 1815 pass, 0 fail, 2 skipped, 366 s; the whole `npm test` after `bump-round` 1869 tests, 1867 pass, 0 fail, 2 skipped, 668 s (Node 22, Ubuntu sandbox). The round archived «Previous» 304, «Done» 300 and rolling 307. No source file touched; the pin did not move. **M27 is closed** (C27.1 to C27.6). NOT run: the CI, macOS, Windows, Node 18 and 20, the whole `mutants`.

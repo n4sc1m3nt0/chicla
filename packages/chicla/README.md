@@ -10,8 +10,12 @@ npx chicla init             # CLAUDE.md, AGENTS.md, the status file, CHANGELOG.m
 npx chicla bump-round --verify
 ```
 
-**The `chicla` command** is the workflow: `init`, `update`, `check-manifest`, `bump-round`, `make-delivery`, `verify-delivery`, `dump` and `recovery`.
+**The `chicla` command** is the workflow: `init`, `update`, `check-manifest`, `bump-round`, `make-delivery`, `verify-delivery`, `dump`, `recovery`, `rename-status` and `ci-report`.
 Every option and exit code is described in `chicla --help` and in the project's documentation.
+
+**Name the project.** The status file is `<NAME>_PROJECT_STATUS-N.md`: `npx chicla init --name ACME` chooses the name (otherwise the folder's, in capitals), and `npx chicla rename-status NEWNAME` changes it later. A project with no name set is called `CHICLA` and keeps working.
+
+**Read a failed CI run.** `npx chicla ci-report logs.zip` reads the logs zip of a GitHub Actions run («Download log archive») and prints, per job, the failing tests and the first error; exit 1 if a job failed or anything was not judged (a log above 64 MiB, or more than 5000 log entries: `ECIREPORT_UNJUDGED`). `--allow <text>` (repeatable, a case-sensitive part of the job name) names a job that may fail or be unjudged, such as `--allow "tarball (windows"`: it is still shown, but it does not count.
 
 **The `chicla-zip` command and the library** read, verify, extract and write zips in plain Node:
 

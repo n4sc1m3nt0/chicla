@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 300-300
+
+Moved out of `CHICLA_PROJECT_STATUS-314.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/archive/status/status-archive-done-*.md`.
+
+- Done: round 300 (2026-11-01; Rodrigo: «avança»; D-C was confirmed in round 298). C26.3 (D151, M26): `emergency-dump.mjs` names in the marker the status file of the project's prefix (own reader; invalid, conflicting or only another prefix: «(not found)», never a guess; the CLAUDE.md is read only if it is in the project, or a missing one would be an error in the marker); `pinned/recovery-report.mjs` does not call an older status file of the baseline «removed», whatever its prefix; `archive-changelog.mjs` (copied alone by its tests, so it reads the line itself) finds the status file in all three modes and still refuses none, two, or a file of another prefix. `test/status-prefix-c263.test.mjs` (8; 6 red first, 2 guards on the legacy name); mutants K-DMP-50, K-DMP-51, K-REC-50, K-ARC-50, K-ARC-51 (each RED alone). Three sources; THE PIN MOVED (`recovery-report` is pinned): CLAUDE.md now says `15e4ef5d0602…`. NOT done: `init` and the templates (C26.4); the dump and the recovery were not run by hand in a clean session (G-C11).

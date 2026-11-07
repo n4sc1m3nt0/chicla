@@ -7,3 +7,16 @@ stage/
 stage2/
 dist/
 ci/package/
+
+# What the release runbooks (docs/release.md) leave INSIDE the repository: never track it (C29.2, AUDIT-11 F-2).
+# `git add -A` after a release once put these in `main`, and the guard EMANIFEST_TRACKED then failed the CI.
+/dist2/
+/dist3/
+/distci/
+/distkit/
+/dist-*/
+/ci/
+/notes.md
+/notes-*.md
+*.tgz.sha256
+__MACOSX/

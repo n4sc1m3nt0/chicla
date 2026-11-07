@@ -21,7 +21,7 @@ test('D148 D-D: chicla-zip and chicla-kit are private (npm refuses to publish th
     assert.equal(p.version, '0.1.1', `${dir} version stays at the last published one`);
   }
   assert.notEqual(json('packages/chicla/package.json').private, true, 'the single package is the one that gets published');
-  assert.equal(json('packages/chicla/package.json').version, '0.2.1');
+  assert.equal(json('packages/chicla/package.json').version, '0.3.0'); // 0.2.1 until round 316 (C28.5, D-310c)
 });
 
 test('pack-release refuses both private folders with EPRIVATE, so no tarball of an old package can be made by mistake', () => {

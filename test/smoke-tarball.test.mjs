@@ -1,3 +1,4 @@
+// Round 313 (C28.2, AUDIT-10 F-7, M28): three steps are added at the end of STEPS (`init-name`, `rename-status`, `ci-report`) and one break-it test; the nine before them are unchanged.
 // Round 288 (C24.3, AUDIT-8 F-4, M24): `scripts/smoke-test-tarball.mjs` and the CI job `tarball`.
 // Until now only one unit test installed the tarball alone, and only on the machine that ran `npm test`; no CI job did it on macOS or Windows.
 // Written before the script; red until it exists. Tests assert exit codes, JSON fields and file shapes, never message wording.
@@ -15,7 +16,7 @@ const node = (args, opts = {}) => spawnSync(process.execPath, args, { encoding: 
 const SMOKE = join(root, 'scripts', 'smoke-test-tarball.mjs');
 const BUILD = join(root, 'scripts', 'build-chicla.mjs');
 const PACK = join(root, 'scripts', 'pack-release.mjs');
-const STEPS = ['init', 'bump-round-verify', 'make-delivery', 'verify-delivery', 'dump', 'dump-has-recover', 'recovery', 'chicla-zip', 'chicla-zip-library'];
+const STEPS = ['init', 'bump-round-verify', 'make-delivery', 'verify-delivery', 'dump', 'dump-has-recover', 'recovery', 'chicla-zip', 'chicla-zip-library', 'init-name', 'rename-status', 'ci-report'];
 
 test('C24.3: the script exists, and a usage error exits 2 (unknown option, --tarball with no value)', () => {
   assert.ok(existsSync(SMOKE), 'scripts/smoke-test-tarball.mjs does not exist');
@@ -58,6 +59,23 @@ test('C24.3, break it on purpose: a tarball without src/pinned/zipkit.mjs (the 0
     assert.equal(o.ok, false);
     assert.equal(o.steps.find((s) => s.name === 'recovery')?.ok, false, 'recovery must be the red step');
     assert.equal(o.steps.find((s) => s.name === 'dump')?.ok, true, 'the steps before it stay green (the script goes on after a red step)');
+  } finally { rmSync(out, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
+});
+
+test('C28.2, break it on purpose: a tarball without src/ci-report.mjs and src/rename-status.mjs fails exactly those two steps (AUDIT-10 F-7); the others stay green', { timeout: 300000 }, () => {
+  const out = mkdtempSync(join(tmpdir(), 'chicla-smoke-nocmd-'));
+  try {
+    assert.equal(node([BUILD, '--out', join(out, 'stage')]).status, 0);
+    for (const f of ['ci-report.mjs', 'rename-status.mjs']) rmSync(join(out, 'stage', 'chicla', 'src', f));
+    const p = node([PACK, join(out, 'stage', 'chicla'), '--out', join(out, 'dist'), '--json']);
+    assert.equal(p.status, 0, p.stdout + p.stderr);
+    const tgz = join(out, 'dist', readdirSync(join(out, 'dist')).find((f) => f.endsWith('.tgz')));
+    const r = node([SMOKE, '--tarball', tgz, '--json'], { timeout: 290000 });
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    const o = JSON.parse(r.stdout.trim().split('\n').pop());
+    const red = o.steps.filter((s) => !s.ok).map((s) => s.name).sort();
+    assert.deepEqual(red, ['ci-report', 'rename-status']);
+    assert.equal(o.steps.find((s) => s.name === 'init-name')?.ok, true, 'init --name does not need those two files');
   } finally { rmSync(out, { recursive: true, force: true, maxRetries: 8, retryDelay: 25 }); }
 });
 
