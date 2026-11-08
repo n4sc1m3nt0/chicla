@@ -1,7 +1,15 @@
-<!-- CHANGELOG_FINGERPRINT: seq=326 file=CHICLA_PROJECT_STATUS-326.md app_sha256_12=065d37032ef1 changelog_sha256_12=26f96415ff52 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=327 file=CHICLA_PROJECT_STATUS-327.md app_sha256_12=065d37032ef1 changelog_sha256_12=92d1a42f2f0a (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`
+
+## Round 322 — the records of the green CI, the mutants and G-C11; the release values (v0.0.326)
+
+- Task (Rodrigo: «podes fechar o g-c11, já o fiz noutra conta. fecha tudo o resto que foi feito (mutants e ci e tudo o resto) e vamos avançar para a release»): docs only. G-C11 closed on his word (another account, not seen by Claude).
+- Test first: `test/close-round322-docs.test.mjs` (6, red). Read: the logs zip of the green CI run of `c03e1767` with `ci-report` (14 jobs, none failed or unjudged; Ubuntu 1926 pass and 2 skipped, macOS 1914 pass and 14 skipped: the 12 more explain 1810 against 1822; no warning, no error), the three actions at their v6.0.0 commits, the tarball jobs on three systems, and the tarball of `pack-chicla` (146190 bytes, sha256 `9fc63878…`) reproduced by a local rebuild.
+- Change: the status file (G-C11 closed, G-C18 with the values), ROADMAP (G-C11, G-C18, C27.5 closed, C29.4 open with its reason), AUDIT-11 §6, the 0.3.0 runbook (the values, G-C11 closed, the real logs zip read, the rebuild identical). Rodrigo's `npm run mutants`: 348, all as listed, 9 not run on darwin. No source file; the pin did not move. Rotation: «Previous» 316, «Done» 312, rolling 319.
+- Then the whole `npm test` after `bump-round`: 1934 tests, 1932 pass, 0 fail, 2 skipped, 715 s (Node 22, Linux, 1 core), read from the run's own summary. The tarball built from the tree of this round (its docs included) has the same 146190 bytes and sha256 `9fc63878…` as the CI's, so pushing this round does not change what is to be released.
+- NOT run: the release itself, `npm view` after it, the 62 kit mutants (C29.4).
 
 ## Round 321 — C29.3: `ci-report` does not call a run green when something was not judged (v0.0.325)
 

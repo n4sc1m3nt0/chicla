@@ -45,3 +45,16 @@ Small, as D148 says: tests first, at most 3 source files and about 200 lines per
 - **C29.4 (F-7)** judge the 62 kit mutants of round 315 in one detached run (`--only`, in a loop, about 100 minutes); survivors, if any, get a test or a note. No source unless a survivor needs it.
 
 Nothing was fixed in this audit except the audit itself; F-5 is a note, not an edit of old records. Claude published nothing, and Claude never publishes: G-C18 stays Rodrigo's.
+
+## 6. Follow-up (round 322, 2026-11-08): what Rodrigo's push, the CI and his runs settled
+
+Rodrigo cleaned the repository (F-1), pasted the zip of round 321 and pushed; the CI ran on commit `c03e176729e5…` (the `main` of the repository). Rodrigo uploaded the logs zip of that run, so the part of §4 «a REAL logs zip» is measured:
+
+- **F-1 held, and its cleanup worked.** After the cleanup and the push the CI is green; nothing is red, nothing tracked is outside the manifest.
+- **The first real logs zip.** `ci-report` read it: 14 jobs, none failed, none unjudged; the layout has the two forms the reader supports (a `N_job.txt` per job, starting at 0, and a folder per job with `system.txt` and the steps); the counts match the logs (Ubuntu 1928 tests, 1926 pass, 2 skipped on Node 18, 20 and 22; macOS 1928 tests, 1914 pass, 14 skipped; Windows 1235 tests, 1194 pass, the 41 skipped not listed here). No `##[warning]`, no `##[error]`, no `not ok` in any log.
+- **1810 against 1822 (the half of C27.5 that was open) is explained.** macOS skips 12 more tests than Ubuntu, by design: 5 of ZIP-016 and 1 that counts descriptors need `/dev/full` or `/proc/self/fd` (Linux only), and 6 depend on a file system that folds names (NFC/NFD and case) such as APFS.
+- **The actions.** The runners downloaded `actions/checkout`, `actions/setup-node` and `actions/upload-artifact` at the three commits confirmed at GitHub in round 310 (v6.0.0), with no Node 20 warning: M27's aim is met.
+- **The tarball.** The three `tarball` jobs (Ubuntu, macOS and the Windows leg) passed the 12 smoke steps, the new commands included, and `pack-chicla` built 32 files: `chicla-0.3.0.tgz`, 146190 bytes, sha256 `9fc6387862267e9515285355e49cf4dfaa759787b6e277f8c08d4dc883198bf7`. A rebuild of the round 321 tree in the sandbox gave the same bytes, so the tarball is reproducible (it was said it «may differ»).
+- **Mutants.** Rodrigo ran `npm run mutants` on his Mac (the list of the zip package): 348 mutants, all as listed, 9 not run on darwin by design (their tests can only go red on Linux). The kit list, `npm run mutants:kit`, is a different list: C29.4 (F-7, the 62 not re-judged) is **still open** and is not a blocker for the release.
+- **G-C11** was repeated by Rodrigo in another account and is closed by his word (Claude did not see it).
+- **Still open:** C29.4; the three Dependabot pull requests (v7 of the three actions; the CI is green on v6, so merging is possible but is his call, F-6); G-C8; and the release itself (G-C18), which is Rodrigo's. Nothing is published: `npm view chicla` still says 0.2.1.
