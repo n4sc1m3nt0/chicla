@@ -24,12 +24,13 @@ test('G-C11 is CLOSED by Rodrigo\'s word (2026-11-08, done in another account, n
   assert.match(row(read('ROADMAP.md'), '| G-C11 ·'), /2026-11-08/);
 });
 
-test('G-C18 stays open and is Rodrigo\'s, with the commit the CI built and the tarball values (the same bytes as a local rebuild)', () => {
+// Round 323: G-C18 was closed by Rodrigo after the release, so the row may be open (round 322) or CLOSED (round 323); the values stay in it either way.
+test('G-C18 is Rodrigo\'s (open in round 322, CLOSED in round 323), with the commit the CI built and the tarball values (the same bytes as a local rebuild)', () => {
   const g = row(statusWithArchives(), '| G-C18 |');
-  assert.match(g, /open \(Rodrigo's\)/);
+  assert.match(g, /open \(Rodrigo's\)|CLOSED by Rodrigo \(2026-11-08/);
   for (const part of ['c03e1767', '9fc63878', '146190', 'docs/release.md']) assert.ok(g.includes(part), `the G-C18 row does not say «${part}»`);
   const r = row(read('ROADMAP.md'), '| G-C18 ·');
-  assert.ok(r.includes('c03e1767') && /open/.test(r) && /G-C11/.test(r));
+  assert.ok(r.includes('c03e1767') && /open|CLOSED/.test(r) && /G-C11/.test(r));
 });
 
 test('docs/release.md: the 0.3.0 runbook has the values of the run to release, says G-C11 is closed and that ci-report has read a real logs zip', () => {
@@ -47,7 +48,7 @@ test('ROADMAP: C27.5 is closed with what the real logs say; C29.4 stays open wit
   const c = row(r, '| C27.5 |');
   assert.ok(c.includes('Closed in round 322') && c.includes('1810') && /12 (more|tests)/.test(c) && c.includes('/dev/full'), 'C27.5 does not say what the logs showed');
   const k = row(r, '| C29.4 |');
-  assert.ok(/proposed/.test(k) && k.includes('mutants:kit') && k.includes('348'), 'C29.4 does not say why it stays open');
+  assert.ok(/proposed|closed by Rodrigo/.test(k) && k.includes('mutants:kit') && k.includes('348'), 'C29.4 does not say why it stays open');
 });
 
 test('AUDIT-11 has a follow-up section: what the CI, the real logs zip and Rodrigo\'s runs settled, and what is still open', () => {

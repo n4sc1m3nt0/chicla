@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 314-314
+
+Moved out of `CHICLA_PROJECT_STATUS-328.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/archive/status/status-archive-done-*.md`.
+
+- Done: round 314 (2026-11-02; Rodrigo: «avança»). C28.3 (M28; AUDIT-10 F-2; D-310b): `packages/chicla-kit/test/ci-report.test.mjs` first (8 new: 7 red, the usage one a guard). `ci-report.mjs`: `ciReport({ zip, allow })`; a job whose name contains one of the texts (case-sensitive) gets `allowed: true`; `failed` keeps the raw verdict; an allowed red job is printed (`⚠`, first error, failing tests) and not counted, the exit is 0 if no other job failed; a bad list is `ECIREPORT_ALLOW`. `cli.mjs`: `--allow <text>` repeatable (missing or empty text: EUSAGE, 2; other commands still refuse it). The help, the kit README and the root README say it. Measured: 19 tests of the file pass; seven hand mutants in a copy (always allowed, allowed still counted, case-insensitive, list not validated, allowed job not printed, CLI drops the list, empty text accepted) all killed. The whole `npm test` on this tree after `bump-round`: 1888 tests, 1886 pass, 0 fail, 2 skipped, 706 s. The round archived «Previous» 308, «Done» 304 and rolling 311. NOT run: a real logs zip, the CI, the whole `mutants`.

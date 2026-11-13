@@ -42,19 +42,20 @@ test('packages/chicla/README.md names the commands that are new since 0.2.1', ()
   for (const part of ['rename-status', 'ci-report', 'init --name', '--allow']) assert.ok(r.includes(part), `the package README does not say «${part}»`);
 });
 
-test('G-C18 is a gate that is Rodrigo\'s and open: in the status file and in ROADMAP §9; C28.5 is done in the ROADMAP', () => {
+// Round 323: G-C18 was closed by Rodrigo after the release (open in round 316, CLOSED in round 323).
+test('G-C18 is a gate that is Rodrigo\'s: in the status file and in ROADMAP §9; C28.5 is done in the ROADMAP', () => {
   const st = statusWithArchives().split('\n').find((l) => l.startsWith('| G-C18 |')) ?? '';
-  assert.match(st, /open \(Rodrigo's\)/);
+  assert.match(st, /open \(Rodrigo's\)|CLOSED by Rodrigo \(2026-11-08/);
   assert.ok(st.includes('docs/release.md') && st.includes('0.3.0'));
   const r = read('ROADMAP.md');
   assert.ok(r.split('\n').some((l) => l.startsWith('| G-C18 ·') && /0\.3\.0/.test(l)), 'ROADMAP §9 has no G-C18 row');
   assert.match(r.split('\n').find((l) => l.startsWith('| C28.5 |')) ?? '', /feito/);
 });
 
-test('README: 0.2.1 is still the published one and 0.3.0 is prepared, not published', () => {
+// Round 323: 0.3.0 is published now; the README says so (the 0.3.0 check is in published-chicla-030-docs.test.mjs) and still names 0.2.1 and gate G-C18.
+test('README: 0.2.1 is still on npm and the README names the gate of 0.3.0', () => {
   const r = read('README.md');
   assert.match(r, /`0\.2\.1` is published on npm/);
-  assert.match(r, /`0\.3\.0` is prepared in this tree/);
-  assert.match(r, /not published/);
+  assert.match(r, /`0\.3\.0` is published on npm/);
   assert.match(r, /G-C18/);
 });

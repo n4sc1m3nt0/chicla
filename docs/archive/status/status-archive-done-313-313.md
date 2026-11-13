@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 313-313
+
+Moved out of `CHICLA_PROJECT_STATUS-327.md` verbatim by `scripts/archive-changelog.mjs --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/archive/status/status-archive-done-*.md`.
+
+- Done: round 313 (2026-11-02; Rodrigo: «avança»). C28.2 (M28; AUDIT-10 F-7): `test/smoke-tarball.test.mjs` first (STEPS 9 → 12 red; plus a break-it test: a tarball without `src/ci-report.mjs` and `src/rename-status.mjs` fails exactly `ci-report` and `rename-status`, `init-name` stays green). `scripts/smoke-test-tarball.mjs`: three steps at the end, driven from the package installed alone: `init-name` (`init --name ACME`, one `ACME_PROJECT_STATUS-N.md`, `bump-round --verify`), `rename-status` (to RENAMED, one file, `--verify` again), `ci-report` (two logs zips made with the installed `chicla-zip`: green exit 0, red exit 1 with the failing test in the `--json`). Measured: the script alone 12 steps ok; the two test files 15 pass; hand mutant (`ci-report` never fails, in a copy) → only `ci-report` red. The whole `npm test` on this tree after `bump-round`: 1880 tests, 1878 pass, 0 fail, 2 skipped, 635 s. The round archived «Previous» 307, «Done» 303 and rolling 310. NOT run: the CI (the macOS and Windows `tarball` legs), the whole `mutants`.

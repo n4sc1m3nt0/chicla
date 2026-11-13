@@ -1,7 +1,26 @@
-<!-- CHANGELOG_FINGERPRINT: seq=327 file=CHICLA_PROJECT_STATUS-327.md app_sha256_12=065d37032ef1 changelog_sha256_12=92d1a42f2f0a (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=329 file=CHICLA_PROJECT_STATUS-329.md app_sha256_12=065d37032ef1 changelog_sha256_12=a5cc03140f8f (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`
+
+## Round 324 — the three Dependabot pull requests merged by Rodrigo; `ci.yml` as his main; the round-323 manifest claim corrected (v0.0.328)
+
+- Task (Rodrigo pasted the output of `gh pr list/checks/diff`, `git ls-remote`, `git pull` and `gh pr list --state all` after the GitHub connector could not be reached): record the merge. Docs and `ci.yml`; no source; the pin did not move. Claude merged nothing.
+- Test first: `test/dependabot-merged-docs.test.mjs` (5, red).
+- Read (his pasted output only): #3, #2 and #1 each touch only `ci.yml` (one action each), 14 jobs green each, each commit equal to its tag (`git ls-remote`: v7.0.1 `3d3c42e5…`, v7.1.0 `949feb24…`, v7.0.2 `cf430e03…`); merged in the order #3, #2, `@dependabot rebase`, #1; CI of main green (run `42512206190`); `main` `306881e` to `37ce250`, only `ci.yml`.
+- CORRECTION: round 323 said a merge makes `check-manifest` fail until the manifest is regenerated. It does not: it compares the list of files; the crc and size are written by `--write` and `make-delivery-zip`. Claude's own simulation of the three bumps (the 8 test files that read `ci.yml`: 79 tests; `check-manifest`; `bump-round --verify`) was green. (That simulation had a slip: a first command that failed on syntax had already applied the bumps, and the backup made after it held them; the original was restored from the round-323 zip and compared byte for byte before this round.)
+- Change: `ci.yml` as his main; AUDIT-11 §7 corrected and §8 added; the status file (Done, Open decisions, Current version). Rotation: «Previous» 318, «Done» 314, rolling 321.
+- Then the whole `npm test` after `bump-round`: 1949 tests, 1947 pass, 0 fail, 2 skipped, 700 s (Node 22, Linux, 1 core), read from the run's own summary.
+- NOT seen: the pull-request pages and the merge commits on GitHub; the `headSha` of the main run; the 62 kit mutants were not run.
+
+## Round 323 — chicla 0.3.0 published: the records, G-C18 and C29.4 closed, the Dependabot reading (v0.0.327)
+
+- Task (Rodrigo: «ajuda-me a fazer a release», then «fecha o g-c18 e o g-c29.4 e diz-me o que fazer com os pr do dependabot»): docs only. He ran the runbook with Claude; `chicla` 0.3.0 is on npm. G-C18 and C29.4 closed on his word (Claude saw no output of `npm run mutants:kit`). Claude published nothing.
+- Test first: `test/published-chicla-030-docs.test.mjs` (10, red). Older tests that said «G-C18 open», «C29.4 proposed» or «0.3.0 prepared» now accept the closed state.
+- Read (his pasted output only): CI run `42480780034` on `306881e`, tarball 146190 bytes sha256 `9fc63878…`, 32 files; the installed tarball (`init --name`, `rename-status`, `dump`, `recovery`, `make-delivery`); `ci-report` on the real logs zip (14 jobs, exit 0); `diff -r` empty and his Mac rebuild different in bytes (`7a4e1cf6…`); tag `chicla-v0.3.0`, the GitHub release, `npm publish`, `npm view` 0.3.0 and `npm pack chicla@0.3.0` equal to the CI's sha256.
+- Change: `docs/release.md` «Published: chicla 0.3.0» and the runbook steps 1 to 3 (new folder, real run id, full paths, `gh api` inside the repository, new rebuild folders, the notes with the CI's numbers, one summary line of `ci-report`); the status file (G-C18 row, Snapshot, Next up); ROADMAP (G-C18, C29.4); README (0.3.0 published); AUDIT-11 §7 (the three Dependabot pull requests read against `ci.yml`). Rotation: «Previous» 317, «Done» 313, rolling 320. No source file; the pin did not move.
+- Then the whole `npm test` after `bump-round`: 1944 tests, 1942 pass, 0 fail, 2 skipped, 593 s (Node 22, Linux, 1 core), read from the run's own summary. (A first run had 23 red: `bump-round` had listed my own scratch folders `stage/` and `dist/` in the manifest and I deleted them before the run; the manifest was refreshed and the suite repeated.)
+- NOT run: anything on GitHub or npm by Claude; the 62 kit mutants; the three Dependabot pull requests were not opened.
 
 ## Round 322 — the records of the green CI, the mutants and G-C11; the release values (v0.0.326)
 

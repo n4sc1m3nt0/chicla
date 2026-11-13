@@ -58,3 +58,27 @@ Rodrigo cleaned the repository (F-1), pasted the zip of round 321 and pushed; th
 - **Mutants.** Rodrigo ran `npm run mutants` on his Mac (the list of the zip package): 348 mutants, all as listed, 9 not run on darwin by design (their tests can only go red on Linux). The kit list, `npm run mutants:kit`, is a different list: C29.4 (F-7, the 62 not re-judged) is **still open** and is not a blocker for the release.
 - **G-C11** was repeated by Rodrigo in another account and is closed by his word (Claude did not see it).
 - **Still open:** C29.4; the three Dependabot pull requests (v7 of the three actions; the CI is green on v6, so merging is possible but is his call, F-6); G-C8; and the release itself (G-C18), which is Rodrigo's. Nothing is published: `npm view chicla` still says 0.2.1.
+
+## 7. Follow-up (round 323, 2026-11-08): the release, and the three Dependabot pull requests
+
+`chicla` 0.3.0 is published (see `docs/release.md` «Published: chicla 0.3.0»): npm serves the CI tarball (`9fc63878…`), so the «Nothing is published» of §6 is out of date. G-C18 and C29.4 are closed by Rodrigo's word (Claude saw no output of the kit mutants).
+
+The three Dependabot pull requests (F-6) are not part of that release (`ci.yml` is not in the tarball) and merging them no longer risks it. Claude has not opened them; this is a reading of the workflow against what the actions' own pages say, read on the web on 2026-11-08:
+
+- `actions/checkout` v7 blocks checking out a fork's pull request under `pull_request_target` and `workflow_run`. `ci.yml` has only `push` (main) and `pull_request`, and no `pull_request_target`, so it does not apply.
+- `actions/setup-node` v7 no longer exports a dummy `NODE_AUTH_TOKEN`. `ci.yml` has no `registry-url` and publishes nothing, so it does not apply.
+- `actions/upload-artifact` v7 adds direct (unzipped) uploads of one file; `ci.yml` uploads the folder `dist/`, which is unchanged. Not confirmed against the full release notes of v7.
+
+What merging does to the tree: it edits `.github/workflows/ci.yml`. (Corrected in round 324: round 323 wrote here that the next `check-manifest` then fails until the manifest is regenerated. That was wrong: `check-manifest` compares the list of files, and the crc and size of `FILES.manifest` are written only by `--write` and by `make-delivery-zip`. The three green pull-request runs, with `ci.yml` changed and the manifest not, already showed it; see §8.) The tests accept «v6 or later», a 40-hex commit with a `# vX.Y.Z` comment, and one commit per action in the whole workflow, which a Dependabot bump of one action keeps. So: merge one at a time, only if the CI of that pull request is green on all 14 jobs, and check that each commit is the tag's commit (the repository's own rule, `.github/dependabot.yml`). Nothing here is urgent: the CI is green on v6.
+
+## 8. Follow-up (round 324, 2026-11-08): the three Dependabot pull requests are merged
+
+Rodrigo merged the three pull requests, one at a time, after reading each one. Only he did: the AI opened no pull request and ran no `gh pr merge`. What Claude saw, in the output he pasted:
+
+- `gh pr list`, `gh pr checks` and `gh pr diff` of #3 (`actions/upload-artifact` 6.0.0 to 7.0.2), #2 (`actions/checkout` 6.0.0 to 7.0.1) and #1 (`actions/setup-node` 6.0.0 to 7.1.0): each touches only `.github/workflows/ci.yml`, one action each (5 uses of checkout, 5 of setup-node, 1 of upload-artifact), a 40-hex commit with a `# vX.Y.Z` comment, and all 14 jobs green (`mergeable` was `UNKNOWN`, which only means GitHub had not computed it).
+- `git ls-remote` of the three tags: `refs/tags/v7.0.1` is `3d3c42e5aac5ba805825da76410c181273ba90b1`, `refs/tags/v7.1.0` is `949feb2413d6458794dcd2491c4babbbce0c15c1` and `refs/tags/v7.0.2` is `cf430e030ddbb5b0abf93d22962f4752f3646cd9`: the commit of each pull request is the commit of its tag (the repository's rule).
+- The order he used was #3, #2, then `@dependabot rebase` on #1 (it changes the line next to the one #2 changes) and #1. After that `gh run list` showed the CI of the push to `main` green (run `42512206190`, 10m6s, titled as the setup-node bump, the last merge), and `git pull` brought `main` from `306881e` to `37ce250` with `ci.yml` as the only file (11 lines in, 11 out); `grep` of `ci.yml` showed checkout v7.0.1 x5, setup-node v7.1.0 x5 and upload-artifact v7.0.2 x1.
+
+The round-323 claim in §7 that a merge makes `check-manifest` fail is corrected (§7 says so): `check-manifest` compares the list of files, not their crc. Claude applied the three bumps to its own copy of `ci.yml` and ran the 8 test files that read it (79 tests, all green), `check-manifest` (still «no file lost») and `bump-round --verify` (green); the manifest keeps the old crc of `ci.yml` until the next `make-delivery-zip` writes it, which this round's delivery does. The `ci.yml` of this round's zip is the merged one.
+
+Not seen by Claude: the pull-request pages and the merge commits on GitHub, the `headSha` of run `42512206190` (it is the last merge by its title and age), and the release notes of the three actions beyond what §7 read. The Dependabot item of «Still open» in §6 is closed; G-C8 stays his.
