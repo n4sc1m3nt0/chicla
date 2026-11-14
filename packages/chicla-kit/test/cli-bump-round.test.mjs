@@ -18,6 +18,9 @@ const CLI = join(ROOT, 'packages/chicla-kit/src/cli.mjs');
 const { bumpRound, renderBumpRound } = await import(pathToFileURL(join(ROOT, 'scripts/bump-round.mjs')).href);
 const { main } = await import(pathToFileURL(CLI).href);
 const { checkManifest } = await import(pathToFileURL(join(ROOT, 'scripts/check-manifest.mjs')).href);
+// C30.7 (D164): the core has no default manifest step any more; a bump or a refresh passes the in-process one, as the wrapper and the kit CLI do
+const { checkManifest: cm, renderCheckManifest } = await import(pathToFileURL(join(ROOT, 'packages/chicla-kit/src/check-manifest.mjs')).href);
+const STEP = (r) => { const m = cm({ root: r, write: true }); return { ok: m.ok, ...renderCheckManifest(m) }; };
 
 // hash independent of the script (strings, not Buffers)
 const hashFrom = (text, fromLine) => createHash('sha256').update(text.split('\n').slice(fromLine - 1).join('\n'), 'utf8').digest('hex').slice(0, 12);
@@ -108,14 +111,14 @@ test('core: a bump renames the status file, keeps the three fingerprints paired 
   const T = project();
   try {
     writeFileSync(join(T, 'CHANGELOG.md'), readFileSync(join(T, 'CHANGELOG.md'), 'utf8') + '\n## Round 2\n');
-    const b = bumpRound({ root: T, mode: 'bump', note: 'round X' });
+    const b = bumpRound({ root: T, mode: 'bump', note: 'round X', regenerateManifest: STEP });
     assert.equal(b.ok, true, JSON.stringify(b.messages)); assert.equal(b.nextSeq, 6);
     assert.ok(existsSync(join(T, 'CHICLA_PROJECT_STATUS-6.md')) && !existsSync(join(T, 'CHICLA_PROJECT_STATUS-5.md')));
     assert.ok(readFileSync(join(T, 'version.mjs'), 'utf8').includes('round X'));
     assert.equal(bumpRound({ root: T, mode: 'verify' }).ok, true);
     writeFileSync(join(T, 'CHANGELOG.md'), readFileSync(join(T, 'CHANGELOG.md'), 'utf8') + 'late\n');
     assert.equal(bumpRound({ root: T, mode: 'verify' }).ok, false);
-    const f = bumpRound({ root: T, mode: 'refresh' });
+    const f = bumpRound({ root: T, mode: 'refresh', regenerateManifest: STEP });
     assert.equal(f.ok, true); assert.equal(f.nextSeq, 6);
     assert.ok(existsSync(join(T, 'CHICLA_PROJECT_STATUS-6.md')) && !existsSync(join(T, 'CHICLA_PROJECT_STATUS-7.md')));
     assert.equal(bumpRound({ root: T, mode: 'verify' }).ok, true);
@@ -126,7 +129,7 @@ test('core: parity: the script as a process and the core print the same text on 
   const T = project();
   try {
     const script = (...a) => spawnSync(process.execPath, [join(T, 'scripts/bump-round.mjs'), ...a], { cwd: T, encoding: 'utf8' });
-    const same = (a, mode) => { const { out, err } = renderBumpRound(bumpRound({ root: T, mode })); assert.equal(a.stdout, out); assert.equal(a.stderr, err); };
+    const same = (a, mode) => { const { out, err } = renderBumpRound(bumpRound({ root: T, mode, regenerateManifest: STEP })); assert.equal(a.stdout, out); assert.equal(a.stderr, err); };
     const ok = script('--verify'); assert.equal(ok.status, 0); same(ok, 'verify');
     writeFileSync(join(T, 'CHANGELOG.md'), readFileSync(join(T, 'CHANGELOG.md'), 'utf8') + 'edit\n');
     const bad = script('--verify'); assert.equal(bad.status, 1); same(bad, 'verify');

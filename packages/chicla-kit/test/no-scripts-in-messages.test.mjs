@@ -12,10 +12,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const KIT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { main } = await import(pathToFileURL(join(KIT, 'src', 'cli.mjs')).href);
 
-// file -> how many non-comment mentions stay, and why. The core of bump-round may import only node: modules and ./integrity.mjs (C17.1, core-bump-round.test.mjs), so its default manifest step cannot be the in-process check-manifest (D-Q blocked, see ROADMAP D163); a new mention anywhere else fails the test below.
-const ALLOWED = {
-  'src/bump-round.mjs': { n: 1, why: 'the fallback that spawns <root>/scripts/check-manifest.mjs when a library caller gives no in-process manifest step (the kit CLI always gives one)' },
-};
+// file -> how many non-comment mentions stay, and why. Empty since C30.7 (D164): bump-round has no spawn fallback any more, so a new mention anywhere fails the test below.
+const ALLOWED = {};
 
 const code = (line) => line.replace(/\s\/\/.*$/, '');
 const isComment = (line) => /^\s*(\/\/|\*|\/\*)/.test(line);

@@ -599,7 +599,7 @@ Tamanhos: S (ronda curta), M (uma ronda). Cada cartão escreve os testes antes.
 | C30.4 | `chicla doctor` (D-E) | M · open |
 | C30.5 | `chicla git-plan` (D161): from the manifest of the delivery and the previous one, the `git rm`, `git add` and `git commit -m "round N: title"` lines ready to paste, no comment, no `chicla` command, no `git push`; the delivery reply (templates and item 14) gives them; first line of the box: the `git rm` of every older status file but the newest (D163) | M · open |
 | C30.6 | One pointer to `docs/archive/status/status-archive-rolling-*.md` instead of the list of every rolling archive in «Open decisions» (D-P, D162); a source change in `archive-changelog.mjs` | S · open |
-| C30.7 | The wrapper `scripts/bump-round.mjs` passes `checkManifest`; the spawn fallback of `bump-round.mjs` becomes an `ok: false` without a `scripts/` path; the guard list empties (D-R, D164) | S · open |
+| C30.7 | The wrapper `scripts/bump-round.mjs` passes `checkManifest`; the spawn fallback of `bump-round.mjs` becomes an `ok: false` without a `scripts/` path; the guard list empties (D-R, D164) | S · feito (round 330: the wrapper passes `checkManifest`; a bump or a refresh without a manifest step stops BEFORE writing with EBUMP_MANIFEST; `packages/chicla-kit/test/bump-round-manifest-step.test.mjs` (5); mutant K-BMP-19 RED; the guard list is empty) |
 
 ## 7. Primeiras rondas
 

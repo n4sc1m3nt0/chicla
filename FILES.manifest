@@ -3,14 +3,14 @@
 .github/dependabot.yml	ca9d20dc	301
 .github/workflows/ci.yml	43d3124c	5159
 .gitignore	aa63ccdb	397
-CHANGELOG.md	75900740	33273
-CHICLA_PROJECT_STATUS-334.md	151c7632	57000
+CHANGELOG.md	9eb1eee0	35464
+CHICLA_PROJECT_STATUS-335.md	47071147	55985
 CLAUDE.md	484fc0fc	6601
 CONTRIBUTING.md	17331dd2	2343
-FILES.baseline.json	ac8e4fcb	102012
+FILES.baseline.json	b2538bdb	92410
 LICENSE	1ea3b7b0	10174
 README.md	34711e9d	13274
-ROADMAP.md	dc9050d0	233034
+ROADMAP.md	025c506f	233281
 SECURITY.md	022440f9	7902
 docs/README.md	5b4ca634	8340
 docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md	fab22c5d	299786
@@ -102,6 +102,7 @@ docs/archive/status/status-archive-done-316-316.md	9075f25a	1908
 docs/archive/status/status-archive-done-317-317.md	b415ffb9	1828
 docs/archive/status/status-archive-done-318-318.md	fc98afe3	1157
 docs/archive/status/status-archive-done-319-319.md	54bd0d67	1665
+docs/archive/status/status-archive-done-320-320.md	80f90d5a	1502
 docs/archive/status/status-archive-previous-123-233.md	6d7605af	35356
 docs/archive/status/status-archive-previous-233b-234.md	e885b55d	1374
 docs/archive/status/status-archive-previous-235-243.md	8c0a2551	3860
@@ -184,6 +185,7 @@ docs/archive/status/status-archive-previous-320-320.md	ccfce705	753
 docs/archive/status/status-archive-previous-321-321.md	45cd6060	946
 docs/archive/status/status-archive-previous-322-322.md	64be954d	989
 docs/archive/status/status-archive-previous-323-323.md	dd60859f	973
+docs/archive/status/status-archive-previous-324-324.md	a3218e67	938
 docs/archive/status/status-archive-rolling-135-246.md	5f87068d	21508
 docs/archive/status/status-archive-rolling-247-253.md	df871027	5092
 docs/archive/status/status-archive-rolling-254-259.md	852ce075	4262
@@ -247,6 +249,7 @@ docs/archive/status/status-archive-rolling-324-324.md	cb1b2f33	849
 docs/archive/status/status-archive-rolling-325-325.md	990cbe13	826
 docs/archive/status/status-archive-rolling-326-326.md	15fceda8	1097
 docs/archive/status/status-archive-rolling-327-327.md	2c07dc55	929
+docs/archive/status/status-archive-rolling-328-328.md	39e610b8	781
 docs/audits/AUDIT-1.md	a56e8d6e	7439
 docs/audits/AUDIT-10.md	f155b89a	10511
 docs/audits/AUDIT-11.md	7b5ecaab	18513
@@ -269,14 +272,14 @@ docs/state-file.md	292a4e25	8112
 docs/zip-handling.md	4ee06488	28560
 docs/zipkit-RASCUNHO.mjs	826b4341	22156
 docs/zipkit-plan-ronda-1s.md	69662cda	13236
-package.json	bb83989f	804
+package.json	103daca8	804
 packages/chicla-kit/LICENSE	1ea3b7b0	10174
 packages/chicla-kit/README.md	181f4d7a	9126
-packages/chicla-kit/mutants/list.mjs	fb17bb71	47574
+packages/chicla-kit/mutants/list.mjs	f2adb242	47860
 packages/chicla-kit/package.json	375cd6cd	566
 packages/chicla-kit/src/agents.mjs	e6c01be8	1451
 packages/chicla-kit/src/archive-changelog.mjs	859bbcc1	24482
-packages/chicla-kit/src/bump-round.mjs	1fd41479	18370
+packages/chicla-kit/src/bump-round.mjs	92baf535	18439
 packages/chicla-kit/src/check-build.mjs	c2ba103f	3493
 packages/chicla-kit/src/check-manifest.mjs	3329cc31	18479
 packages/chicla-kit/src/ci-report.mjs	a18eb9c8	9280
@@ -304,8 +307,9 @@ packages/chicla-kit/templates/copilot-instructions.md	792274ee	1192
 packages/chicla-kit/templates/version.mjs	d811e055	454
 packages/chicla-kit/test/.gitkeep	00000000	0
 packages/chicla-kit/test/archive-cli.test.mjs	7b90914e	5354
+packages/chicla-kit/test/bump-round-manifest-step.test.mjs	5b1fa10a	3488
 packages/chicla-kit/test/ci-report.test.mjs	fcaa4bcc	20911
-packages/chicla-kit/test/cli-bump-round.test.mjs	85a4b54d	18111
+packages/chicla-kit/test/cli-bump-round.test.mjs	7d5292b0	18591
 packages/chicla-kit/test/cli-check-manifest.test.mjs	9f46ef0a	10552
 packages/chicla-kit/test/cli-dump.test.mjs	6f5841b5	11703
 packages/chicla-kit/test/cli-loads-src.test.mjs	5d7a69a6	2469
@@ -334,7 +338,7 @@ packages/chicla-kit/test/init-agent.test.mjs	9625cd64	10849
 packages/chicla-kit/test/init-name.test.mjs	6adc8eef	7188
 packages/chicla-kit/test/init.test.mjs	3feae89d	14372
 packages/chicla-kit/test/name-rules-differential.test.mjs	c4a3ed8b	6887
-packages/chicla-kit/test/no-scripts-in-messages.test.mjs	ed3c6c2a	3818
+packages/chicla-kit/test/no-scripts-in-messages.test.mjs	aac20c9e	3486
 packages/chicla-kit/test/packaging.test.mjs	25ebdcc5	10007
 packages/chicla-kit/test/panel-decisions.test.mjs	f39385c6	4946
 packages/chicla-kit/test/panel.test.mjs	1a20b1f1	17623
@@ -432,7 +436,7 @@ packages/chicla/README.md	51042ace	2305
 packages/chicla/package.json	0d69e85c	716
 scripts/archive-changelog.mjs	e58b0e28	703
 scripts/build-chicla.mjs	de52e33e	4693
-scripts/bump-round.mjs	12fa3644	2525
+scripts/bump-round.mjs	5f007da4	2867
 scripts/check-build.mjs	8fd6dd42	1269
 scripts/check-manifest.mjs	960ac064	1566
 scripts/emergency-dump.mjs	caffce8f	5683
@@ -563,4 +567,4 @@ test/verify-against.test.mjs	a62846fe	6012
 test/verify-nounzip.test.mjs	38f0df0e	9058
 test/win-quote-bare-command.test.mjs	0a2933bb	2453
 test/windows-npm-spawn.test.mjs	6e872e55	5530
-version.mjs	87d66868	550
+version.mjs	f99982c8	550

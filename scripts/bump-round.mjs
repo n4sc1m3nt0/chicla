@@ -16,6 +16,7 @@
 import { fileURLToPath } from "node:url";
 import { realpathSync } from "node:fs";
 import { bumpRound, renderBumpRound, parseBumpArgs, BUMP_USAGE } from "../packages/chicla-kit/src/bump-round.mjs";
+import { checkManifest, renderCheckManifest } from "../packages/chicla-kit/src/check-manifest.mjs"; // C30.7 (D164): the manifest step is the same in-process core the kit CLI passes
 export { bumpRound, renderBumpRound };
 
 // Runs only as the entry point, never when the kit CLI or a test imports it. The root is the project this file sits in.
@@ -27,7 +28,8 @@ if (isEntry) {
   if (a.help) { console.log(BUMP_USAGE); process.exit(0); }
   if (a.error) { console.error(BUMP_USAGE); process.exit(2); }
   const { mode, dry, note } = a;
-  const r = bumpRound({ root: fileURLToPath(new URL("..", import.meta.url)), mode, dry, note });
+  const regenerateManifest = (root) => { const m = checkManifest({ root, write: true }); return { ok: m.ok, ...renderCheckManifest(m) }; };
+  const r = bumpRound({ root: fileURLToPath(new URL("..", import.meta.url)), mode, dry, note, regenerateManifest });
   const { out, err } = renderBumpRound(r);
   process.stdout.write(out); process.stderr.write(err);
   process.exitCode = r.ok ? 0 : 1;

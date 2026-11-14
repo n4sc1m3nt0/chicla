@@ -130,6 +130,7 @@ export default [
   x("K-ARC-07", AC, "\"--keep-previous\", \"--keep-done\", \"--keep-clauses\", \"--root\"]);", "\"--keep-previous\", \"--keep-clauses\", \"--root\"]);", AO, "--keep-done is rejected as unknown"),
   x("K-ARC-08", AC, "return resolve(i >= 0 && process.argv[i + 1] ?", "return resolve(false && process.argv[i + 1] ?", ["packages/chicla-kit/test/archive-cli.test.mjs"], "--root is ignored and the root is the folder above the script (a project without scripts/ is never found)"),
   x("K-ARC-09", AC, "args[i + 1].startsWith(\"--\"))) { console.error(`\\n✗ --root needs", "args[i + 1].startsWith(\"--\") && false)) { console.error(`\\n✗ --root needs", ["packages/chicla-kit/test/archive-cli.test.mjs"], "--root with no folder is taken as a flag or as nothing instead of a usage error"),
+  x("K-BMP-19", BR, "if (typeof regenerateManifest !== \"function\") stop(", "if (false) stop(", ["packages/chicla-kit/test/bump-round-manifest-step.test.mjs"], "a bump without a manifest step writes the files and then fails (or spawns something), instead of stopping before writing"),
   // ---- slice 6 (C19.2, round 258): bump-round reports the archive limits it sees (AUDIT-6 F-1) ----
   x("K-BMP-01", BR, "previous: 5,", "previous: 6,", BT, "the «Previous» limit moves to 6: a 6th block goes unreported"),
   x("K-BMP-02", BR, "done: 10,", "done: 11,", BT, "the «Done» limit moves to 11"),

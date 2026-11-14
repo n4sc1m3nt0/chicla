@@ -12,8 +12,7 @@
 // `scripts/bump-round.mjs` is a thin wrapper (flags, print, exit) and `chicla bump-round` imports the same code, so both run one implementation.
 // WHEN TO RUN: at step 5 of the "closing kit", AFTER the CHANGELOG entry, "Last updated" and any app edit are final (the hashes are of the final content)
 // and BEFORE make-delivery-zip.mjs. The hashes are computed over BYTES: app = tail -n +4 | sha256sum; CHANGELOG = tail -n +2 | sha256sum (12 hex).
-// The manifest step of a bump runs `regenerateManifest(root)` -> { ok, out, err }; the default spawns `<root>/scripts/check-manifest.mjs --write` (which works through the wrapper).
-import { spawnSync } from "node:child_process";
+// The manifest step of a bump runs `regenerateManifest(root)` -> { ok, out, err }; it is required for a bump and a refresh (C30.7, D164): without it nothing is written and the result is EBUMP_MANIFEST.
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, writeFileSync, renameSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -125,8 +124,8 @@ function verify(_s, P) { // instruction 11 a-c (and the toolchain pin, and the l
 
 /**
  * The mechanical close of a round for the project at `root`. `mode`: "bump" (default), "refresh" or "verify"; `dry` shows without writing; `note` is added to
- * the fingerprint comments; `regenerateManifest(root)` -> { ok, out, err } is the manifest step of a bump (default: runs `<root>/scripts/check-manifest.mjs --write`
- * as a process; the kit CLI passes `checkManifest` in-process, so it works on a project without `scripts/`). Returns { ok, code, mode, dry, seq, statusFile, nextSeq, checks?, limits? (C19.2: archive limits passed, reported only), messages }: `code` is null when ok, else EBUMP_USAGE, EBUMP_STATE,
+ * the fingerprint comments; `regenerateManifest(root)` -> { ok, out, err } is the manifest step of a bump (required to write: `chicla bump-round` and the wrapper of this repo pass
+ * `checkManifest` in-process, so it works on a project without `scripts/`; without it a bump or a refresh stops before writing, EBUMP_MANIFEST). Returns { ok, code, mode, dry, seq, statusFile, nextSeq, checks?, limits? (C19.2: archive limits passed, reported only), messages }: `code` is null when ok, else EBUMP_USAGE, EBUMP_STATE,
  * EBUMP_UNPAIRED (11a), EBUMP_STATUS (C10.5, bump and refresh only), EBUMP_VERIFY, EBUMP_MANIFEST, EBUMP_FINAL or EBUMP_ERROR (anything unexpected); `messages` is [{ stream: "out" | "err", text }] in the order
  * the script prints them (see `renderBumpRound`). Never prints, exits or throws.
  */
@@ -185,14 +184,14 @@ instructions item 11 above before doing anything else.`;
     result.limits = archiveLimits(s); // C19.2: reported, never run, never part of `ok`
     for (const l of result.limits) say("out", l.line);
     if (dry) { say("out", "  (dry-run: nothing was written)"); return result; }
+    if (typeof regenerateManifest !== "function") stop("EBUMP_MANIFEST", "no manifest step was given, so nothing was written: a library caller passes regenerateManifest(root) -> { ok, out, err } (`chicla bump-round` and the wrapper of this repo pass checkManifest)");
 
     writeFileSync(P(s.appName), newApp);
     writeFileSync(P("CHANGELOG.md"), newCl);
     writeFileSync(P(s.statusName), newSt);
     if (pinned(P)) writeFileSync(P("CLAUDE.md"), readFileSync(P("CLAUDE.md"), "utf8").replace(PIN_RE, () => `toolchain-digest: ${toolchainDigest(P)}`));
     if (newName !== s.statusName) renameSync(P(s.statusName), P(newName));
-    const regen = regenerateManifest ?? ((r) => { const m = spawnSync(process.execPath, [join(r, "scripts/check-manifest.mjs"), "--write"], { cwd: r, encoding: "utf8" }); return { ok: m.status === 0, out: m.stdout, err: m.stderr }; });
-    const man = regen(ROOT);
+    const man = regenerateManifest(ROOT);
     if (!man.ok) stop("EBUMP_MANIFEST", `check-manifest --write failed:\n${man.out}${man.err}`);
     say("out", `  ${man.out.trim()}`);
     say("out", "final check (instruction 11 a-c, on what is on disk):");

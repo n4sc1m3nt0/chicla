@@ -1,7 +1,17 @@
-<!-- CHANGELOG_FINGERPRINT: seq=334 file=CHICLA_PROJECT_STATUS-334.md app_sha256_12=065d37032ef1 changelog_sha256_12=f8a1e67c35e4 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 329 results) -->
+<!-- CHANGELOG_FINGERPRINT: seq=335 file=CHICLA_PROJECT_STATUS-335.md app_sha256_12=065d37032ef1 changelog_sha256_12=6cc62bd4e979 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 330 results) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`
+
+## Round 330 — C30.7: bump-round no longer spawns scripts/; the wrapper passes the manifest step (v0.0.334)
+
+- Task (Rodrigo «ok» to the D-R round: D164, confirmed in round 328): C30.7, two source files and tests. M30 now has only C30.3, C30.4, C30.5 and C30.6 open.
+- Change: `packages/chicla-kit/src/bump-round.mjs` has no fallback that spawns `<root>/scripts/check-manifest.mjs`: `regenerateManifest` is required to write, and a bump or a refresh without it stops BEFORE writing with `EBUMP_MANIFEST` (a dry run and a verify need none); the unused `spawnSync` import is gone. `scripts/bump-round.mjs` (the wrapper of this repo) imports `checkManifest` and `renderCheckManifest` of the kit and passes them, as the kit CLI already did. The rule C17.1 holds: the core still imports only `node:` modules and `./integrity.mjs` (`core-bump-round.test.mjs` passes).
+- Tests: `packages/chicla-kit/test/bump-round-manifest-step.test.mjs` (5: bump and refresh without a step refused with the tree unchanged and no `scripts/` named; dry run and verify fine; a bump with the step works; the wrapper `--dry-run` exits 0). Mutant `K-BMP-19` (the early stop removed) is RED. The list of `no-scripts-in-messages.test.mjs` is empty: no shipped file has a non-comment mention of `scripts/` left. Honest: the code came before the tests this time as well.
+- The first full run of this round (stopped by me after its first failure) found `packages/chicla-kit/test/cli-bump-round.test.mjs` test 47: four calls of `bumpRound` there relied on the old default spawn. They pass the in-process step now (`STEP`), as the wrapper and the kit CLI do (21 pass).
+- Whole `npm test` after `bump-round`, run again after that fix: 1964 tests, 1962 pass, 0 fail, 2 skipped, 586 s (Node 22, Linux, 1 core), read from the run's own summary; the failure of rounds 325 to 329 is gone with the two build folders. `npm run smoke`: the whole chain passes. Mutants: the 19 `K-BMP-` entries, one by one with `--timeout 60`: all RED.
+- Rotation with `chicla archive`: «Previous» 324, «Done» 320, rolling 328 (`--keep-clauses 2`).
+- NOT run: the kit mutants outside `K-BMP-`; nothing on GitHub or npm; macOS and Windows runs.
 
 ## Round 329 — C30.2c: the tarball smoke checks that nothing says `scripts/`; the CI logs read; D165 (v0.0.333)
 
