@@ -33,7 +33,7 @@ const replaceLine = (buf, n, text) => Buffer.concat([buf.subarray(0, buf.length 
 
 // C20.1 (AUDIT-7 F-1): the arguments of `scripts/bump-round.mjs`, checked before anything is written. Pure: it returns, never prints or exits (the wrapper does). An option it does not know,
 // a stray word, `--note` with no text (or followed by an option) and `--verify` with another mode are errors, not «bump for real»; `--help` / `-h` ask for the usage.
-export const BUMP_USAGE = "usage: node scripts/bump-round.mjs [--verify | [--refresh] [--dry-run] [--note <text>]]   (no option: bump N to N+1; --help prints this)";
+export const BUMP_USAGE = "usage: chicla bump-round [--verify | [--refresh] [--dry-run] [--note <text>]]   (no option: bump N to N+1; --help prints this)";
 export function parseBumpArgs(args) {
   if (args.includes("--help") || args.includes("-h")) return { help: true };
   const KNOWN = new Set(["--verify", "--refresh", "--dry-run", "--note"]);

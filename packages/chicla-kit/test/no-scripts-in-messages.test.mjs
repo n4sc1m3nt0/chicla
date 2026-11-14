@@ -1,4 +1,4 @@
-// C30.2a (D160 D-B, D-J): what the npm package `chicla` ships must not tell the user to run `scripts/...`, a folder their project does not have.
+// C30.2a, C30.2b (D160 D-B, D-J, D-Q): what the npm package `chicla` ships must not tell the user to run `scripts/...`, a folder their project does not have.
 // Static part: every mention of `scripts/` in src/ (outside pinned/) and templates/, comments aside, is counted per file against a list that says why it stays or which card removes it.
 // The list is exact: a NEW mention fails, and so does one that went away without the list being updated (so the list can only shrink).
 // Behaviour part: `chicla init` then `chicla bump-round` on a clean folder write a status file with no `scripts/` in it.
@@ -12,11 +12,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const KIT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { main } = await import(pathToFileURL(join(KIT, 'src', 'cli.mjs')).href);
 
-// file -> how many non-comment mentions stay, and why
+// file -> how many non-comment mentions stay, and why. The core of bump-round may import only node: modules and ./integrity.mjs (C17.1, core-bump-round.test.mjs), so its default manifest step cannot be the in-process check-manifest (D-Q blocked, see ROADMAP D163); a new mention anywhere else fails the test below.
 const ALLOWED = {
-  'src/bump-round.mjs': { n: 2, why: 'BUMP_USAGE is the usage line of the wrapper scripts/bump-round.mjs; and the fallback that spawns <root>/scripts/check-manifest.mjs when a library caller gives no in-process manifest step (the kit CLI always does)' },
-  'src/archive-changelog.mjs': { n: 9, why: 'PENDING C30.2b: its own usage and messages' },
-  'src/check-manifest.mjs': { n: 3, why: 'PENDING C30.2b: the messages that say to run node scripts/check-manifest.mjs --write' },
+  'src/bump-round.mjs': { n: 1, why: 'the fallback that spawns <root>/scripts/check-manifest.mjs when a library caller gives no in-process manifest step (the kit CLI always gives one)' },
 };
 
 const code = (line) => line.replace(/\s\/\/.*$/, '');

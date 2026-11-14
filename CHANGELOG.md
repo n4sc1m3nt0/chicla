@@ -1,7 +1,20 @@
-<!-- CHANGELOG_FINGERPRINT: seq=332 file=CHICLA_PROJECT_STATUS-332.md app_sha256_12=065d37032ef1 changelog_sha256_12=e8263221ded4 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 327 results) -->
+<!-- CHANGELOG_FINGERPRINT: seq=333 file=CHICLA_PROJECT_STATUS-333.md app_sha256_12=065d37032ef1 changelog_sha256_12=dfab9aea2980 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 328 results) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`
+
+## Round 328 — C30.2b: the messages of check-manifest, archive and bump-round say `chicla ...`; D163; D-Q blocked (v0.0.332)
+
+- Task (Rodrigo: the delivery commands must also `git rm` the old status files and keep only the newest; «avança» = «ok» to D-Q): record D163 and do C30.2b.
+- D163, in `ROADMAP.md` (card C30.5 changed): the first line of every delivery's commands is `git rm -q --ignore-unmatch -- ':(glob)CHICLA_PROJECT_STATUS-*.md' ':(exclude)CHICLA_PROJECT_STATUS-<newest>.md'`. Tried in a scratch repo: it removes the old status files that are tracked, keeps the new one, and a second run ends 0.
+- Change, three files: `packages/chicla-kit/src/check-manifest.mjs` (its 3 messages say `chicla check-manifest --write`), `packages/chicla-kit/src/archive-changelog.mjs` (usage, the headers written into the archive files, and the closing lines say `chicla archive` and `chicla bump-round`) and `packages/chicla-kit/src/bump-round.mjs` (`BUMP_USAGE` only).
+- D-Q tried and reverted: I made the default manifest step of `bump-round.mjs` the in-process `checkManifest`; the full run then failed `core-bump-round.test.mjs` test 144 (rule C17.1: that core may import only `node:` modules and `./integrity.mjs`). I stopped that run, restored the spawn of `<root>/scripts/check-manifest.mjs` and listed it in the guard test (one entry). Open: D-R, an alternative that needs the wrapper too.
+- Tests: the PENDING entries of `no-scripts-in-messages.test.mjs` (9 and 3 mentions) are gone; it has one entry left (the fallback), and any new mention of `scripts/` outside comments in a shipped file fails it; the other tests that touch these files pass unchanged. Honest: the code came before the test run this time too; the guard test was seen red against old files in round 327, and for these files the proof is that the PENDING entries went and it passes.
+- Mutants: the 18 `K-BMP-` entries and the 11 `K-ARC-` entries, one by one with `--timeout 60`: all RED. (A first K-BMP pass reported «baseline FAILED» because the manifest was stale after the rotation: `core-bump-round-limits` test 7 compares the archive files of the repo with a copy made from the manifest; after `bump-round` it was green.)
+- Whole `npm test` after `bump-round`, run again after the D-Q reversal: 1959 tests, 1956 pass, 1 fail, 2 skipped, 692 s (Node 22, Linux, 1 core), read from the run's own summary. The 1 failure is `test/stale-package-words-docs.test.mjs`, as in rounds 325 to 327: `ci-0.3.0/` and `stage-0.3.0/` tracked in `origin/main` (D-K, Rodrigo's `git rm`). `npm run smoke`: the whole chain passes. The first full run of this round (stopped by me) had failed test 144 of `core-bump-round.test.mjs`, which is how D-Q was found blocked.
+- Rodrigo answered «ok» to D-R: D164 and card C30.7 are in the ROADMAP; no source for it in this round.
+- Rotation with `chicla archive`: «Previous» 322, «Done» 318, rolling 326 (`--keep-clauses 2`).
+- NOT run: the kit mutants outside `K-BMP-` and `K-ARC-`; nothing on GitHub or npm; macOS and Windows runs.
 
 ## Round 327 — C30.2a: bump-round and the status template say `chicla ...`; D162 (v0.0.331)
 

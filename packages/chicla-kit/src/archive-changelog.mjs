@@ -40,7 +40,7 @@ const PREFIX = (() => {
 const statusFiles = () => (PREFIX === null ? [] : readdirSync(ROOT).filter((f) => new RegExp(`^${PREFIX}_PROJECT_STATUS-\\d+\\.md$`).test(f)));
 const args = process.argv.slice(2);
 // C19.1 (AUDIT-6 F-2): an argument the script does not know is an error, never «archive for real» (`--help` did that in round 251). Value options take the next word as their value.
-const USAGE = "usage: node scripts/archive-changelog.mjs [--dry-run] [--keep N] | --status [--keep-previous N] | --snapshot [--keep-done N] | --rolling [--keep-clauses N]   [--root <dir>]   (the header of this file says what each does; --help prints this)";
+const USAGE = "usage: chicla archive [--dry-run] [--keep N] | --status [--keep-previous N] | --snapshot [--keep-done N] | --rolling [--keep-clauses N]   [--root <dir>]   (the header of this file says what each does; --help prints this)";
 if (args.includes("--help") || args.includes("-h")) { console.log(USAGE); process.exit(0); }
 {
   const FLAGS = new Set(["--dry-run", "--status", "--snapshot", "--rolling"]), VALUED = new Set(["--keep", "--keep-previous", "--keep-done", "--keep-clauses", "--root"]);
@@ -77,7 +77,7 @@ if (args.includes("--status")) {
   const aName = `status-archive-previous-${loL}-${hiL}.md`;
   const aPath = join(ROOT, STATUS_ARCH, aName);
   if (existsSync(aPath)) fail(`${STATUS_ARCH}/${aName} already exists; not overwriting it. Move it or use another --keep-previous.`);
-  const aHeader = `# Status file archive — «Previous» blocks of rounds ${loL}-${hiL}\n\nMoved out of \`${files[0]}\` verbatim by \`scripts/archive-changelog.mjs --status\`. Nothing was edited or deleted.\nFind a block with \`grep -n "^\\*\\*Previous (round 12)" ${STATUS_ARCH}/status-archive-previous-*.md\`.\n\n`;
+  const aHeader = `# Status file archive — «Previous» blocks of rounds ${loL}-${hiL}\n\nMoved out of \`${files[0]}\` verbatim by \`chicla archive --status\`. Nothing was edited or deleted.\nFind a block with \`grep -n "^\\*\\*Previous (round 12)" ${STATUS_ARCH}/status-archive-previous-*.md\`.\n\n`;
   const item = `\`${STATUS_ARCH}/${aName}\``;
   const sIdx = /^\*\*Archived «Previous» blocks \(nothing deleted\):\*\* (.*)$/m;
   let sLive = sText.slice(0, cutAt) + (sIdx.test(sText) ? "" : `**Archived «Previous» blocks (nothing deleted):** ${item}\n\n`) + sText.slice(endAt);
@@ -90,7 +90,7 @@ if (args.includes("--status")) {
   writeFileSync(aPath, aHeader + sMoved);
   if (readFileSync(aPath, "utf8") !== aHeader + sMoved) fail("the archive written does not match; undo by deleting it and run again.");
   writeFileSync(sPath, sLive);
-  console.log("✓ done. The fingerprints do not cover the status blocks; run node scripts/bump-round.mjs --verify.");
+  console.log("✓ done. The fingerprints do not cover the status blocks; run chicla bump-round --verify.");
   process.exit(0);
 }
 
@@ -171,7 +171,7 @@ if (args.includes("--rolling")) {
   let live = text;
   for (const r of replacements.sort((a, b) => b.from - a.from)) live = live.slice(0, r.from) + r.str + live.slice(r.to);
   const section = (title, rows) => (rows.length ? `## ${title}\n\n${rows.map((r) => `- ${r}`).join("\n")}\n\n` : "");
-  const aText = `# Status file archive — rolling paragraphs, rounds ${lo}-${hi}\n\nMoved out of \`${files[0]}\` verbatim by \`scripts/archive-changelog.mjs --rolling\`. Nothing was edited or deleted.\nEach line is one clause or entry, newest first; put them after the ones kept in the file, joined with «; » («Current version») or one space («Open decisions»), and the paragraph is rebuilt.\nFind a round with \`grep -n "round 12" ${STATUS_ARCH}/status-archive-rolling-*.md\`.\n\n${section("Current version clauses", cvPlan?.mv ?? [])}${section("Open decisions entries", odPlan?.mv ?? [])}`.replace(/\n+$/, "\n");
+  const aText = `# Status file archive — rolling paragraphs, rounds ${lo}-${hi}\n\nMoved out of \`${files[0]}\` verbatim by \`chicla archive --rolling\`. Nothing was edited or deleted.\nEach line is one clause or entry, newest first; put them after the ones kept in the file, joined with «; » («Current version») or one space («Open decisions»), and the paragraph is rebuilt.\nFind a round with \`grep -n "round 12" ${STATUS_ARCH}/status-archive-rolling-*.md\`.\n\n${section("Current version clauses", cvPlan?.mv ?? [])}${section("Open decisions entries", odPlan?.mv ?? [])}`.replace(/\n+$/, "\n");
   console.log(`${DRY ? "[dry-run] " : ""}keep ${KC}; «Current version»: archive ${cvPlan ? cvPlan.mv.length : 0} clauses · «Open decisions»: archive ${odPlan ? odPlan.mv.length : 0} entries (rounds ${lo}-${hi})`);
   console.log(`  ${files[0]}: ${sBuf.length} → ${Buffer.byteLength(live)} bytes · ${STATUS_ARCH}/${aName}: ${Buffer.byteLength(aText)} bytes`);
   if (DRY) process.exit(0);
@@ -179,7 +179,7 @@ if (args.includes("--rolling")) {
   writeFileSync(aPath, aText);
   if (readFileSync(aPath, "utf8") !== aText) fail("the archive written does not match; undo by deleting it and run again.");
   writeFileSync(sPath, live);
-  console.log("✓ done. The fingerprints do not cover the status file; run node scripts/bump-round.mjs --verify.");
+  console.log("✓ done. The fingerprints do not cover the status file; run chicla bump-round --verify.");
   process.exit(0);
 }
 
@@ -221,7 +221,7 @@ if (args.includes("--snapshot")) {
   const rebuild = (lines) => text.slice(0, bodyStart) + lead + lines.join("\n") + trail + text.slice(bodyEnd);
   if (rebuild([...kept, ...moved, ...(index ? [index] : [])]) !== text) fail("internal check failed (kept + moved != original); nothing was changed.");
   const live = rebuild([...kept, newIndex]);
-  const aText = `# Status file archive — «Done» lines of the Snapshot, rounds ${lo}-${hi}\n\nMoved out of \`${files[0]}\` verbatim by \`scripts/archive-changelog.mjs --snapshot\`. Nothing was edited or deleted.\nFind a line with \`grep -n "round 12" ${STATUS_ARCH}/status-archive-done-*.md\`.\n\n${moved.join("\n")}\n`;
+  const aText = `# Status file archive — «Done» lines of the Snapshot, rounds ${lo}-${hi}\n\nMoved out of \`${files[0]}\` verbatim by \`chicla archive --snapshot\`. Nothing was edited or deleted.\nFind a line with \`grep -n "round 12" ${STATUS_ARCH}/status-archive-done-*.md\`.\n\n${moved.join("\n")}\n`;
   console.log(`${DRY ? "[dry-run] " : ""}keep ${KD} Snapshot lines; archive ${moved.length} lines (${lo}-${hi})`);
   console.log(`  ${files[0]}: ${sBuf.length} → ${Buffer.byteLength(live)} bytes · ${STATUS_ARCH}/${aName}: ${Buffer.byteLength(aText)} bytes`);
   if (DRY) process.exit(0);
@@ -229,7 +229,7 @@ if (args.includes("--snapshot")) {
   writeFileSync(aPath, aText);
   if (readFileSync(aPath, "utf8") !== aText) fail("the archive written does not match; undo by deleting it and run again.");
   writeFileSync(sPath, live);
-  console.log("✓ done. The fingerprints do not cover the status file; run node scripts/bump-round.mjs --verify.");
+  console.log("✓ done. The fingerprints do not cover the status file; run chicla bump-round --verify.");
   process.exit(0);
 }
 
@@ -256,7 +256,7 @@ const archRel = `${ARCH_DIR}/${archName}`;                         // what the i
 const archPath = join(ROOT, ARCH_DIR, archName);
 if (existsSync(archPath)) fail(`${archRel} already exists; not overwriting it. Move it or use another --keep.`);
 
-const header = `# Changelog archive — rounds ${lo}-${hi}\n\nMoved out of \`CHANGELOG.md\` verbatim by \`scripts/archive-changelog.mjs\`. Nothing was edited or deleted;\nthis file has no fingerprint and is not part of the fingerprint triple. Find an entry with\n\`grep -n "^## Round 12" ${ARCH_DIR}/CHANGELOG-archive-*.md\`.\n\n`;
+const header = `# Changelog archive — rounds ${lo}-${hi}\n\nMoved out of \`CHANGELOG.md\` verbatim by \`chicla archive\`. Nothing was edited or deleted;\nthis file has no fingerprint and is not part of the fingerprint triple. Find an entry with\n\`grep -n "^## Round 12" ${ARCH_DIR}/CHANGELOG-archive-*.md\`.\n\n`;
 
 // Index line in the live CHANGELOG (before the first entry), maintained by the script.
 const idxRe = /^Archived rounds \(nothing deleted\): (.*)$/m;
@@ -277,4 +277,4 @@ mkdirSync(dirname(archPath), { recursive: true });   // only for real: a dry run
 writeFileSync(archPath, header + moved);
 if (readFileSync(archPath, "utf8") !== header + moved) fail("the archive written does not match; undo by deleting it and run again.");
 writeFileSync(path, newLive);
-console.log(`✓ done. Still to do: node scripts/bump-round.mjs --refresh (or the normal bump) to recompute the CHANGELOG hash.`);
+console.log(`✓ done. Still to do: chicla bump-round --refresh (or the normal bump) to recompute the CHANGELOG hash.`);

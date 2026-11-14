@@ -177,7 +177,7 @@ export function checkManifest({ root, write = false, git = "git" } = {}) {
 
   if (!existsSync(MANIFEST)) {
     result.manifestMissing = true;
-    say("err", "⚠ FILES.manifest does not exist — run `node scripts/check-manifest.mjs --write` to create it.");
+    say("err", "⚠ FILES.manifest does not exist — run `chicla check-manifest --write` to create it.");
     return result;
   }
 
@@ -197,7 +197,7 @@ export function checkManifest({ root, write = false, git = "git" } = {}) {
   const added = current.filter((f) => !listedSet.has(nfc(f)));
   result.listed = listed.length; result.lost = lost; result.added = added;
 
-  if (added.length) say("err", `⚠ ${added.length} new file(s) outside FILES.manifest (regenerate with node scripts/check-manifest.mjs --write):\n  ${added.slice(0, 15).join("\n  ")}`);
+  if (added.length) say("err", `⚠ ${added.length} new file(s) outside FILES.manifest (regenerate with chicla check-manifest --write):\n  ${added.slice(0, 15).join("\n  ")}`);
   if (lost.length) {
     say("err", `\n✗ ${lost.length} LOST file(s) vs FILES.manifest:\n  ${lost.join("\n  ")}`);
     const nowSecret = detected.filter(([f]) => lost.some((l) => nfc(l) === nfc(f))).map(([f]) => f);
@@ -224,7 +224,7 @@ export function checkManifest({ root, write = false, git = "git" } = {}) {
         const few = t.length <= 15; // up to 15 files are named as before; more are summarised by group
         const list = few ? t : grp.groups.slice(0, 15).map((x) => `${x.files} × ${x.path}${x.kind === "folder" ? "/" : ""}`);
         const more = !few && grp.groups.length > 15 ? `\n  … and ${grp.groups.length - 15} more group(s)` : "";
-        return stop("EMANIFEST_TRACKED", `\n✗ EMANIFEST_TRACKED: ${t.length} file(s) tracked by git are not in FILES.manifest${few ? "" : `, in ${grp.groups.length} group(s)`}:\n  ${list.join("\n  ")}${more}\n  To stop tracking them (they stay on disk), run:\n    ${grp.command}${grp.complete ? "" : "\n  (that line covers the first groups only: run the check again for the rest)"}\n  A stale copy of something that moved (an old status file, an archive now under docs/archive/)? Delete it instead: the same line without --cached. Build output committed by mistake? Name the folder in .gitignore. A real source file? regenerate with node scripts/check-manifest.mjs --write.`);
+        return stop("EMANIFEST_TRACKED", `\n✗ EMANIFEST_TRACKED: ${t.length} file(s) tracked by git are not in FILES.manifest${few ? "" : `, in ${grp.groups.length} group(s)`}:\n  ${list.join("\n  ")}${more}\n  To stop tracking them (they stay on disk), run:\n    ${grp.command}${grp.complete ? "" : "\n  (that line covers the first groups only: run the check again for the rest)"}\n  A stale copy of something that moved (an old status file, an archive now under docs/archive/)? Delete it instead: the same line without --cached. Build output committed by mistake? Name the folder in .gitignore. A real source file? regenerate with chicla check-manifest --write.`);
       }
     }
   }
