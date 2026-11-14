@@ -1,5 +1,5 @@
 // Chicla app version. Single source: "version" in the root package.json (D13).
 // Line 3 below is the app leg of the status/changelog fingerprint; scripts/bump-round.mjs rewrites it.
-// STATUS_FILE_FINGERPRINT: seq=333 file=CHICLA_PROJECT_STATUS-333.md app_sha256_12=065d37032ef1 changelog_sha256_12=dfab9aea2980 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 328 results)
+// STATUS_FILE_FINGERPRINT: seq=334 file=CHICLA_PROJECT_STATUS-334.md app_sha256_12=065d37032ef1 changelog_sha256_12=f8a1e67c35e4 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 329 results)
 import { readFileSync } from "node:fs";
 export const APP_VERSION = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")).version;

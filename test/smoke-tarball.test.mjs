@@ -1,4 +1,4 @@
-// Round 313 (C28.2, AUDIT-10 F-7, M28): three steps are added at the end of STEPS (`init-name`, `rename-status`, `ci-report`) and one break-it test; the nine before them are unchanged.
+// Round 329 (C30.2c): a thirteenth step, `no-scripts-in-output`, is added at the end. Round 313 (C28.2, AUDIT-10 F-7, M28): three steps are added at the end of STEPS (`init-name`, `rename-status`, `ci-report`) and one break-it test; the nine before them are unchanged.
 // Round 288 (C24.3, AUDIT-8 F-4, M24): `scripts/smoke-test-tarball.mjs` and the CI job `tarball`.
 // Until now only one unit test installed the tarball alone, and only on the machine that ran `npm test`; no CI job did it on macOS or Windows.
 // Written before the script; red until it exists. Tests assert exit codes, JSON fields and file shapes, never message wording.
@@ -16,7 +16,7 @@ const node = (args, opts = {}) => spawnSync(process.execPath, args, { encoding: 
 const SMOKE = join(root, 'scripts', 'smoke-test-tarball.mjs');
 const BUILD = join(root, 'scripts', 'build-chicla.mjs');
 const PACK = join(root, 'scripts', 'pack-release.mjs');
-const STEPS = ['init', 'bump-round-verify', 'make-delivery', 'verify-delivery', 'dump', 'dump-has-recover', 'recovery', 'chicla-zip', 'chicla-zip-library', 'init-name', 'rename-status', 'ci-report'];
+const STEPS = ['init', 'bump-round-verify', 'make-delivery', 'verify-delivery', 'dump', 'dump-has-recover', 'recovery', 'chicla-zip', 'chicla-zip-library', 'init-name', 'rename-status', 'ci-report', 'no-scripts-in-output'];
 
 test('C24.3: the script exists, and a usage error exits 2 (unknown option, --tarball with no value)', () => {
   assert.ok(existsSync(SMOKE), 'scripts/smoke-test-tarball.mjs does not exist');

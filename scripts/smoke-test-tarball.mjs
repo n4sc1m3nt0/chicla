@@ -142,5 +142,24 @@ step("ci-report", () => { // two logs zips built here with the installed chicla-
   return JSON.stringify(o.jobs?.[0]?.failing ?? []).includes("the broken one") ? true : "the failing test is not named in the --json of the red run";
 });
 
+// C30.2c (D160 D-F, D165): a user who installed `chicla` has no scripts/ folder, so nothing the installed package prints or writes may tell them to run `scripts/...`.
+// A fresh project, then what a user does: a round with many old entries archived, a bump, a manifest check, a verify. Every output and every text file of the project is read.
+step("no-scripts-in-output", () => {
+  const dir = join(T, "noscripts");
+  mkdirSync(dir);
+  const outs = [], go = (args) => { const r = bin("chicla", [...args, "--root", dir]); outs.push(`${args.join(" ")}\n${r.stdout}${r.stderr}`); return r; };
+  const i = go(["init"]);
+  if (i.status !== 0) return exit0(i, "init");
+  const cl = join(dir, "CHANGELOG.md");
+  writeFileSync(cl, `${readFileSync(cl, "utf8")}\n${Array.from({ length: 14 }, (_, n) => `## Round ${14 - n} — entry ${14 - n}\n\n- text\n`).join("\n")}`);
+  for (const args of [["archive", "--keep", "3"], ["bump-round", "--refresh"], ["bump-round"], ["check-manifest"], ["bump-round", "--verify"]]) {
+    const r = go(args);
+    if (r.status !== 0) return exit0(r, args.join(" "));
+  }
+  const files = readdirSync(dir, { recursive: true }).filter((f) => /\.(md|mjs|json)$/.test(f) || f === "FILES.manifest");
+  const bad = [...outs.filter((o) => o.includes("scripts/")).map((o) => `the output of «${o.split("\n")[0]}»`), ...files.filter((f) => readFileSync(join(dir, f), "utf8").includes("scripts/")).map((f) => `the file ${f}`)];
+  return bad.length ? `says scripts/: ${bad.join("; ")}` : files.some((f) => String(f).replaceAll("\\", "/").startsWith("docs/archive/changelog/")) ? true : "the archive step wrote no archive file, so its text was not read";
+});
+
 const ok = steps.every((s) => s.ok);
 finish(ok ? 0 : 1, { ok, tarball: basename(tarball), installed, steps }, `${steps.map((s) => `${s.ok ? "✓" : "✗"} ${s.name}${s.ok ? "" : `: ${s.why}`}`).join("\n")}\n${ok ? "tarball smoke: ok" : "tarball smoke: FAILED"} (${basename(tarball)}, installed alone: ${installed.join(", ")})\n`);

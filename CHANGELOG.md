@@ -1,7 +1,18 @@
-<!-- CHANGELOG_FINGERPRINT: seq=333 file=CHICLA_PROJECT_STATUS-333.md app_sha256_12=065d37032ef1 changelog_sha256_12=dfab9aea2980 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 328 results) -->
+<!-- CHANGELOG_FINGERPRINT: seq=334 file=CHICLA_PROJECT_STATUS-334.md app_sha256_12=065d37032ef1 changelog_sha256_12=f8a1e67c35e4 (bump-round.mjs: app hash unchanged, changelog hash recomputed; round 329 results) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`
+
+## Round 329 — C30.2c: the tarball smoke checks that nothing says `scripts/`; the CI logs read; D165 (v0.0.333)
+
+- Task (Rodrigo: «ok» to D-S, after he sent the logs of the CI and said `ci-0.3.0/` and `stage-0.3.0/` are gone): C30.2c, one source file (`scripts/smoke-test-tarball.mjs`) and the tests.
+- CI read (commit a0da302, 2026-11-14 15:28 UTC): the six test jobs (Ubuntu and macOS, Node 18, 20, 22) all gave 1959 tests, 1956 pass, 1 fail, 2 skipped; the one failure is `stale-package-words-docs` on the two README of `ci-0.3.0/` and `stage-0.3.0/` (gone now). Windows (Node 18, 20, 22): 0 fail (816 tests, 777 pass, 39 skipped; and 429 tests, 427 pass, 2 skipped). The three tarball jobs, `bench` and `pack-chicla` are green; no warning in any job.
+- Change: a thirteenth step `no-scripts-in-output` in `scripts/smoke-test-tarball.mjs` (the CI runs it on Ubuntu, macOS and Windows with the package installed alone): a fresh project, 14 old entries added to its CHANGELOG, then `archive --keep 3`, `bump-round --refresh`, `bump-round`, `check-manifest`, `bump-round --verify`; it fails if any output or any `.md`, `.mjs`, `.json` or manifest file of the project says `scripts/`, or if no archive file was written (then its text was not read).
+- Tests: `test/smoke-tarball.test.mjs` lists the thirteen steps (9 pass). Seen RED by hand: with the closing line of the CHANGELOG archive put back to `node scripts/bump-round.mjs --refresh`, the smoke fails with the step named («the output of «archive --keep 3»»); the file was restored. A first mutation, on the `--status` branch, did NOT turn it red: that branch (and `--snapshot`, `--rolling`) is not run by the step; the guard test of round 327 covers those messages.
+- Whole `npm test` after `bump-round`: 1959 tests, 1956 pass, 1 fail, 2 skipped, 712 s (Node 22, Linux, 1 core), read from the run's own summary; the 1 failure is `stale-package-words-docs` again, because MY working copy still had `ci-0.3.0/` and `stage-0.3.0/`. `npm run smoke`: the whole chain passes (with the new step).
+- After the run I deleted those two folders from my working copy (Rodrigo had already removed them from his project with the commands of round 328; without this the zip would have put them back) and refreshed: the manifest has 565 files. Not re-run after that: the whole `npm test` (the failure above is exactly what it removes; not seen gone).
+- Rotation with `chicla archive`: «Previous» 323, «Done» 319, rolling 327 (`--keep-clauses 2`).
+- NOT run: the whole `npm test` after the folders were deleted; the kit mutants (none touched); nothing on GitHub or npm; macOS and Windows runs.
 
 ## Round 328 — C30.2b: the messages of check-manifest, archive and bump-round say `chicla ...`; D163; D-Q blocked (v0.0.332)
 
