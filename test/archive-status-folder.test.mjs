@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const SCRIPT = join(fileURLToPath(new URL('..', import.meta.url)), 'scripts/archive-changelog.mjs');
+const SCRIPT = join(fileURLToPath(new URL('..', import.meta.url)), 'packages/chicla-kit/src/archive-changelog.mjs');
 const rounds = Array.from({ length: 14 }, (_, i) => `## Round ${14 - i} — entry ${14 - i}\n\n- text of ${14 - i}\n`).join('\n');
 const blocks = [9, 8, 7, 6, 5, 4, 3].map((n) => `**Previous (round ${n}):** text of ${n}.\n`).join('\n');
 const STATUS = `# Status\n\n**Current version:** v1 (round 9: a; round 8: b; round 7: c; round 6: d).\n\n**Fingerprint:** seq=3 ·\napp=x\n\n**Last updated (round 10):** now.\n\n${blocks}\n## Snapshot\n\n${[9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 10, 11].map((n) => `- Done: round ${n}.`).join('\n')}\n\n## Next up\n\n**Open decisions:** (round 9: a) (round 8: b) (round 7: c) (round 6: d)\n\n## Gates\n\n| G | x |\n`;

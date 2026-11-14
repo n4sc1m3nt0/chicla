@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const SCRIPT = join(ROOT, 'scripts/archive-changelog.mjs');
+const SCRIPT = join(ROOT, 'packages/chicla-kit/src/archive-changelog.mjs');
 const HEAD = '# Chicla — Project Status\n\n## Instructions\n\n1. rule one.\n\n';
 const CV_HEAD = '**Current version:** v0.0.9 (';
 const CV_CLAUSES = ['round 9: nine, with (nested; round x) parens', 'round 8b: eight b', 'round 8: eight', 'round 7: seven', 'round 6: six', 'round 5 made the thing'];

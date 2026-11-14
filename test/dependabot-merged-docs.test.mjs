@@ -43,7 +43,7 @@ test('status file: no open decision about the Dependabot pull requests; the Snap
   const s = statusWithArchives();
   const line = s.split('\n').find((l) => l.startsWith('- Done: round 324 ')) ?? '';
   for (const part of ['#1', '#2', '#3', 'Rodrigo', '42512206190', 'check-manifest', 'AUDIT-11']) assert.ok(line.includes(part), `the Snapshot line of round 324 does not say «${part}»`);
-  const open = s.split('\n').find((l) => l.startsWith('**Open decisions:** (round 324')) ?? '';
+  const open = s.split('\n').find((l) => (l.startsWith('**Open decisions:**') || l.startsWith('- (round 324')) && l.includes('(round 324')) ?? ''; // round 326: a newer clause may come first, and the rolling archive may already hold the round 324 clause (one per line, `- (round 324: ...)`)
   assert.ok(open.length > 0, 'the «Open decisions» paragraph has no round 324 clause');
   assert.doesNotMatch(open.split('(round 323')[0], /Dependabot pull requests when he wants/);
 });

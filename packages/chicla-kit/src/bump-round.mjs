@@ -94,18 +94,18 @@ function readState(ROOT, P) {
 // One entry per limit that the status file or the CHANGELOG passes: { id, line }; `line` names the command. A file within the limits gives nothing.
 const LIMITS = { previous: 5, done: 10, rounds: 21, bytes: 4096 };
 function archiveLimits(s) {
-  const out = [], over = (id, what, n, limit, cmd, file) => out.push({ id, line: `  ! ${n} ${what} in ${file} (limit ${limit}): run ${cmd}, then node scripts/bump-round.mjs --refresh` });
+  const out = [], over = (id, what, n, limit, cmd, file) => out.push({ id, line: `  ! ${n} ${what} in ${file} (limit ${limit}): run ${cmd}, then chicla bump-round --refresh` });
   const rows = s.stTxt.split("\n"), snapAt = rows.findIndex((l) => /^## Snapshot[ \t]*$/.test(l)), nextAt = rows.findIndex((l, i) => i > snapAt && /^## Next up[ \t]*$/.test(l));
   const previous = rows.filter((l) => l.startsWith("**Previous (round ")).length;
   const done = snapAt < 0 ? 0 : rows.slice(snapAt, nextAt < 0 ? rows.length : nextAt).filter((l) => l.startsWith("- Done:")).length;
-  if (previous > LIMITS.previous) over("previous", "«Previous» blocks", previous, LIMITS.previous, "node scripts/archive-changelog.mjs --status", s.statusName);
-  if (done > LIMITS.done) over("done", "«Done» lines", done, LIMITS.done, "node scripts/archive-changelog.mjs --snapshot", s.statusName);
+  if (previous > LIMITS.previous) over("previous", "«Previous» blocks", previous, LIMITS.previous, "chicla archive --status", s.statusName);
+  if (done > LIMITS.done) over("done", "«Done» lines", done, LIMITS.done, "chicla archive --snapshot", s.statusName);
   for (const [id, head] of [["current-version", "**Current version:**"], ["open-decisions", "**Open decisions:**"]]) {
     const row = rows.find((l) => l.startsWith(head)), bytes = row === undefined ? 0 : Buffer.byteLength(row);
-    if (bytes > LIMITS.bytes) over(id, "bytes", bytes, LIMITS.bytes, "node scripts/archive-changelog.mjs --rolling", `the «${head.slice(2, -3)}» line of ${s.statusName}`);
+    if (bytes > LIMITS.bytes) over(id, "bytes", bytes, LIMITS.bytes, "chicla archive --rolling", `the «${head.slice(2, -3)}» line of ${s.statusName}`);
   }
   const rounds = s.cl.toString("utf8").split("\n").filter((l) => /^## Round /.test(l)).length;
-  if (rounds > LIMITS.rounds) over("changelog", "rounds", rounds, LIMITS.rounds, "node scripts/archive-changelog.mjs", "CHANGELOG.md");
+  if (rounds > LIMITS.rounds) over("changelog", "rounds", rounds, LIMITS.rounds, "chicla archive", "CHANGELOG.md");
   return out;
 }
 
@@ -167,10 +167,10 @@ export function bumpRound({ root, mode = "bump", dry = false, note = "", regener
     const newCl = replaceLine(s.cl, 1, `<!-- CHANGELOG_FINGERPRINT: ${core} ${tag} -->`);
     const para = `**Fingerprint:** seq=${seq} · app=${s.appName} ·
 app_sha256_12=${s.hApp} (of everything below the app file's own
-fingerprint comment; ${appChanged ? "CHANGED" : "unchanged"} at this seq — rewritten by \`scripts/bump-round.mjs\`) ·
+fingerprint comment; ${appChanged ? "CHANGED" : "unchanged"} at this seq — rewritten by \`chicla bump-round\`) ·
 changelog=CHANGELOG.md ·
 changelog_sha256_12=${s.hCl} (hash of \`CHANGELOG.md\` below its own
-fingerprint line; recomputed by \`scripts/bump-round.mjs\` at seq ${seq}) · matches the
+fingerprint line; recomputed by \`chicla bump-round\` at seq ${seq}) · matches the
 \`STATUS_FILE_FINGERPRINT\` comment on line 2–3 of the app file and the
 \`CHANGELOG_FINGERPRINT\` comment on line 1 of \`CHANGELOG.md\`. If any of
 these three don't match what you're looking at, stop and see

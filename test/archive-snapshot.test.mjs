@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const SCRIPT = join(ROOT, 'scripts/archive-changelog.mjs');
+const SCRIPT = join(ROOT, 'packages/chicla-kit/src/archive-changelog.mjs');
 const HEAD = '# Chicla — Project Status\n\n## Instructions\n\n1. rule one.\n\n**Current version:** v0.0.1 (x)\n\n**Fingerprint:** seq=7 · app=version.mjs ·\napp_sha256_12=aaaaaaaaaaaa ·\nchangelog_sha256_12=bbbbbbbbbbbb\n\n**Last updated (round 9):** newest text.\n\n**Previous (round 8):** older text.\n\n';
 const TAIL = '\n## Next up\n\nnext.\n\n## Gates\n\n| G | x |\n';
 const B = {

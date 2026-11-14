@@ -25,7 +25,7 @@ const MD = "packages/chicla-kit/src/make-delivery.mjs", MO = ["packages/chicla-k
 const MC5 = ["packages/chicla-kit/test/core-make-delivery-catch.test.mjs"];
 const P = "packages/chicla-kit/src/panel.mjs", PT = ["packages/chicla-kit/test/panel.test.mjs"];
 const BR = "packages/chicla-kit/src/bump-round.mjs", BT = ["packages/chicla-kit/test/core-bump-round-limits.test.mjs"];
-const AC = "scripts/archive-changelog.mjs", AO = ["test/archive-options.test.mjs"];
+const AC = "packages/chicla-kit/src/archive-changelog.mjs", AO = ["test/archive-options.test.mjs"];
 const CM = "packages/chicla-kit/src/check-manifest.mjs";
 const CMT = ["test/manifest.test.mjs", "test/collisions-nfc.test.mjs", "test/secret-allow.test.mjs", "test/policy-file.test.mjs", "test/check-manifest-one-read.test.mjs", "test/secret-names.test.mjs", "packages/chicla-kit/test/core-check-manifest.test.mjs", "packages/chicla-kit/test/cli-check-manifest.test.mjs"];
 const CMG = ["packages/chicla-kit/test/core-check-manifest-gaps.test.mjs"];
@@ -124,10 +124,12 @@ export default [
   x("K-ARC-01", AC, "if (args.includes(\"--help\") || args.includes(\"-h\")) {", "if (false) {", AO, "--help is an unknown argument again (exit 2, or the old default run)"),
   x("K-ARC-02", AC, "console.log(USAGE); process.exit(0);", "console.log(USAGE); process.exit(1);", AO, "--help exits 1"),
   x("K-ARC-03", AC, "if (!FLAGS.has(args[i])) {", "if (false) {", AO, "an unknown option or a stray word falls through to the default command (the round 251 accident)"),
-  x("K-ARC-04", AC, "); process.exit(2);", "); process.exit(1);", AO, "an unknown argument exits 1, which the count errors already use"),
+  x("K-ARC-04", AC, "nothing was changed.\\n${USAGE}`); process.exit(2); }\n  }", "nothing was changed.\\n${USAGE}`); process.exit(1); }\n  }", AO, "an unknown argument exits 1, which the count errors already use"),
   x("K-ARC-05", AC, "if (VALUED.has(args[i])) { i++; continue; }", "if (VALUED.has(args[i])) { continue; }", AO, "the value of --keep and its kin is read as a stray word"),
   x("K-ARC-06", AC, "\"--snapshot\", \"--rolling\"]", "\"--snapshot\"]", AO, "--rolling is rejected as unknown"),
-  x("K-ARC-07", AC, "\"--keep-previous\", \"--keep-done\", \"--keep-clauses\"]);", "\"--keep-previous\", \"--keep-clauses\"]);", AO, "--keep-done is rejected as unknown"),
+  x("K-ARC-07", AC, "\"--keep-previous\", \"--keep-done\", \"--keep-clauses\", \"--root\"]);", "\"--keep-previous\", \"--keep-clauses\", \"--root\"]);", AO, "--keep-done is rejected as unknown"),
+  x("K-ARC-08", AC, "return resolve(i >= 0 && process.argv[i + 1] ?", "return resolve(false && process.argv[i + 1] ?", ["packages/chicla-kit/test/archive-cli.test.mjs"], "--root is ignored and the root is the folder above the script (a project without scripts/ is never found)"),
+  x("K-ARC-09", AC, "args[i + 1].startsWith(\"--\"))) { console.error(`\\n✗ --root needs", "args[i + 1].startsWith(\"--\") && false)) { console.error(`\\n✗ --root needs", ["packages/chicla-kit/test/archive-cli.test.mjs"], "--root with no folder is taken as a flag or as nothing instead of a usage error"),
   // ---- slice 6 (C19.2, round 258): bump-round reports the archive limits it sees (AUDIT-6 F-1) ----
   x("K-BMP-01", BR, "previous: 5,", "previous: 6,", BT, "the «Previous» limit moves to 6: a 6th block goes unreported"),
   x("K-BMP-02", BR, "done: 10,", "done: 11,", BT, "the «Done» limit moves to 11"),
@@ -139,8 +141,8 @@ export default [
   x("K-BMP-08", BR, "rounds > LIMITS.rounds", "rounds >= LIMITS.rounds", BT, "exactly 21 CHANGELOG headings are reported"),
   x("K-BMP-09", BR, "Buffer.byteLength(row)", "row.length", BT, "the paragraph is measured in characters, not bytes"),
   x("K-BMP-10", BR, "for (const l of result.limits) say(\"out\", l.line);", ";", BT, "the lines are computed but never printed"),
-  x("K-BMP-11", BR, "\"node scripts/archive-changelog.mjs --status\", s.statusName", "\"node scripts/archive-changelog.mjs --snapshot\", s.statusName", BT, "the «Previous» line names the wrong command"),
-  x("K-BMP-12", BR, ", then node scripts/bump-round.mjs --refresh`", "`", BT, "the line stops naming the --refresh that follows the archiving"),
+  x("K-BMP-11", BR, "\"chicla archive --status\", s.statusName", "\"chicla archive --snapshot\", s.statusName", BT, "the «Previous» line names the wrong command"),
+  x("K-BMP-12", BR, ", then chicla bump-round --refresh`", "`", BT, "the line stops naming the --refresh that follows the archiving"),
   x("K-BMP-13", BR, "    result.limits = archiveLimits(s);", "    result.limits = []; archiveLimits(s);", BT, "the limits are not reported in the result"),
   // C20.1 (round 266, AUDIT-7 F-1): the argument check of `scripts/bump-round.mjs`: `parseBumpArgs` in the core (K-BMP-14 to -17); the exit codes of the wrapper are held by `test/bump-round-options.test.mjs` and the smoke test, not mutated (the list mutates kit sources only).
   x("K-BMP-14", BR, 'if (args.includes("--help") || args.includes("-h")) return { help: true };', "if (false) return { help: true };", ["test/bump-round-options.test.mjs"], "--help is an unknown argument again (or the old default: a real bump)"),

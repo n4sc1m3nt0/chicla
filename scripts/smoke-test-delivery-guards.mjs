@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { crc32, parseManifest, serializeManifest } = await importPinned("manifest");
-const COPY = [...CHECK_MANIFEST_COPY, ...CHECK_BUILD_COPY, ...VERIFY_DELIVERY_COPY, "scripts/make-delivery-zip.mjs", "packages/chicla-kit/src/make-delivery.mjs", LOADER, "scripts/archive-changelog.mjs"]; // wrappers, their cores in the kit and the pinned files
+const COPY = [...CHECK_MANIFEST_COPY, ...CHECK_BUILD_COPY, ...VERIFY_DELIVERY_COPY, "scripts/make-delivery-zip.mjs", "packages/chicla-kit/src/make-delivery.mjs", LOADER, "scripts/archive-changelog.mjs", "packages/chicla-kit/src/archive-changelog.mjs"]; // wrappers, their cores in the kit and the pinned files
 const cleanup = [];
 const tmp = (p) => { const d = mkdtempSync(join(tmpdir(), p)); cleanup.push(d); return d; };
 

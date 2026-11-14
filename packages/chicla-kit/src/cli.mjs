@@ -34,6 +34,7 @@
 // `chicla-zip` and `chicla-kit` are no longer packages. Only the owner publishes (CLAUDE.md product rule 4).
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { realpathSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { shouldStyle, styleSummary } from "./ui.mjs";
 
@@ -53,6 +54,7 @@ Commands:
   update           compare the instruction files of a project with this kit's templates and show the diff; writes nothing unless --apply <file> names a file (--agent <name>, --apply <file>)
   rename-status    rename the status file of an existing project to <NAME>_PROJECT_STATUS-N.md: the file, the fingerprint lines, the status-prefix line, the name in the instruction files and in the process block of the status file, the manifest; never the history; all or nothing (<NAME>)
   init             start a project: CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs and FILES.manifest, consistent; refuses if any exists, never overwrites
+  archive          move old rounds out of CHANGELOG.md and the status file, nothing deleted (--dry-run, --keep N | --status | --snapshot | --rolling; --help lists them)
   bump-round       close a round: bump N -> N+1 (default), --refresh (keep N), --dry-run (write nothing), --verify (only check), --note <text>
 
 Options:
@@ -82,6 +84,15 @@ export async function main(argv, io = {}) {
     return 2;
   };
 
+  // C30.1 (D160, D-A): `archive` runs the archive script of the kit (one file, its own options and its own usage error, exit 2) on the project root: `--root <dir>`, default the current folder
+  if (args[0] === "archive") {
+    const rest = args.slice(1), k = rest.indexOf("--root"); let root = cwd;
+    if (k >= 0) { const v = rest[k + 1]; if (v === undefined || v.startsWith("--")) return fail("archive", "EUSAGE", "--root needs a folder"); root = resolve(cwd, v); rest.splice(k, 2); }
+    const r = spawnSync(process.execPath, [fileURLToPath(new URL("archive-changelog.mjs", SRC)), "--root", root, ...rest], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    if (r.error) return fail("archive", "ECOMMAND_LOAD", "the archive script could not run");
+    stdout.write(r.stdout ?? ""); stderr.write(r.stderr ?? "");
+    return r.status ?? 1;
+  }
   if (args.includes("--help") || args.includes("-h")) { stdout.write(HELP); return 0; }
   // C11.5 slice c (D93): no arguments at all on an interactive terminal (stdout AND stdin are TTYs, same `shouldStyle` rules) opens the read-only panel; anything else keeps the usage error below
   if (args.length === 0 && shouldStyle({ isTTY: stdout.isTTY === true && (io.stdin ?? process.stdin).isTTY === true, env: io.env ?? process.env })) {

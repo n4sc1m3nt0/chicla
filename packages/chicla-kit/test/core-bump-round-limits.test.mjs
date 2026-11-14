@@ -67,28 +67,28 @@ test('«Previous» blocks: 5 print nothing, 6 print one line that names --status
   const r = close(six.p);
   assert.equal(r.ok, true); assert.equal(r.code, null);
   const l = limitLines(r);
-  assert.equal(l.length, 1, l.join('\n')); assert.match(l[0], /6 «Previous» blocks/); assert.match(l[0], /limit 5/); assert.match(l[0], /node scripts\/archive-changelog\.mjs --status\b/); assert.match(l[0], /bump-round\.mjs --refresh/);
+  assert.equal(l.length, 1, l.join('\n')); assert.match(l[0], /6 «Previous» blocks/); assert.match(l[0], /limit 5/); assert.match(l[0], /chicla archive --status\b/); assert.match(l[0], /chicla bump-round --refresh/);
   assert.equal(r.limits.length, 1); assert.equal(r.limits[0].id, 'previous');
   assert.equal(tree(six.p), before, 'nothing was archived'); assert.ok(readFileSync(join(six.p, six.st)).equals(stBefore), 'the status file is untouched (dry)');
 });
 
 test('«Done» lines: 10 print nothing, 11 print one line that names --snapshot', () => {
   const r = close(project(addDone(1)).p), l = limitLines(r);
-  assert.equal(l.length, 1, l.join('\n')); assert.match(l[0], /11 «Done» lines/); assert.match(l[0], /limit 10/); assert.match(l[0], /archive-changelog\.mjs --snapshot\b/); assert.equal(r.limits[0].id, 'done');
+  assert.equal(l.length, 1, l.join('\n')); assert.match(l[0], /11 «Done» lines/); assert.match(l[0], /limit 10/); assert.match(l[0], /chicla archive --snapshot\b/); assert.equal(r.limits[0].id, 'done');
 });
 
-test('CHANGELOG rounds: 21 headings print nothing, 22 print one line that names the plain archive-changelog command', () => {
+test('CHANGELOG rounds: 21 headings print nothing, 22 print one line that names the plain archive command', () => {
   const real = readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8').split('\n').filter((l) => /^## Round /.test(l)).length;
   assert.deepEqual(limitLines(close(project(addRounds(21 - real)).p)), [], '21 headings is within the limit');
   const r = close(project(addRounds(22 - real)).p), l = limitLines(r);
-  assert.equal(l.length, 1, l.join('\n')); assert.match(l[0], /22 rounds/); assert.match(l[0], /limit 21/); assert.match(l[0], /archive-changelog\.mjs(?! --)/); assert.equal(r.limits[0].id, 'changelog');
+  assert.equal(l.length, 1, l.join('\n')); assert.match(l[0], /22 rounds/); assert.match(l[0], /limit 21/); assert.match(l[0], /chicla archive(?! --)/); assert.equal(r.limits[0].id, 'changelog');
 });
 
 test('the two rolling paragraphs: 4096 bytes print nothing, 4097 print one line that names --rolling (bytes, not characters)', () => {
   for (const [head, id] of [['**Current version:**', 'current-version'], ['**Open decisions:**', 'open-decisions']]) {
     assert.deepEqual(limitLines(close(project(padLine(head, 4096)).p)), [], `${id} at 4096 bytes`);
     const r = close(project(padLine(head, 4097)).p), l = limitLines(r);
-    assert.equal(l.length, 1, `${id}: ${l.join('\n')}`); assert.match(l[0], /4097 bytes/); assert.match(l[0], /limit 4096/); assert.match(l[0], /archive-changelog\.mjs --rolling\b/); assert.equal(r.limits[0].id, id);
+    assert.equal(l.length, 1, `${id}: ${l.join('\n')}`); assert.match(l[0], /4097 bytes/); assert.match(l[0], /limit 4096/); assert.match(l[0], /chicla archive --rolling\b/); assert.equal(r.limits[0].id, id);
   }
   // a line of multi-byte characters counts its BYTES: 2100 characters of « are 4200 bytes
   const { p } = project((s, c) => { const a = lines(s), i = a.findIndex((l) => l.startsWith('**Open decisions:**')); a[i] = '**Open decisions:** ' + '«'.repeat(2100); return [a.join('\n'), c]; });

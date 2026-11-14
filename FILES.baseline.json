@@ -1,7 +1,7 @@
 {
  "format": "chicla-baseline-v1",
- "created": "2026-11-08T19:19:25.296Z",
- "seal": "db8a3c0ab3a7fd80d34be29e8bc4fd70d2c472cee60d22c41bcfb72807d3f8cc",
+ "created": "2026-11-14T08:50:59.277Z",
+ "seal": "f69df6610ae1d680cb4329a6c21b79f7ff1e7ba99d886685bd694f9fda5ef979",
  "files": [
   {
    "path": ".gitattributes",
@@ -25,13 +25,13 @@
   },
   {
    "path": "CHANGELOG.md",
-   "size": 20588,
-   "sha256": "2acfccc080bf682bdb7608638138c37d7e39f998ea5b1059426113b396e5b28e"
+   "size": 27580,
+   "sha256": "058d05e60847c9fe15b23ea7c8775a3c2cf03c3153e9bcf1a835511832beb713"
   },
   {
-   "path": "CHICLA_PROJECT_STATUS-329.md",
-   "size": 61291,
-   "sha256": "158dae91e70ada3f87ba3b65b076f315926459d7edaac552587a5b72e36bdec4"
+   "path": "CHICLA_PROJECT_STATUS-332.md",
+   "size": 59006,
+   "sha256": "627c91e4fe2fd93e6700ce4946d6fb6ec44c64e9ba9aa2ddf21edb28680e0825"
   },
   {
    "path": "CLAUDE.md",
@@ -45,8 +45,8 @@
   },
   {
    "path": "FILES.manifest",
-   "size": 31120,
-   "sha256": "ff4e29f1183ba0d1438fe9799efb8df952f4f8a364094288b7dbde56c28a7a85"
+   "size": 35314,
+   "sha256": "21150ab024a6bbf606be885260503e9add554cc4edf308a8cb211d0ba4d3f228"
   },
   {
    "path": "LICENSE",
@@ -60,13 +60,173 @@
   },
   {
    "path": "ROADMAP.md",
-   "size": 221746,
-   "sha256": "f1e1cdde7058649b64cac276d3d3b6acefbbecef0c87a4f92cf09a1edb5a4543"
+   "size": 229411,
+   "sha256": "163d38bdbbd442fb08adf5cd6e4c9c5eaebfb271ba18bf4f6500201e8cf3a77d"
   },
   {
    "path": "SECURITY.md",
    "size": 7902,
    "sha256": "35c59b94167bdca6dc887b70f2b3984aef0531823ff62b632be18717cfcb78a5"
+  },
+  {
+   "path": "ci-0.3.0/package/LICENSE",
+   "size": 10174,
+   "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+  },
+  {
+   "path": "ci-0.3.0/package/README.md",
+   "size": 2305,
+   "sha256": "1f4f7a94efcd3cf2c86f45a5d938f8430cab93a5696b1d1f279087a3c3977433"
+  },
+  {
+   "path": "ci-0.3.0/package/package.json",
+   "size": 716,
+   "sha256": "b0e5614d9c1f8de1d92f28afc7296c96ceda25582454eb687482d654bf876999"
+  },
+  {
+   "path": "ci-0.3.0/package/src/agents.mjs",
+   "size": 1451,
+   "sha256": "528b06fd8362018f3c55ab72dfb1fe7b615cd9dd9e9884b4777c5b455aa7d081"
+  },
+  {
+   "path": "ci-0.3.0/package/src/bump-round.mjs",
+   "size": 18480,
+   "sha256": "8a63b505d358342ac86dc42a199739e349c79ce76a14cac670cabb727a5251ff"
+  },
+  {
+   "path": "ci-0.3.0/package/src/check-build.mjs",
+   "size": 3493,
+   "sha256": "3d487b16158f32b8c20936fabe2173fa7b4cec54d40617ed6c83497ccdd76ce5"
+  },
+  {
+   "path": "ci-0.3.0/package/src/check-manifest.mjs",
+   "size": 18509,
+   "sha256": "4d64b3761874a96310353dfd061d200be42cc423f85e05bfbb9a7eab91b1b3c8"
+  },
+  {
+   "path": "ci-0.3.0/package/src/ci-report.mjs",
+   "size": 9280,
+   "sha256": "2c972bb8b83b86305ecb59b56a6eb26ee56fe2142cfeae5d99af9f621a55260d"
+  },
+  {
+   "path": "ci-0.3.0/package/src/cli.mjs",
+   "size": 18670,
+   "sha256": "ae82006815f7a6e61ae09b1d0d544a16c36cb99455412351a323439b6afa0695"
+  },
+  {
+   "path": "ci-0.3.0/package/src/emergency-dump.mjs",
+   "size": 35948,
+   "sha256": "1a2f6c5289fcf42530369ec96343f82adec02c23851fec43bec0993fe162d0cb"
+  },
+  {
+   "path": "ci-0.3.0/package/src/init.mjs",
+   "size": 8522,
+   "sha256": "80526755960118d1e42724340287a011a278d6738104c95c0c4f9a5354ec6a31"
+  },
+  {
+   "path": "ci-0.3.0/package/src/integrity.mjs",
+   "size": 9389,
+   "sha256": "b69309f226f7271b40a56545ba1a290e469de4e5275dc3b6bd2957673505ec1a"
+  },
+  {
+   "path": "ci-0.3.0/package/src/make-delivery.mjs",
+   "size": 8359,
+   "sha256": "4920c36aeef3ca0a5369a0ccee9d327455bf896de4e2e4f0bdd78b4359f0c53c"
+  },
+  {
+   "path": "ci-0.3.0/package/src/panel.mjs",
+   "size": 10983,
+   "sha256": "455bb670393944aaf66bdde1f5ecb29966cbe8871b1486736d8f300618371d4e"
+  },
+  {
+   "path": "ci-0.3.0/package/src/pinned/baseline.mjs",
+   "size": 3028,
+   "sha256": "7ee14e7084caf978cda226463dd71d90e3f5b36a0d1e9162d310936f734a3e0c"
+  },
+  {
+   "path": "ci-0.3.0/package/src/pinned/manifest.mjs",
+   "size": 4969,
+   "sha256": "052f36789ec113db487ccdf07cd8331cef8dcb8ae915e7dd7ff6564938f31c08"
+  },
+  {
+   "path": "ci-0.3.0/package/src/pinned/policy.mjs",
+   "size": 10914,
+   "sha256": "1796f7e88a75a8c870344310cf95a0dcc4fe8536a443c09d4b710f6065a5c3ff"
+  },
+  {
+   "path": "ci-0.3.0/package/src/pinned/recovery-report.mjs",
+   "size": 22307,
+   "sha256": "ea597ed8c048545ee046992ab751f4bfdb0ea693e1d43d0414870547f788f1bc"
+  },
+  {
+   "path": "ci-0.3.0/package/src/pinned/zipkit.mjs",
+   "size": 95220,
+   "sha256": "89478bbe052771eeb72ad4da04880ccfea6030a9e79b3ce9a0f06373a805b380"
+  },
+  {
+   "path": "ci-0.3.0/package/src/rename-status.mjs",
+   "size": 8192,
+   "sha256": "f8f294a045571459fdd9db516d00191be10b87af7c89c05b1f8aa4b0dd52ea39"
+  },
+  {
+   "path": "ci-0.3.0/package/src/ui.mjs",
+   "size": 4353,
+   "sha256": "6d16e38f81aea4ee232b1c24e6a63d7f1f1b29252c29be59984d8aa14c207f4f"
+  },
+  {
+   "path": "ci-0.3.0/package/src/update.mjs",
+   "size": 9296,
+   "sha256": "7a6306efd9a99e33978d8daa2f09621314e1cddea9cf19e2d41f42a79e13c094"
+  },
+  {
+   "path": "ci-0.3.0/package/src/verify-delivery.mjs",
+   "size": 21348,
+   "sha256": "31af1e56a2a3c52f4b35de1093bbb84815c3e910279059e380bbcb12dd1323ea"
+  },
+  {
+   "path": "ci-0.3.0/package/src/zipkit-loader.mjs",
+   "size": 1322,
+   "sha256": "883e835214489c3fe4a3d4083d8b62b2556c3a6267ba6c9ae5754f155c832ade"
+  },
+  {
+   "path": "ci-0.3.0/package/src/zipkit.mjs",
+   "size": 95220,
+   "sha256": "89478bbe052771eeb72ad4da04880ccfea6030a9e79b3ce9a0f06373a805b380"
+  },
+  {
+   "path": "ci-0.3.0/package/templates/AGENTS.md",
+   "size": 1202,
+   "sha256": "6286084e193e0352663da62456a284c74c0091eb01385d43aacc3b0528ec93eb"
+  },
+  {
+   "path": "ci-0.3.0/package/templates/CHANGELOG.md",
+   "size": 428,
+   "sha256": "bbb8b38565de0fc3d6ca9f45f4a5b1cdfbcf06d7ec16d43a419ea354b0fc79d9"
+  },
+  {
+   "path": "ci-0.3.0/package/templates/CHICLA_PROJECT_STATUS-1.md",
+   "size": 3126,
+   "sha256": "24942f6a4b2b6c48f81c865cdd8531a450861fbc128bf691bd3ea3cf9f81d9c5"
+  },
+  {
+   "path": "ci-0.3.0/package/templates/CLAUDE.md",
+   "size": 3093,
+   "sha256": "167669a56626221e2c9be5268e777abdf75bbb4657b0ebfe7ef67e5f79a0c1c8"
+  },
+  {
+   "path": "ci-0.3.0/package/templates/GEMINI.md",
+   "size": 1211,
+   "sha256": "b66af061f3e9dbda2ddad75ba90544fcdad8a014ef0d809a54a849613c8266cb"
+  },
+  {
+   "path": "ci-0.3.0/package/templates/copilot-instructions.md",
+   "size": 1192,
+   "sha256": "854f2b4543ba614ceebccb1a481b2a90de0e75623ecadda9b4fbb61f0ed1c9e9"
+  },
+  {
+   "path": "ci-0.3.0/package/templates/version.mjs",
+   "size": 454,
+   "sha256": "3aedfbd134e7571e9dc9b729d24a57e82d1e9ef121278b95ccf78eac066845a4"
   },
   {
    "path": "docs/README.md",
@@ -494,6 +654,21 @@
    "sha256": "f100a4fb1112180b5c7e2a31f8507ff6969670b9a145d27a57f0a5f127f9614e"
   },
   {
+   "path": "docs/archive/status/status-archive-done-315-315.md",
+   "size": 1517,
+   "sha256": "d8ff70131316964bbaa7b117731d15d3ab2a947c3d17415f8010eefe338609b6"
+  },
+  {
+   "path": "docs/archive/status/status-archive-done-316-316.md",
+   "size": 1908,
+   "sha256": "8143cc3ec6c24af3c4f3d17d9cb72a1b0909ed348c3965fb8c69030053d96fe2"
+  },
+  {
+   "path": "docs/archive/status/status-archive-done-317-317.md",
+   "size": 1828,
+   "sha256": "5056d620ef8c3c4d3527a5f36e3667baf34101206264e816f89a8cd5904022cc"
+  },
+  {
    "path": "docs/archive/status/status-archive-previous-123-233.md",
    "size": 35356,
    "sha256": "6e1546bd6a4840c343aa4b7398845f32b8a6121511e4bdc41b9e313be2e79ed1"
@@ -879,6 +1054,21 @@
    "sha256": "af39e100273f97faab55c80e4930f0d0f8987e30dbfaaf69ce0f004087b0141a"
   },
   {
+   "path": "docs/archive/status/status-archive-previous-319-319.md",
+   "size": 916,
+   "sha256": "f62bdb35fe6ba194b98450547a1b09c245d95c56305a0ccf56ebe9cf9b62257f"
+  },
+  {
+   "path": "docs/archive/status/status-archive-previous-320-320.md",
+   "size": 753,
+   "sha256": "9c28848b0633e0cb37f1891e0a2d34ef4ff855767ad5f1e032bc424b0c9c187a"
+  },
+  {
+   "path": "docs/archive/status/status-archive-previous-321-321.md",
+   "size": 946,
+   "sha256": "9eac7e1f34f50dcfb6e2e3b3c382f2af82b31bcc9811a5b9c023e80f5d2e0167"
+  },
+  {
    "path": "docs/archive/status/status-archive-rolling-135-246.md",
    "size": 21508,
    "sha256": "5e2e6d0ebf5f86cac92cc361727478e6d28aca0be4cd73df88c0b90901f447a5"
@@ -1164,6 +1354,26 @@
    "sha256": "89aab1bcb62246ce33df4bf190d17f6a680d3c5b14b7b47f09b8db9e1b9af532"
   },
   {
+   "path": "docs/archive/status/status-archive-rolling-322-322.md",
+   "size": 919,
+   "sha256": "51068482520fe4481cf0b79a465adc3844138d761d26ffe7da3c469eac4db392"
+  },
+  {
+   "path": "docs/archive/status/status-archive-rolling-323-323.md",
+   "size": 874,
+   "sha256": "fe1005ac5c0b57238a3683a825d67c7fe5f9c144eaf05efb123b799099ae24d6"
+  },
+  {
+   "path": "docs/archive/status/status-archive-rolling-324-324.md",
+   "size": 849,
+   "sha256": "91a912af708682e95bff2aba7b57d6aef88d77e973758b067dbdc9df78579605"
+  },
+  {
+   "path": "docs/archive/status/status-archive-rolling-325-325.md",
+   "size": 826,
+   "sha256": "21b2944c95a05dc050da539d25543ddaae0e649e75de829af36e2b5ff714ad14"
+  },
+  {
    "path": "docs/audits/AUDIT-1.md",
    "size": 7439,
    "sha256": "61aed62fa91672220322c67633d7a01226395949c900aacf596afec4a02e7b64"
@@ -1276,7 +1486,7 @@
   {
    "path": "package.json",
    "size": 804,
-   "sha256": "409ace5e40d831e324191cc549d57c635edaccf75c03ef64be8d21529110ef75"
+   "sha256": "8133eae71b84e4791b58dad6fcd7042e530aaa93b57f52106942354662be810b"
   },
   {
    "path": "packages/chicla-kit/LICENSE",
@@ -1290,8 +1500,8 @@
   },
   {
    "path": "packages/chicla-kit/mutants/list.mjs",
-   "size": 46916,
-   "sha256": "f0f890fbde81555d73c260ea7ee4510325e655de1df17d5bb1069d2aa7ffd090"
+   "size": 47574,
+   "sha256": "c02a0339e51efa8268936f11174b3242709475e957fe2e4d46cb547877633722"
   },
   {
    "path": "packages/chicla-kit/package.json",
@@ -1304,9 +1514,14 @@
    "sha256": "528b06fd8362018f3c55ab72dfb1fe7b615cd9dd9e9884b4777c5b455aa7d081"
   },
   {
+   "path": "packages/chicla-kit/src/archive-changelog.mjs",
+   "size": 24602,
+   "sha256": "d49612111635aa91ac86056dc3fe292bb5f66e98e35fc7f6638b6751825801b2"
+  },
+  {
    "path": "packages/chicla-kit/src/bump-round.mjs",
-   "size": 18480,
-   "sha256": "8a63b505d358342ac86dc42a199739e349c79ce76a14cac670cabb727a5251ff"
+   "size": 18380,
+   "sha256": "8e5fc677400f7af069c29259f160e37e750d64ae2541d44cb866338d2c39d856"
   },
   {
    "path": "packages/chicla-kit/src/check-build.mjs",
@@ -1325,8 +1540,8 @@
   },
   {
    "path": "packages/chicla-kit/src/cli.mjs",
-   "size": 18670,
-   "sha256": "ae82006815f7a6e61ae09b1d0d544a16c36cb99455412351a323439b6afa0695"
+   "size": 19738,
+   "sha256": "9e631e4d1f4a8de044c3d955413eebe40b1bc31eec3a7b89fae245cfa8dc4709"
   },
   {
    "path": "packages/chicla-kit/src/emergency-dump.mjs",
@@ -1410,8 +1625,8 @@
   },
   {
    "path": "packages/chicla-kit/templates/CHICLA_PROJECT_STATUS-1.md",
-   "size": 3126,
-   "sha256": "24942f6a4b2b6c48f81c865cdd8531a450861fbc128bf691bd3ea3cf9f81d9c5"
+   "size": 3116,
+   "sha256": "7b9f2106cf0ab5ecb70ae68ada822cb8a79546665dd5c0545228bdad92e156d0"
   },
   {
    "path": "packages/chicla-kit/templates/CLAUDE.md",
@@ -1437,6 +1652,11 @@
    "path": "packages/chicla-kit/test/.gitkeep",
    "size": 0,
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "path": "packages/chicla-kit/test/archive-cli.test.mjs",
+   "size": 5354,
+   "sha256": "585b9ffa8e10cfdf595d0e80e20dd5bd846148655618855f4e3feced41376b6f"
   },
   {
    "path": "packages/chicla-kit/test/ci-report.test.mjs",
@@ -1485,8 +1705,8 @@
   },
   {
    "path": "packages/chicla-kit/test/core-bump-round-limits.test.mjs",
-   "size": 10140,
-   "sha256": "94f4d2342809ab71741fd17b016c06b0b0f3f6975b6b2f1cc9540e62a1cab02c"
+   "size": 10086,
+   "sha256": "3ab010804b9bae00a40e1db0760eeb74fe4de343bda920b511ff1e6f2b0145a6"
   },
   {
    "path": "packages/chicla-kit/test/core-bump-round.test.mjs",
@@ -1587,6 +1807,11 @@
    "path": "packages/chicla-kit/test/name-rules-differential.test.mjs",
    "size": 6887,
    "sha256": "5fe7a7c3963f003015b6af1a0abe246de7d178e5a9d038c707c3ec793d16e5f1"
+  },
+  {
+   "path": "packages/chicla-kit/test/no-scripts-in-messages.test.mjs",
+   "size": 3834,
+   "sha256": "19bfc326b1071e4b5ffc854554f5602f76c4c63aed3b74b72959a775d3ebc09e"
   },
   {
    "path": "packages/chicla-kit/test/packaging.test.mjs",
@@ -2065,8 +2290,8 @@
   },
   {
    "path": "scripts/archive-changelog.mjs",
-   "size": 23884,
-   "sha256": "538d959183f02eec0e9983396c33b677d64c12ca851e4b6bc45e49afd7913953"
+   "size": 703,
+   "sha256": "570c467587091ce6e79a15f5b15103777d5dc923e2d20444f285265709d2d534"
   },
   {
    "path": "scripts/build-chicla.mjs",
@@ -2125,8 +2350,8 @@
   },
   {
    "path": "scripts/smoke-test-archive-changelog.mjs",
-   "size": 7261,
-   "sha256": "d36f0ccbfc7ceff23353f9243d5dc3df3671f5884f18e73dfd79be38b7908620"
+   "size": 7277,
+   "sha256": "1837baeb7b69102a8f8cc457f847b01a76cb78d7e7fbd31bc87f2ef3d2d796d2"
   },
   {
    "path": "scripts/smoke-test-bump-round.mjs",
@@ -2140,8 +2365,8 @@
   },
   {
    "path": "scripts/smoke-test-delivery-guards.mjs",
-   "size": 27608,
-   "sha256": "d0773355b1252321b0c14c671b7253e5acdb963f0727d74c66cc8a0b5c54c794"
+   "size": 27657,
+   "sha256": "fa8c46de6cfb5eef02888facdd47cbf7d005f6c2c241d1294bdba7f60d4aac05"
   },
   {
    "path": "scripts/smoke-test-emergency.mjs",
@@ -2169,29 +2394,189 @@
    "sha256": "30c29d87c48ddf965bd19921f4c0a0a7383f677c6778507de16808671936c4ed"
   },
   {
+   "path": "stage-0.3.0/chicla/LICENSE",
+   "size": 10174,
+   "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+  },
+  {
+   "path": "stage-0.3.0/chicla/README.md",
+   "size": 2305,
+   "sha256": "1f4f7a94efcd3cf2c86f45a5d938f8430cab93a5696b1d1f279087a3c3977433"
+  },
+  {
+   "path": "stage-0.3.0/chicla/package.json",
+   "size": 716,
+   "sha256": "b0e5614d9c1f8de1d92f28afc7296c96ceda25582454eb687482d654bf876999"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/agents.mjs",
+   "size": 1451,
+   "sha256": "528b06fd8362018f3c55ab72dfb1fe7b615cd9dd9e9884b4777c5b455aa7d081"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/bump-round.mjs",
+   "size": 18480,
+   "sha256": "8a63b505d358342ac86dc42a199739e349c79ce76a14cac670cabb727a5251ff"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/check-build.mjs",
+   "size": 3493,
+   "sha256": "3d487b16158f32b8c20936fabe2173fa7b4cec54d40617ed6c83497ccdd76ce5"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/check-manifest.mjs",
+   "size": 18509,
+   "sha256": "4d64b3761874a96310353dfd061d200be42cc423f85e05bfbb9a7eab91b1b3c8"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/ci-report.mjs",
+   "size": 9280,
+   "sha256": "2c972bb8b83b86305ecb59b56a6eb26ee56fe2142cfeae5d99af9f621a55260d"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/cli.mjs",
+   "size": 18670,
+   "sha256": "ae82006815f7a6e61ae09b1d0d544a16c36cb99455412351a323439b6afa0695"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/emergency-dump.mjs",
+   "size": 35948,
+   "sha256": "1a2f6c5289fcf42530369ec96343f82adec02c23851fec43bec0993fe162d0cb"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/init.mjs",
+   "size": 8522,
+   "sha256": "80526755960118d1e42724340287a011a278d6738104c95c0c4f9a5354ec6a31"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/integrity.mjs",
+   "size": 9389,
+   "sha256": "b69309f226f7271b40a56545ba1a290e469de4e5275dc3b6bd2957673505ec1a"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/make-delivery.mjs",
+   "size": 8359,
+   "sha256": "4920c36aeef3ca0a5369a0ccee9d327455bf896de4e2e4f0bdd78b4359f0c53c"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/panel.mjs",
+   "size": 10983,
+   "sha256": "455bb670393944aaf66bdde1f5ecb29966cbe8871b1486736d8f300618371d4e"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/pinned/baseline.mjs",
+   "size": 3028,
+   "sha256": "7ee14e7084caf978cda226463dd71d90e3f5b36a0d1e9162d310936f734a3e0c"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/pinned/manifest.mjs",
+   "size": 4969,
+   "sha256": "052f36789ec113db487ccdf07cd8331cef8dcb8ae915e7dd7ff6564938f31c08"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/pinned/policy.mjs",
+   "size": 10914,
+   "sha256": "1796f7e88a75a8c870344310cf95a0dcc4fe8536a443c09d4b710f6065a5c3ff"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/pinned/recovery-report.mjs",
+   "size": 22307,
+   "sha256": "ea597ed8c048545ee046992ab751f4bfdb0ea693e1d43d0414870547f788f1bc"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/pinned/zipkit.mjs",
+   "size": 95220,
+   "sha256": "89478bbe052771eeb72ad4da04880ccfea6030a9e79b3ce9a0f06373a805b380"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/rename-status.mjs",
+   "size": 8192,
+   "sha256": "f8f294a045571459fdd9db516d00191be10b87af7c89c05b1f8aa4b0dd52ea39"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/ui.mjs",
+   "size": 4353,
+   "sha256": "6d16e38f81aea4ee232b1c24e6a63d7f1f1b29252c29be59984d8aa14c207f4f"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/update.mjs",
+   "size": 9296,
+   "sha256": "7a6306efd9a99e33978d8daa2f09621314e1cddea9cf19e2d41f42a79e13c094"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/verify-delivery.mjs",
+   "size": 21348,
+   "sha256": "31af1e56a2a3c52f4b35de1093bbb84815c3e910279059e380bbcb12dd1323ea"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/zipkit-loader.mjs",
+   "size": 1322,
+   "sha256": "883e835214489c3fe4a3d4083d8b62b2556c3a6267ba6c9ae5754f155c832ade"
+  },
+  {
+   "path": "stage-0.3.0/chicla/src/zipkit.mjs",
+   "size": 95220,
+   "sha256": "89478bbe052771eeb72ad4da04880ccfea6030a9e79b3ce9a0f06373a805b380"
+  },
+  {
+   "path": "stage-0.3.0/chicla/templates/AGENTS.md",
+   "size": 1202,
+   "sha256": "6286084e193e0352663da62456a284c74c0091eb01385d43aacc3b0528ec93eb"
+  },
+  {
+   "path": "stage-0.3.0/chicla/templates/CHANGELOG.md",
+   "size": 428,
+   "sha256": "bbb8b38565de0fc3d6ca9f45f4a5b1cdfbcf06d7ec16d43a419ea354b0fc79d9"
+  },
+  {
+   "path": "stage-0.3.0/chicla/templates/CHICLA_PROJECT_STATUS-1.md",
+   "size": 3126,
+   "sha256": "24942f6a4b2b6c48f81c865cdd8531a450861fbc128bf691bd3ea3cf9f81d9c5"
+  },
+  {
+   "path": "stage-0.3.0/chicla/templates/CLAUDE.md",
+   "size": 3093,
+   "sha256": "167669a56626221e2c9be5268e777abdf75bbb4657b0ebfe7ef67e5f79a0c1c8"
+  },
+  {
+   "path": "stage-0.3.0/chicla/templates/GEMINI.md",
+   "size": 1211,
+   "sha256": "b66af061f3e9dbda2ddad75ba90544fcdad8a014ef0d809a54a849613c8266cb"
+  },
+  {
+   "path": "stage-0.3.0/chicla/templates/copilot-instructions.md",
+   "size": 1192,
+   "sha256": "854f2b4543ba614ceebccb1a481b2a90de0e75623ecadda9b4fbb61f0ed1c9e9"
+  },
+  {
+   "path": "stage-0.3.0/chicla/templates/version.mjs",
+   "size": 454,
+   "sha256": "3aedfbd134e7571e9dc9b729d24a57e82d1e9ef121278b95ccf78eac066845a4"
+  },
+  {
    "path": "test/archive-options.test.mjs",
-   "size": 7011,
-   "sha256": "1289b61fb9379247350c037a226de7b89064371b560a838e01ef25a43a311179"
+   "size": 7027,
+   "sha256": "b5068a99ff662556a898aa4e7f9dd77944f67ab865edf984e99435a4140d79ad"
   },
   {
    "path": "test/archive-rolling.test.mjs",
-   "size": 10620,
-   "sha256": "4ef814dc81f5ef494474b90f00a5d6c189031478f5c6406e3f34e58504eb2cb8"
+   "size": 10636,
+   "sha256": "223b5115275095db779e0b51ec2d47720714f76d19cbad9fe031610d80919c61"
   },
   {
    "path": "test/archive-snapshot.test.mjs",
-   "size": 10096,
-   "sha256": "2c48ad90343c97c0bc0e2460a357795b09f5de628e3a53fff1b2bf5dec0d46d0"
+   "size": 10112,
+   "sha256": "53132b2ca78e38ff5e17d768ede269d846323d1a82d17d1740f52223ee1ce64d"
   },
   {
    "path": "test/archive-status-folder.test.mjs",
-   "size": 4690,
-   "sha256": "77e58ca47646dc9531d0d2387ad9f5748d95a2b28f5a3a5172266e2c1d519cd1"
+   "size": 4706,
+   "sha256": "c947971c03195776cfee6bba8b3e23e8970bf1b97a720024e53c9acb9f6d2573"
   },
   {
    "path": "test/archive-status.test.mjs",
-   "size": 8825,
-   "sha256": "baa854aaf5b4cf76731e7e4368692a8693d292376520226349c7333d8abc3f24"
+   "size": 8841,
+   "sha256": "e967810268bbd9a21530b631d009da993e7985e2726640fd9d79fa4e9d0a090e"
   },
   {
    "path": "test/audit10-docs.test.mjs",
@@ -2305,8 +2690,8 @@
   },
   {
    "path": "test/dependabot-merged-docs.test.mjs",
-   "size": 3751,
-   "sha256": "47070b6f7bdcddbfc4efc9bc848188ec147c2b925a84b565e62fbb1958a661a7"
+   "size": 3946,
+   "sha256": "af787966f6122132aa2b56864b9ce07d98151567ca1a9f4f7543ff98f348ff4b"
   },
   {
    "path": "test/docs-accuracy.test.mjs",
@@ -2665,8 +3050,8 @@
   },
   {
    "path": "test/status-prefix-c263.test.mjs",
-   "size": 9281,
-   "sha256": "1de12f3262aef9a9b87094e27ec5fd08cc0ecfa85e1da8278bc64d31dce47fd3"
+   "size": 9297,
+   "sha256": "bd09ca100c226f29f9c8cfa664571c65065a663f3ff0c536af1fe670c5ce7859"
   },
   {
    "path": "test/status-reads.test.mjs",
@@ -2730,8 +3115,8 @@
   },
   {
    "path": "version.mjs",
-   "size": 531,
-   "sha256": "6f00d6a2354a7f8210304ba4199586e862c02f38cbbcbc75f8142a534087f45a"
+   "size": 550,
+   "sha256": "56bb4da9a2024b99ee9e64d4755879dd03e45917b2ed00cc748d9e14f99926bc"
   }
  ]
 }

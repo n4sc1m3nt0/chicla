@@ -24,10 +24,10 @@ Created by `chicla init`. This file is the memory of the project between session
 
 **Fingerprint:** seq=1 · app=version.mjs ·
 app_sha256_12=000000000000 (of everything below the app file's own
-fingerprint comment; unchanged at this seq — rewritten by `scripts/bump-round.mjs`) ·
+fingerprint comment; unchanged at this seq — rewritten by `chicla bump-round`) ·
 changelog=CHANGELOG.md ·
 changelog_sha256_12=000000000000 (hash of `CHANGELOG.md` below its own
-fingerprint line; recomputed by `scripts/bump-round.mjs` at seq 1) · matches the
+fingerprint line; recomputed by `chicla bump-round` at seq 1) · matches the
 `STATUS_FILE_FINGERPRINT` comment on line 2–3 of the app file and the
 `CHANGELOG_FINGERPRINT` comment on line 1 of `CHANGELOG.md`. If any of
 these three don't match what you're looking at, stop and see

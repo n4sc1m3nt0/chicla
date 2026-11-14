@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const T = mkdtempSync(join(tmpdir(), "chicla-w5-"));
 mkdirSync(join(T, "scripts"));
-copyFileSync(join(ROOT, "scripts/archive-changelog.mjs"), join(T, "scripts/archive-changelog.mjs"));
+copyFileSync(join(ROOT, "packages/chicla-kit/src/archive-changelog.mjs"), join(T, "scripts/archive-changelog.mjs"));
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? "✓" : "✗"} ${what}`); if (!ok) failed++; };
 const run = (...a) => spawnSync(process.execPath, [join(T, "scripts/archive-changelog.mjs"), ...a], { encoding: "utf8" });

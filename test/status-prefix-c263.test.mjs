@@ -82,7 +82,7 @@ const BLOCKS = ['8', '7', '6', '5'].map((r) => `**Previous (round ${r}):** text 
 const TAIL = '## Snapshot\n\n- Done: round 9.\n\n## Next up\n\nnext.\n';
 const project = (claude, statusNames) => {
   const d = fresh(); mkdirSync(join(d, 'docs')); mkdirSync(join(d, 'scripts'));
-  copyFileSync(join(ROOT, 'scripts/archive-changelog.mjs'), join(d, 'scripts/archive-changelog.mjs'));
+  copyFileSync(join(ROOT, 'packages/chicla-kit/src/archive-changelog.mjs'), join(d, 'scripts/archive-changelog.mjs'));
   put(d, 'CHANGELOG.md', '<!-- CHANGELOG_FINGERPRINT: seq=7 -->\n# Changelog\n\n## Round 1 — a\n- x\n');
   if (claude !== null) put(d, 'CLAUDE.md', claude);
   for (const s of statusNames) put(d, s, HEAD + BLOCKS + TAIL);
