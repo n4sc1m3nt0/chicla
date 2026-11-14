@@ -12,7 +12,17 @@ If the owner writes `/dump` (or «dump»), stop what you are doing, run `chicla 
 
 1. Read `CHICLA_PROJECT_STATUS-N.md` (N is the round): the state, the open decisions, the gates, the next task. If it does not exist, say so to the owner before doing anything else.
 2. Run `chicla bump-round --verify` and `chicla check-manifest`. If either fails, stop and report; do not work on top of a project whose files do not agree with each other.
-3. List the open decisions, each with your suggestion, and wait for the owner to answer them.
+3. List the open decisions IN YOUR REPLY, numbered, each with your suggestion and a one-line reason, and wait for the owner to answer them before you start. «It is in the status file» does not count as a list. Do the same in the reply that ends a round, if new decisions came up.
+
+## 1b. How the owner answers
+
+The owner answers the numbered decisions in one line:
+- `ok` (or `confirmo tudo`, `avança`): accept every suggestion; record them, then do the task.
+- `ok, 2 não`: accept all but 2, which stays open.
+- `ok, 2: <text>`: accept all, but 2 is as the owner wrote it.
+- With no decision open, `ok` means the task under «Next up».
+
+This never covers what only the owner can do: a gate, publishing a release, deleting anything the project lists, changing a rule. Those are asked apart and answered apart.
 
 ## 2. How to work
 
@@ -32,3 +42,4 @@ Secrets and junk are never put in a delivery zip or read into a conversation: `.
 2. Update the status file, edit `APP_VERSION` in `version.mjs`, then close the round: `chicla bump-round` (N becomes N+1, the fingerprint and `FILES.manifest` are rewritten and verified).
 3. Build the zip with `chicla make-delivery <out.zip> --against <previous.zip>`: it checks the whole tree, the manifest and what the previous zip held, and deletes a zip it rejects. Check it again from outside with `chicla verify-delivery <out.zip> --against <previous.zip>`.
 4. Tell the owner which old files to remove from the repository, if the delivery lists any.
+5. When you give commands to run, the code box holds commands only, never a comment (not on its own line, not at the end of one). The explanation goes in a separate reply outside the box.

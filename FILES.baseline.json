@@ -1,7 +1,7 @@
 {
  "format": "chicla-baseline-v1",
- "created": "2026-11-14T19:06:15.610Z",
- "seal": "c5edb5404a8868cda0db48d0f1f0fc97149908f691132c88a2d63df2c19b6f1e",
+ "created": "2026-11-14T21:27:54.024Z",
+ "seal": "5e4454ad647f1170cbb92b35424dbc2dac040d87b34c120bef252ef9effb7b44",
  "files": [
   {
    "path": ".gitattributes",
@@ -25,18 +25,18 @@
   },
   {
    "path": "CHANGELOG.md",
-   "size": 35464,
-   "sha256": "ee6f0da506b449140819cd4ab26957e58d2962667a30b2e2184de978da2967b8"
+   "size": 23880,
+   "sha256": "75e1b7dc936d1c6c8728874ff11416fe713602a04e5915a7e04dc059821ec050"
   },
   {
-   "path": "CHICLA_PROJECT_STATUS-335.md",
-   "size": 55985,
-   "sha256": "161926774c3a229673bb6b4eb438c34c1326d548aa9fe427a50285b3c68280f6"
+   "path": "CHICLA_PROJECT_STATUS-336.md",
+   "size": 56009,
+   "sha256": "42dd169cefec158ce0f8a18513cbddb798b741baab7506631acb63b25bbfe551"
   },
   {
    "path": "CLAUDE.md",
-   "size": 6601,
-   "sha256": "b8844f21bf0381383b66316e1a6b5bdf3def9bf677b090339606c13974a5a486"
+   "size": 7333,
+   "sha256": "2c5a080f7d2c72eb0f8c13cd1d1c0d9cd3392ba99bd91d80c92af5b97cc92ac5"
   },
   {
    "path": "CONTRIBUTING.md",
@@ -45,8 +45,8 @@
   },
   {
    "path": "FILES.manifest",
-   "size": 32651,
-   "sha256": "088b147b9459383619087c6726f8bcc4c54510d217752082a121c781ee370a08"
+   "size": 32968,
+   "sha256": "bd3630852a35ebb0f4acebca2db66db3c00dd71bde0e3a211a5911314c35ba15"
   },
   {
    "path": "LICENSE",
@@ -60,8 +60,8 @@
   },
   {
    "path": "ROADMAP.md",
-   "size": 233281,
-   "sha256": "2703e77ab707ecbd4cdd60a835a23e2391bea88649a83137c9e83fab8b3abef2"
+   "size": 234025,
+   "sha256": "1156e627f55aea90f1367e4b15425075a0e7a8134c237d5677e058c5a098c034"
   },
   {
    "path": "SECURITY.md",
@@ -117,6 +117,11 @@
    "path": "docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md",
    "size": 21781,
    "sha256": "51647ac1c738a410a7b17aa44a089f727fe0d8a0c24b757fac7836f913807304"
+  },
+  {
+   "path": "docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md",
+   "size": 14347,
+   "sha256": "83086dd0dc007004e46c132887b89a0754d9bdd08ac6816449e0dc84a8123b01"
   },
   {
    "path": "docs/archive/status/status-archive-done-0-228.md",
@@ -522,6 +527,11 @@
    "path": "docs/archive/status/status-archive-done-320-320.md",
    "size": 1502,
    "sha256": "90df3c874ff8721026d52ffa57ab53ddd40285c034a0f3b085d547bc8d9729df"
+  },
+  {
+   "path": "docs/archive/status/status-archive-done-321-321.md",
+   "size": 1402,
+   "sha256": "359c3df4df796338112b4c780811a942e6cfe01b5e4aa22c8de0338a2dd018d6"
   },
   {
    "path": "docs/archive/status/status-archive-previous-123-233.md",
@@ -937,6 +947,11 @@
    "path": "docs/archive/status/status-archive-previous-324-324.md",
    "size": 938,
    "sha256": "c7e1a8a8919292ef2a68b9732b442470011bdfe98fb864fa468145d09930b29f"
+  },
+  {
+   "path": "docs/archive/status/status-archive-previous-325-325.md",
+   "size": 723,
+   "sha256": "4d3b8399b0facc2c03c3409c69784b9e6219d857e11bd2a0166028a094ef016f"
   },
   {
    "path": "docs/archive/status/status-archive-rolling-135-246.md",
@@ -1371,7 +1386,7 @@
   {
    "path": "package.json",
    "size": 804,
-   "sha256": "ddddd98bcc410b0c9091f4aa5186cf4ab6a2e694d856858794fd66bef0b4591e"
+   "sha256": "05bcc158a8139fe5de517238a8dbbcd4b57da6b3dd60fc3f4d559202f7c6de5c"
   },
   {
    "path": "packages/chicla-kit/LICENSE",
@@ -1500,8 +1515,8 @@
   },
   {
    "path": "packages/chicla-kit/templates/AGENTS.md",
-   "size": 1202,
-   "sha256": "6286084e193e0352663da62456a284c74c0091eb01385d43aacc3b0528ec93eb"
+   "size": 1790,
+   "sha256": "28342a5e08b5a3d81e109e2d2d332b40d8e4fb9e41435ffb13a43704bb693a5d"
   },
   {
    "path": "packages/chicla-kit/templates/CHANGELOG.md",
@@ -1515,18 +1530,18 @@
   },
   {
    "path": "packages/chicla-kit/templates/CLAUDE.md",
-   "size": 3093,
-   "sha256": "167669a56626221e2c9be5268e777abdf75bbb4657b0ebfe7ef67e5f79a0c1c8"
+   "size": 4002,
+   "sha256": "059468d2e1ead2eab07369be2913ef29a39fa128b11b94d0b091344527f04ab6"
   },
   {
    "path": "packages/chicla-kit/templates/GEMINI.md",
-   "size": 1211,
-   "sha256": "b66af061f3e9dbda2ddad75ba90544fcdad8a014ef0d809a54a849613c8266cb"
+   "size": 1799,
+   "sha256": "87cb9ecb63058df0d5d8deca94887d799200544f5f093685ec6b84c190c11ed8"
   },
   {
    "path": "packages/chicla-kit/templates/copilot-instructions.md",
-   "size": 1192,
-   "sha256": "854f2b4543ba614ceebccb1a481b2a90de0e75623ecadda9b4fbb61f0ed1c9e9"
+   "size": 1780,
+   "sha256": "cd9db950d3683a2140932e59e0939ceec82a6505c06448f9f5052f8dc6c4be5c"
   },
   {
    "path": "packages/chicla-kit/templates/version.mjs",
@@ -1702,6 +1717,11 @@
    "path": "packages/chicla-kit/test/no-scripts-in-messages.test.mjs",
    "size": 3486,
    "sha256": "7e10f33bbcaa056af2efb9c6d1dea0502152115e8377cf09b2ad51702cbd5f7a"
+  },
+  {
+   "path": "packages/chicla-kit/test/owner-answers-templates.test.mjs",
+   "size": 3646,
+   "sha256": "25537fc6bfc4b9422c506288bc73bb32ed49590c6f220b988bf5bd571e0d2c69"
   },
   {
    "path": "packages/chicla-kit/test/packaging.test.mjs",
@@ -2379,6 +2399,11 @@
    "sha256": "0ec5272939008503d2c2fee6c0638a60150f7f31923dad7c5aa45a3f9723b055"
   },
   {
+   "path": "test/c303-docs.test.mjs",
+   "size": 2282,
+   "sha256": "dfe2f2d99acf5b1e32ab58ddf466313f0b37c28ed7a36f7e2315dd038c1db342"
+  },
+  {
    "path": "test/changelog-heading.test.mjs",
    "size": 794,
    "sha256": "da168f6c5b069721723c4d0ce33436c71e415065096f1dd04ffdea38249ad4e3"
@@ -2845,8 +2870,8 @@
   },
   {
    "path": "version.mjs",
-   "size": 550,
-   "sha256": "632c558300a081754c81ee053ae4764f612cd14f063de5f4bf6973f04d8a498a"
+   "size": 531,
+   "sha256": "5862c28017d3e9574ee7d2549ce35e02cc31c7c4b8b248b142c520e873c5c80a"
   }
  ]
 }
