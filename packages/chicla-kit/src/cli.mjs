@@ -6,6 +6,7 @@
 //   chicla init [--agent <name>]... [--name <NAME>] [--json] [--root <dir>]   (C12.1, C12.6, C12.7: starts a project: CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs, FILES.manifest; never overwrites)
 //   chicla rename-status <NAME> [--json] [--root <dir>]   (C26.5: renames the status file of an existing project: the file, the `file=` of the fingerprint lines, the `status-prefix:` line, the name in the instruction files and in the process block of the status file, the manifest; never the history; all or nothing)
 //   chicla update [--agent <name>]... [--apply <file>]... [--json] [--root <dir>]   (C11.3: compares the instruction files with the kit's templates and shows the diff; writes only the files named with --apply)
+//   chicla doctor [--json] [--root <dir>]   (C30.4: reads a project, writes nothing: instruction files, fingerprint, differences from the templates (a note), `scripts/` files named but missing; exit 1 if a check failed)
 //   chicla check-manifest [--write] [--json] [--root <dir>]
 //   chicla bump-round [--verify | [--refresh] [--dry-run] [--note <text>]] [--json] [--root <dir>]
 //        no flag = the bump (N -> N+1, WRITES); --verify only checks; --refresh keeps the number; --dry-run shows and writes nothing;
@@ -39,7 +40,7 @@ import { resolve } from "node:path";
 import { shouldStyle, styleSummary } from "./ui.mjs";
 
 const SRC = new URL("./", import.meta.url); // C11.1 slice 7 (D92): every core is imported from the kit itself, never through scripts/
-const CORES = { "ci-report": "ci-report.mjs", "check-manifest": "check-manifest.mjs", "rename-status": "rename-status.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs", update: "update.mjs" };
+const CORES = { "ci-report": "ci-report.mjs", "check-manifest": "check-manifest.mjs", "rename-status": "rename-status.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs", update: "update.mjs", doctor: "doctor.mjs" };
 const HELP = `chicla: the workflow CLI
 
 Usage: chicla <command> [options]
@@ -54,6 +55,7 @@ Commands:
   update           compare the instruction files of a project with this kit's templates and show the diff; writes nothing unless --apply <file> names a file (--agent <name>, --apply <file>)
   rename-status    rename the status file of an existing project to <NAME>_PROJECT_STATUS-N.md: the file, the fingerprint lines, the status-prefix line, the name in the instruction files and in the process block of the status file, the manifest; never the history; all or nothing (<NAME>)
   init             start a project: CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs and FILES.manifest, consistent; refuses if any exists, never overwrites
+  doctor           read a project and say what is wrong, writing nothing: instruction files, fingerprint, differences from the templates (a note, not a failure), files of the scripts folder that the instructions name but the project lacks
   archive          move old rounds out of CHANGELOG.md and the status file, nothing deleted (--dry-run, --keep N | --status | --snapshot | --rolling; --help lists them)
   bump-round       close a round: bump N -> N+1 (default), --refresh (keep N), --dry-run (write nothing), --verify (only check), --note <text>
 
@@ -147,6 +149,7 @@ export async function main(argv, io = {}) {
   else if (command === "ci-report") r = await mod.ciReport({ zip: resolve(cwd, opts.zip), allow: opts.allow });
   else if (command === "rename-status") r = mod.renameStatus({ root: opts.root, name: opts.name });
   else if (command === "init") r = mod.initProject({ root: opts.root, agents: opts.agents, name: opts.name });
+  else if (command === "doctor") r = mod.doctor({ root: opts.root });
   else if (command === "update") r = mod.updateProject({ root: opts.root, agents: opts.agents, apply: opts.apply });
   else if (command === "recovery") r = await mod.recoveryReport({ dump: resolve(cwd, opts.zip), baseline: opts.baseline, out: opts.out, toolchainDigest: opts.digest, trustToolchain: opts.trust });
   else if (command === "dump") r = await mod.emergencyDump({ work: opts.root, outdir: opts.outdir, note: opts.note || opts.words.join(" "), projectOnly: opts.projectOnly });
@@ -158,7 +161,7 @@ export async function main(argv, io = {}) {
     const regenerateManifest = (root) => { const m = cm.checkManifest({ root, write: true }); return { ok: m.ok, ...cm.renderCheckManifest(m) }; };
     r = mod.bumpRound({ root: opts.root, mode: opts.verify ? "verify" : opts.refresh ? "refresh" : "bump", dry: opts.dry, note: opts.note, regenerateManifest });
   }
-  const { out, err } = command === "ci-report" ? mod.renderCiReport(r) : command === "check-manifest" ? mod.renderCheckManifest(r) : command === "verify-delivery" ? mod.renderVerifyDelivery(r) : command === "make-delivery" ? mod.renderMakeDelivery(r) : command === "dump" ? mod.renderEmergencyDump(r) : command === "recovery" ? mod.renderRecoveryReport(r) : command === "rename-status" ? mod.renderRenameStatus(r) : command === "init" ? mod.renderInit(r) : command === "update" ? mod.renderUpdate(r) : mod.renderBumpRound(r);
+  const { out, err } = command === "ci-report" ? mod.renderCiReport(r) : command === "check-manifest" ? mod.renderCheckManifest(r) : command === "verify-delivery" ? mod.renderVerifyDelivery(r) : command === "make-delivery" ? mod.renderMakeDelivery(r) : command === "dump" ? mod.renderEmergencyDump(r) : command === "recovery" ? mod.renderRecoveryReport(r) : command === "rename-status" ? mod.renderRenameStatus(r) : command === "init" ? mod.renderInit(r) : command === "update" ? mod.renderUpdate(r) : command === "doctor" ? mod.renderDoctor(r) : mod.renderBumpRound(r);
   if (json) {
     const { messages, ...data } = r;
     stdout.write(`${JSON.stringify({ command, ...data })}\n`);

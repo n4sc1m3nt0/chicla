@@ -1,7 +1,18 @@
-<!-- CHANGELOG_FINGERPRINT: seq=336 file=CHICLA_PROJECT_STATUS-336.md app_sha256_12=065d37032ef1 changelog_sha256_12=165061f00022 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=337 file=CHICLA_PROJECT_STATUS-337.md app_sha256_12=065d37032ef1 changelog_sha256_12=d99476abda70 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`
+
+## Round 332 — C30.4: `chicla doctor` (v0.0.336)
+
+- Task (Rodrigo: «ok», no decision open = the task under «Next up»): C30.4, D-E. Two source files (`packages/chicla-kit/src/doctor.mjs`, new, and `cli.mjs`) and the tests.
+- Change: `chicla doctor [--json] [--root <dir>]` reads a project and writes NOTHING. Four checks by id: `instruction-files` (at least one instruction file of the matrix, none a folder; one of `CLAUDE.md` and `AGENTS.md` missing is a note), `fingerprint` (`bumpRound` in verify mode), `templates` (a file that differs from the kit's template is a NOTE, never a failure) and `scripts-refs` (an instruction file or the newest status file names a file of a scripts folder that the project lacks; patterns such as a star or `<name>` and the full stop that ends a sentence are not names). Exit 0 or 1 (`EDOCTOR_FAILED`; `EDOCTOR_NOPROJECT`; `ENOROOT`), 2 for usage. The word-and-slash of the scripts folder is built in code, never written, so the guard test of C30.2 holds. READMEs and the help list it.
+- Tests: `packages/chicla-kit/test/doctor.test.mjs` (10), red first (the module did not exist). Run on this repository (the independent reader): ok, with two notes (no `AGENTS.md`; its own `CLAUDE.md` differs from the template). That run showed my first rule (both default files required) was wrong for this project, so it became a note and the tests changed with it.
+- Mutants: `K-DOC-01` to `08` added to the kit list, one by one with `--timeout 60`: 06 (the pattern skip) and 08 (`--root` ignored) SURVIVED first, got their own assertions, and are RED; all 8 RED.
+- The first whole run after `bump-round` (1985 tests, 3 fail) found three tests of mine: `c303-docs` still asserted C30.4 open, and `mutants-kit-figures` (2) needs the new prefix `K-DOC-` in its list and in `docs/README.md`; fixed.
+- Whole `npm test`, run again after those fixes: 1985 tests, 1983 pass, 0 fail, 2 skipped, 635 s (Node 22, Linux, 1 core), read from the run's own summary. `check-build`: passed.
+- Rotation with `chicla archive`: «Previous» 326 and 327, «Done» 322 and 323, rolling 329 and 330.
+- NOT run: the kit mutants outside `K-DOC-`; `npm run smoke` (no script changed); nothing on GitHub or npm; macOS and Windows runs; Node 18 and 20. `doctor` does not check what `chicla update` would write, nor the archives.
 
 ## Round 331 — C30.3: the templates and the project say where the open decisions go, how the owner answers, and no comment in a command box (v0.0.335)
 

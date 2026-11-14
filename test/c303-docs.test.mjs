@@ -27,10 +27,10 @@ test('the delivery item (14) of the status file has the rule of the command box 
   assert.match(item, /outside the box/i);
 });
 
-test('ROADMAP: C30.3 is recorded as done, and C30.4 is still open', () => {
+test('ROADMAP: C30.3 is recorded as done, and C30.4 has its row', () => {
   const rows = read('ROADMAP.md').split('\n');
   assert.match(rows.find((l) => l.startsWith('| C30.3 |')) ?? '', /\| S · feito \(round 331/);
-  assert.match(rows.find((l) => l.startsWith('| C30.4 |')) ?? '', /\| M · open \|/);
+  assert.match(rows.find((l) => l.startsWith('| C30.4 |')) ?? '', /\| M · (open|feito \(round 332)/);
 });
 
 test('the GEMINI.md and copilot templates, which are one body with AGENTS.md, carry the new items', () => {

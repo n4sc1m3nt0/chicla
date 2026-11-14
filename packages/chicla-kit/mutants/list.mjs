@@ -12,6 +12,7 @@ const IM = ["packages/chicla-kit/test/init-name.test.mjs"]; // C26.4: init --nam
 const PC = ["test/status-prefix-c263.test.mjs"]; // C26.3: dump, recovery, archive-changelog
 const PF = ["packages/chicla-kit/test/status-prefix.test.mjs"];                       // C26.1: the prefix of the status file
 const GH = ["packages/chicla-kit/test/git-hygiene.test.mjs"]; // C27.2: the git hygiene guard of check-manifest
+const DC = "packages/chicla-kit/src/doctor.mjs", DCT = ["packages/chicla-kit/test/doctor.test.mjs"]; // C30.4: chicla doctor
 const CI = "packages/chicla-kit/src/ci-report.mjs", CIT = ["packages/chicla-kit/test/ci-report.test.mjs"]; // C27.3: chicla ci-report
 const F = "packages/chicla-kit/src/integrity.mjs";
 const LF = ["packages/chicla-kit/test/core-integrity.test.mjs"];                 // the LF rule, the regex, the callers of round 243
@@ -285,4 +286,13 @@ export default [
   x("K-CIR-22", CI, "logs.slice(0, maxLogs)", "logs.slice(0, MAX_LOGS)", CIT, "the `maxLogs` option is ignored"),
   x("K-CIR-23", CI, "const doubt = unjudgedBad.length + result.unjudgedEntries > 0;", "const doubt = unjudgedBad.length + (allow.length ? 0 : result.unjudgedEntries) > 0;", CIT, "any `--allow` also allows the entries beyond the cap, which have no name to allow"),
   x("K-CIR-24", CI, "allowedRed.length + allowedUnjudged.length ? `; ${allowedRed.length + allowedUnjudged.length} allowed", "allowedRed.length ? `; ${allowedRed.length} allowed", CIT, "the green line does not count the allowed, unjudged jobs"),
+  // C30.4 (round 332, D-E): `chicla doctor` (tests: packages/chicla-kit/test/doctor.test.mjs).
+  x("K-DOC-01", DC, "const bad = !present.length || broken.length > 0;", "const bad = false;", DCT, "no instruction file at all, or an instruction file that is a folder, passes"),
+  x("K-DOC-02", DC, "ok: fp.ok === true, level: fp.ok ? \"pass\" : \"fail\"", "ok: true, level: \"pass\"", DCT, "a project whose fingerprints disagree is called healthy"),
+  x("K-DOC-03", DC, "level: differs.length ? \"note\" : \"pass\"", "level: differs.length ? \"fail\" : \"pass\"", DCT, "an instruction file edited by the project is shown as a failed check"),
+  x("K-DOC-04", DC, "if (kind(join(root, ref)) === \"none\") refs.push", "if (false) refs.push", DCT, "a named file of the scripts folder that is missing is not reported"),
+  x("K-DOC-05", DC, "const ref = m[1].replace(/[.\\-_]+$/, \"\");", "const ref = m[1];", DCT, "the full stop that ends a sentence is read as part of the file name"),
+  x("K-DOC-06", DC, "if (/[*<{[]/.test(text[m.index + m[0].length] ?? \"\")) continue;", "", DCT, "a pattern such as a name with a star is reported as a missing file"),
+  x("K-DOC-07", DC, "return { ok: false, code: \"EDOCTOR_NOPROJECT\"", "return { ok: true, code: \"EDOCTOR_NOPROJECT\"", DCT, "a folder with no project is called healthy"),
+  x("K-DOC-08", CLI, "else if (command === \"doctor\") r = mod.doctor({ root: opts.root });", "else if (command === \"doctor\") r = mod.doctor({ root: cwd });", DCT, "`doctor` ignores --root"),
 ];
