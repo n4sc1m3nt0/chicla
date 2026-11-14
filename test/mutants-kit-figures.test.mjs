@@ -17,8 +17,8 @@ const itemC = () => { const item = statusText().split('\n').find((l) => l.starts
 const header = () => read(LIST).split('\n').filter((l) => l.startsWith('//')).slice(0, 4).join('\n');
 
 // round 294 (C25.3) added K-LDR- and K-PKG-
-test('the list has the prefixes AUDIT-7 counted plus the two of C25.3 and K-UPD- of C26.2 and K-CIR- of C27.3 and K-DOC- of C30.4 (a new prefix must reach the docs: this number moves with it)', () => {
-  assert.deepEqual(prefixes.sort(), ['K-ARC-', 'K-BMP-', 'K-CIR-', 'K-CMN-', 'K-DEL-', 'K-DMP-', 'K-DOC-', 'K-INI-', 'K-INT-', 'K-LDR-', 'K-MAN-', 'K-PKG-', 'K-PNL-', 'K-REC-', 'K-REN-', 'K-UPD-', 'K-VER-']);
+test('the list has the prefixes AUDIT-7 counted plus the two of C25.3 and K-UPD- of C26.2 and K-CIR- of C27.3 and K-DOC- of C30.4 and K-GPL- of C30.5 (a new prefix must reach the docs: this number moves with it)', () => {
+  assert.deepEqual(prefixes.sort(), ['K-ARC-', 'K-BMP-', 'K-CIR-', 'K-CMN-', 'K-DEL-', 'K-DMP-', 'K-DOC-', 'K-GPL-', 'K-INI-', 'K-INT-', 'K-LDR-', 'K-MAN-', 'K-PKG-', 'K-PNL-', 'K-REC-', 'K-REN-', 'K-UPD-', 'K-VER-']);
 });
 
 test('docs/README.md names every prefix of the list', () => {

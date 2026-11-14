@@ -12,6 +12,7 @@ const IM = ["packages/chicla-kit/test/init-name.test.mjs"]; // C26.4: init --nam
 const PC = ["test/status-prefix-c263.test.mjs"]; // C26.3: dump, recovery, archive-changelog
 const PF = ["packages/chicla-kit/test/status-prefix.test.mjs"];                       // C26.1: the prefix of the status file
 const GH = ["packages/chicla-kit/test/git-hygiene.test.mjs"]; // C27.2: the git hygiene guard of check-manifest
+const GP = "packages/chicla-kit/src/git-plan.mjs", GPT = ["packages/chicla-kit/test/git-plan.test.mjs"]; // C30.5: chicla git-plan
 const DC = "packages/chicla-kit/src/doctor.mjs", DCT = ["packages/chicla-kit/test/doctor.test.mjs"]; // C30.4: chicla doctor
 const CI = "packages/chicla-kit/src/ci-report.mjs", CIT = ["packages/chicla-kit/test/ci-report.test.mjs"]; // C27.3: chicla ci-report
 const F = "packages/chicla-kit/src/integrity.mjs";
@@ -295,4 +296,17 @@ export default [
   x("K-DOC-06", DC, "if (/[*<{[]/.test(text[m.index + m[0].length] ?? \"\")) continue;", "", DCT, "a pattern such as a name with a star is reported as a missing file"),
   x("K-DOC-07", DC, "return { ok: false, code: \"EDOCTOR_NOPROJECT\"", "return { ok: true, code: \"EDOCTOR_NOPROJECT\"", DCT, "a folder with no project is called healthy"),
   x("K-DOC-08", CLI, "else if (command === \"doctor\") r = mod.doctor({ root: opts.root });", "else if (command === \"doctor\") r = mod.doctor({ root: cwd });", DCT, "`doctor` ignores --root"),
+  // C30.5 (round 333, D161, D163): `chicla git-plan` (tests: packages/chicla-kit/test/git-plan.test.mjs).
+  x("K-GPL-01", GP, "':(exclude)${status}'", "", GPT, "the newest status file is not excluded: the first line would remove it too"),
+  x("K-GPL-02", GP, " && !statusFileAny.test(p)", "", GPT, "an old status file is listed again in the second line"),
+  x("K-GPL-03", GP, "!o || o.crc32 !== e.crc32 || o.size !== e.size", "!o", GPT, "a changed file is never added"),
+  x("K-GPL-04", GP, "const CHUNK = 30", "const CHUNK = 3000", GPT, "a line has no limit of names"),
+  x("K-GPL-05", GP, "const safe = paths.filter((p) => !CONTROL.test(p));", "const safe = paths;", GPT, "a name with a control character is printed"),
+  x("K-GPL-06", GP, "!statusFileAny.test(p)).sort();", "!statusFileAny.test(p));", GPT, "the files that left come in manifest order, not sorted"),
+  x("K-GPL-07", GP, ".map(shq).join", ".map((p) => p).join", GPT, "names are printed unquoted"),
+  x("K-GPL-08", GP, "git commit -m 'round ${head[1]}: ${title}'", "git commit -m round ${head[1]}: ${title}", GPT, "the commit message is not quoted"),
+  x("K-GPL-09", GP, ".replace(/[`'\"$\\\\\\u0000-\\u001f\\u007f]/g, \"\")", "", GPT, "quotes, backticks and dollars stay in the commit title"),
+  x("K-GPL-10", CLI, "if (command === \"git-plan\" && opts.prev === undefined) return fail(", "if (false) return fail(", GPT, "git-plan with no --against is not a usage error"),
+  x("K-GPL-12", GP, "\"FILES.manifest\"])].sort();", "])].sort();", GPT, "FILES.manifest is not added when the manifest does not list itself (it never does)"),
+  x("K-GPL-11", CLI, "command === \"git-plan\" ? mod.renderGitPlan(r) :", "", GPT, "the output of git-plan is rendered by the wrong renderer"),
 ];

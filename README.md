@@ -48,6 +48,7 @@ Full details, options and known limits: [`packages/chicla-zip/README.md`](packag
 chicla init [--name <NAME>] [--json] [--root <dir>]
 chicla rename-status <NAME> [--json] [--root <dir>]
 chicla doctor [--json] [--root <dir>]
+chicla git-plan --against <zip | FILES.manifest> [--json] [--root <dir>]
 chicla ci-report <logs.zip> [--allow <text>]... [--json]
 chicla check-manifest [--write] [--json] [--root <dir>]
 chicla bump-round [--verify | [--refresh] [--dry-run] [--note <text>]] [--json] [--root <dir>]

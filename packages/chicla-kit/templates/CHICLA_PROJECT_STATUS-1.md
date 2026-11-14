@@ -19,6 +19,7 @@ Created by `chicla init`. This file is the memory of the project between session
 9. **App version.** Edit `APP_VERSION` in `version.mjs` in every output that changes the project.
 10. **Session-start check.** After item 1 run `chicla bump-round --verify`. If it fails, STOP and tell the owner; do not work on top of files that disagree.
 11. **Fingerprint.** The paragraph below, the third line of `version.mjs` and the first line of `CHANGELOG.md` carry the same numbers. `chicla bump-round` writes them; never edit them by hand. If they do not match, stop and tell the owner.
+12. **Delivery commands.** After a delivery the reply gives the git commands to paste, printed by `chicla git-plan --against <the previous zip or its FILES.manifest>` and copied as they are: the code box holds commands only, never a comment and never a `chicla` command; the explanation goes outside the box.
 
 **Current version:** v0.0.1 (round 1: the project was started with `chicla init`)
 
