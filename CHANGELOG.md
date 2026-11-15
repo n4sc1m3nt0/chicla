@@ -1,7 +1,17 @@
-<!-- CHANGELOG_FINGERPRINT: seq=339 file=CHICLA_PROJECT_STATUS-339.md app_sha256_12=065d37032ef1 changelog_sha256_12=c9aeac7db86f (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=340 file=CHICLA_PROJECT_STATUS-340.md app_sha256_12=065d37032ef1 changelog_sha256_12=02bb1caec5f8 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`
+
+## Round 335 — AUDIT-12: the audit after M30, before publishing the next `chicla` (v0.0.339)
+
+- Task (Rodrigo: «fazemos o audit e depois a publicação da atualização»): the `audit` of item 2, `docs/audits/AUDIT-12.md`. Docs only: no source, the pin does not move. Only Rodrigo publishes: Claude ran no `npm publish`, `git tag` or `gh release create`.
+- Measured: `npm run smoke:tarball` 13 of 13 ok; the package of the tree built, packed (35 files, 157875 bytes) and installed alone: `archive`, `doctor`, `git-plan` listed and run, `init --name`, `doctor`, `bump-round --verify` exit 0 in a project with no `scripts/`; `npm view chicla version` = 0.3.0.
+- Findings: F-1 (medium) the pinned `recovery-report.mjs` line 253 prints `node scripts/make-delivery-zip.mjs` (the guard skips `pinned/`); F-2 (low) `archive` is in no README; F-3 (blocks the release) the package is still 0.3.0, the number npm has; F-4 (record) the pin is the same in 0.3.0 and the tree. Not fixed here (rule 6).
+- Plan: D166 (D-A fix F-1 before the release, D-B 0.4.0, D-C the order), M31 with C31.1 to C31.3 in the ROADMAP, the index of `docs/README.md`.
+- Tests: `test/audit12-docs.test.mjs` (4). Honest: written in the same step as the docs, NOT seen red first.
+- Whole `npm test` after `bump-round`: 2007 tests, 2005 pass, 0 fail, 2 skipped, 766 s (Node 22, Linux, 1 core), read from the run's own summary. `check-build`: passed. Rotation with `chicla archive`: «Previous» 329, «Done» 325, rolling 332.
+- NOT run: the CI on GitHub; Node 18 and 20 (Node 22 only here); macOS and Windows; a real logs zip; any publish.
 
 ## Round 334 — C30.6: one glob pointer to the rolling archives in «Open decisions» (v0.0.338)
 

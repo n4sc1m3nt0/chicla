@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 325-325
+
+Moved out of `CHICLA_PROJECT_STATUS-339.md` verbatim by `chicla archive --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/archive/status/status-archive-done-*.md`.
+
+- Done: round 325 (2026-11-13; Rodrigo «ok» to D-A to D-H of D160). C30.1: `chicla archive [--dry-run|--keep N|--status|--snapshot|--rolling] [--root <dir>]`; the script moved to `packages/chicla-kit/src/archive-changelog.mjs` (`--root`), `scripts/archive-changelog.mjs` is a 9-line wrapper, `cli.mjs` dispatches. `packages/chicla-kit/test/archive-cli.test.mjs` (7, no `scripts/` in the project; written after the code, NOT seen red first, see the CHANGELOG); mutants K-ARC-08/09 new, K-ARC-04/07 re-anchored. Version 0.0.329. Whole `npm test`: 1956, 1952 pass, 2 fail (one fixed in the same round; the other, `stale-package-words-docs`, is from the 64 tracked files of `ci-0.3.0/` and `stage-0.3.0/` in `origin/main`, not from this round); smoke green after the copy list of the delivery-guards smoke got the kit core. Still wrong in the published package until C30.2: the messages and the status template that say `scripts/...`.
