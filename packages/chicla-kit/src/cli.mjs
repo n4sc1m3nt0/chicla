@@ -8,6 +8,7 @@
 //   chicla update [--agent <name>]... [--apply <file>]... [--json] [--root <dir>]   (C11.3: compares the instruction files with the kit's templates and shows the diff; writes only the files named with --apply)
 //   chicla doctor [--json] [--root <dir>]   (C30.4: reads a project, writes nothing: instruction files, fingerprint, differences from the templates (a note), `scripts/` files named but missing; exit 1 if a check failed)
 //   chicla git-plan --against <previous zip | FILES.manifest> [--json] [--root <dir>]   (C30.5: PRINTS the git commands of a delivery: the old status files, what left, what entered or changed, the commit line; reads only)
+//   chicla release check [--json] [--root <dir>]   (C32.1, D167: READS ONLY: the version of packages/chicla is not on npm, the tree is clean, the tag is absent, every CI run of HEAD ended in success; `git`, `gh` and `npm` go through one function, `io.run` in tests; `prepare` and `publish` are C32.2 and C32.3)
 //   chicla check-manifest [--write] [--json] [--root <dir>]
 //   chicla bump-round [--verify | [--refresh] [--dry-run] [--note <text>]] [--json] [--root <dir>]
 //        no flag = the bump (N -> N+1, WRITES); --verify only checks; --refresh keeps the number; --dry-run shows and writes nothing;
@@ -41,7 +42,7 @@ import { resolve } from "node:path";
 import { shouldStyle, styleSummary } from "./ui.mjs";
 
 const SRC = new URL("./", import.meta.url); // C11.1 slice 7 (D92): every core is imported from the kit itself, never through scripts/
-const CORES = { "ci-report": "ci-report.mjs", "check-manifest": "check-manifest.mjs", "rename-status": "rename-status.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs", update: "update.mjs", doctor: "doctor.mjs", "git-plan": "git-plan.mjs" };
+const CORES = { "ci-report": "ci-report.mjs", "check-manifest": "check-manifest.mjs", "rename-status": "rename-status.mjs", "bump-round": "bump-round.mjs", "verify-delivery": "verify-delivery.mjs", "make-delivery": "make-delivery.mjs", dump: "emergency-dump.mjs", recovery: "pinned/recovery-report.mjs", init: "init.mjs", update: "update.mjs", doctor: "doctor.mjs", "git-plan": "git-plan.mjs", release: "release.mjs" };
 const HELP = `chicla: the workflow CLI
 
 Usage: chicla <command> [options]
@@ -58,6 +59,7 @@ Commands:
   init             start a project: CLAUDE.md, AGENTS.md, the status file, CHANGELOG.md, version.mjs and FILES.manifest, consistent; refuses if any exists, never overwrites
   doctor           read a project and say what is wrong, writing nothing: instruction files, fingerprint, differences from the templates (a note, not a failure), files of the scripts folder that the instructions name but the project lacks
   git-plan         print the git commands of a delivery, ready to paste, from its FILES.manifest and the previous one: git rm of the old status files and of what left, git add of what entered or changed, one git commit line; runs nothing (--against <zip or FILES.manifest>)
+  release          check that the package may be released, reading only: its version is not on npm, the tree is clean, the tag is absent, every CI run of HEAD ended in success (check)
   archive          move old rounds out of CHANGELOG.md and the status file, nothing deleted (--dry-run, --keep N | --status | --snapshot | --rolling; --help lists them)
   bump-round       close a round: bump N -> N+1 (default), --refresh (keep N), --dry-run (write nothing), --verify (only check), --note <text>
 
@@ -131,6 +133,7 @@ export async function main(argv, io = {}) {
     if ((command === "init" || command === "update") && a === "--agent") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--agent needs a name"); opts.agents.push(v); continue; }
     if (command === "update" && a === "--apply") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--apply needs a file name"); opts.apply.push(v); continue; }
     if (command === "git-plan" && a === "--against") { const v = args[++i]; if (v === undefined || v.startsWith("--")) return fail(command, "EUSAGE", "--against needs a zip or a FILES.manifest"); opts.prev = v; continue; }
+    if (command === "release" && !a.startsWith("--")) { if (opts.sub !== undefined) return fail(command, "EUSAGE", "only one subcommand may be given"); opts.sub = a; continue; }
     if (command === "check-manifest" && a === "--write") { opts.write = true; continue; }
     if (command === "bump-round" && a === "--verify") { opts.verify = true; continue; }
     if (command === "bump-round" && a === "--refresh") { opts.refresh = true; continue; }
@@ -139,6 +142,8 @@ export async function main(argv, io = {}) {
     return fail(command, "EUSAGE", `unknown option or argument «${a.slice(0, 40)}»`);
   }
   if (command === "rename-status" && opts.name === undefined) return fail(command, "EUSAGE", "no name given: chicla rename-status <NAME>");
+  if (command === "release" && opts.sub === undefined) return fail(command, "EUSAGE", "no subcommand given: chicla release check");
+  if (command === "release" && opts.sub !== "check") return fail(command, "EUSAGE", `unknown or not yet built subcommand «${opts.sub.slice(0, 40)}»: chicla release check`);
   if (command === "git-plan" && opts.prev === undefined) return fail(command, "EUSAGE", "no previous delivery given: chicla git-plan --against <zip or FILES.manifest>");
   if (command === "bump-round" && opts.verify && (opts.refresh || opts.dry || opts.note)) return fail(command, "EUSAGE", "--verify only checks; it cannot be combined with --refresh, --dry-run or --note");
 
@@ -155,6 +160,7 @@ export async function main(argv, io = {}) {
   else if (command === "rename-status") r = mod.renameStatus({ root: opts.root, name: opts.name });
   else if (command === "init") r = mod.initProject({ root: opts.root, agents: opts.agents, name: opts.name });
   else if (command === "doctor") r = mod.doctor({ root: opts.root });
+  else if (command === "release") r = mod.releaseCheck({ root: opts.root, run: io.run });
   else if (command === "git-plan") r = await mod.gitPlan({ root: opts.root, against: resolve(cwd, opts.prev) });
   else if (command === "update") r = mod.updateProject({ root: opts.root, agents: opts.agents, apply: opts.apply });
   else if (command === "recovery") r = await mod.recoveryReport({ dump: resolve(cwd, opts.zip), baseline: opts.baseline, out: opts.out, toolchainDigest: opts.digest, trustToolchain: opts.trust });
@@ -167,7 +173,7 @@ export async function main(argv, io = {}) {
     const regenerateManifest = (root) => { const m = cm.checkManifest({ root, write: true }); return { ok: m.ok, ...cm.renderCheckManifest(m) }; };
     r = mod.bumpRound({ root: opts.root, mode: opts.verify ? "verify" : opts.refresh ? "refresh" : "bump", dry: opts.dry, note: opts.note, regenerateManifest });
   }
-  const { out, err } = command === "ci-report" ? mod.renderCiReport(r) : command === "check-manifest" ? mod.renderCheckManifest(r) : command === "verify-delivery" ? mod.renderVerifyDelivery(r) : command === "make-delivery" ? mod.renderMakeDelivery(r) : command === "dump" ? mod.renderEmergencyDump(r) : command === "recovery" ? mod.renderRecoveryReport(r) : command === "rename-status" ? mod.renderRenameStatus(r) : command === "init" ? mod.renderInit(r) : command === "update" ? mod.renderUpdate(r) : command === "doctor" ? mod.renderDoctor(r) : command === "git-plan" ? mod.renderGitPlan(r) : mod.renderBumpRound(r);
+  const { out, err } = command === "ci-report" ? mod.renderCiReport(r) : command === "check-manifest" ? mod.renderCheckManifest(r) : command === "verify-delivery" ? mod.renderVerifyDelivery(r) : command === "make-delivery" ? mod.renderMakeDelivery(r) : command === "dump" ? mod.renderEmergencyDump(r) : command === "recovery" ? mod.renderRecoveryReport(r) : command === "rename-status" ? mod.renderRenameStatus(r) : command === "init" ? mod.renderInit(r) : command === "update" ? mod.renderUpdate(r) : command === "doctor" ? mod.renderDoctor(r) : command === "git-plan" ? mod.renderGitPlan(r) : command === "release" ? mod.renderReleaseCheck(r) : mod.renderBumpRound(r);
   if (json) {
     const { messages, ...data } = r;
     stdout.write(`${JSON.stringify({ command, ...data })}\n`);

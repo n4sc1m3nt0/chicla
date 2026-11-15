@@ -14,6 +14,7 @@ const PF = ["packages/chicla-kit/test/status-prefix.test.mjs"];                 
 const GH = ["packages/chicla-kit/test/git-hygiene.test.mjs"]; // C27.2: the git hygiene guard of check-manifest
 const GP = "packages/chicla-kit/src/git-plan.mjs", GPT = ["packages/chicla-kit/test/git-plan.test.mjs"]; // C30.5: chicla git-plan
 const DC = "packages/chicla-kit/src/doctor.mjs", DCT = ["packages/chicla-kit/test/doctor.test.mjs"]; // C30.4: chicla doctor
+const RL = "packages/chicla-kit/src/release.mjs", RLT = ["packages/chicla-kit/test/release-check.test.mjs"]; // C32.1: chicla release check
 const CI = "packages/chicla-kit/src/ci-report.mjs", CIT = ["packages/chicla-kit/test/ci-report.test.mjs"]; // C27.3: chicla ci-report
 const F = "packages/chicla-kit/src/integrity.mjs";
 const LF = ["packages/chicla-kit/test/core-integrity.test.mjs"];                 // the LF rule, the regex, the callers of round 243
@@ -311,4 +312,19 @@ export default [
   x("K-GPL-11", CLI, "command === \"git-plan\" ? mod.renderGitPlan(r) :", "", GPT, "the output of git-plan is rendered by the wrong renderer"),
   x("K-ARC-52", AC, "const ptr = `${OD_PTR}${item(\"status-archive-rolling-*.md\")})`;", "const ptr = p.ptr ? `${p.ptr.slice(0, -1)}, ${item(aName)})` : `${OD_PTR}${item(aName)})`;", ["test/archive-rolling.test.mjs"], "the «Open decisions» pointer lists every archive again instead of the one glob (C30.6)"),
   x("K-REC-51", R, "cd \"${root}\" && chicla make-delivery <out.zip>", "cd \"${root}\" && node scripts/make-delivery-zip.mjs <out.zip>", ["packages/chicla-kit/test/no-scripts-in-pinned.test.mjs"], "the NEXT line of the recovery tells the user of the package to run a script that is not there (C31.2)"),
+  x("K-REL-01", RL, "if (npm.status === 0 && npm.stdout.trim() === res.version) add(\"npm-version-free\", false", "if (false) add(\"npm-version-free\", false", RLT, "a version that npm already has is called free"),
+  x("K-REL-02", RL, "npm.status !== 0 && npm.status !== null && /E404/.test(npm.stderr)", "npm.status !== 0 && npm.status !== null", RLT, "any failure of npm (a network error) is read as `not published`"),
+  x("K-REL-03", RL, "add(\"tree-clean\", dirty === 0,", "add(\"tree-clean\", true,", RLT, "a dirty tree passes"),
+  x("K-REL-04", RL, "if (st.status !== 0) add(\"tree-clean\", false", "if (false) add(\"tree-clean\", false", RLT, "a git that cannot read the tree is called clean"),
+  x("K-REL-05", RL, "const has = tg.stdout.split(\"\\n\").includes(res.tag);", "const has = false;", RLT, "an existing tag passes"),
+  x("K-REL-06", RL, "if (head.status !== 0 || !SHA.test(sha))", "if (head.status !== 0)", RLT, "a HEAD that is not 40 hex digits (an option) is passed to gh"),
+  x("K-REL-07", RL, "else if (list.length === 0) add(", "else if (false) add(", RLT, "a commit with no CI run is called green"),
+  x("K-REL-08", RL, "x?.status === \"completed\" && x?.conclusion !== \"success\"", "x?.status === \"completed\" && x?.conclusion === \"failure\"", RLT, "a cancelled or skipped run counts as success"),
+  x("K-REL-09", RL, "const running = list.filter((x) => x?.status !== \"completed\").length", "const running = 0", RLT, "a CI run that is still going counts as success"),
+  x("K-REL-10", RL, "|| !VERSION.test(pkg.version)", "", RLT, "a version that is an option (--registry=x) reaches the commands"),
+  x("K-REL-11", RL, "!NAME.test(pkg.name) ||", "", RLT, "a name with a scope or a space reaches the commands"),
+  x("K-REL-12", RL, "try { r = run(cmd, args, { cwd: root }); } catch { r = null; }", "r = run(cmd, args, { cwd: root });", RLT, "a run function that throws makes the core throw"),
+  x("K-REL-13", RL, "run(cmd, args, { cwd: root })", "run(cmd, args, {})", RLT, "git and gh run in the folder of the caller, not of the project"),
+  x("K-REL-14", CLI, "command === \"release\" ? mod.renderReleaseCheck(r) :", "", RLT, "the result of release check is rendered by the wrong renderer"),
+  x("K-REL-15", CLI, "opts.sub !== \"check\") return fail", "false) return fail", RLT, "`release publish` or any other word runs the check instead of a usage error"),
 ];

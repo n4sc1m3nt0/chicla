@@ -1,7 +1,20 @@
-<!-- CHANGELOG_FINGERPRINT: seq=343 file=CHICLA_PROJECT_STATUS-343.md app_sha256_12=065d37032ef1 changelog_sha256_12=8335623e236e (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=344 file=CHICLA_PROJECT_STATUS-344.md app_sha256_12=065d37032ef1 changelog_sha256_12=3d952cb9f995 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`
+
+## Round 339 — C32.1: `chicla release check` (v0.0.343)
+
+- Task (Rodrigo: «avança»; no decision open = the task under «Next up»): C32.1 of M32 (D167). Two source files: `packages/chicla-kit/src/release.mjs` (new) and `cli.mjs`.
+- Change: `chicla release check [--json] [--root <dir>]` READS ONLY and always runs four checks: `npm-version-free` (`npm view <name>@<version> version`: E404 free, the version published, anything else cannot tell and fails), `tree-clean` (`git status --porcelain`), `tag-absent` (`git tag --list <name>-v<version>`, local tags only) and `ci-green` (`git rev-parse HEAD`, then `gh run list --commit <sha>`: at least one run, all `completed` with `success`). Name and version come from `packages/chicla/package.json` and must be plain before any call. Exit 0 or 1; `prepare`, `publish` and any other word are usage errors (exit 2) until C32.2 and C32.3.
+- One function: `git`, `gh` and `npm` run only through `runTool` (the one `spawnSync`); `releaseCheck` takes `run`, the CLI takes `io.run`. Every test uses a fake: NO real `git`, `gh` or `npm` command ran for this round, and nothing was written.
+- Tests: `packages/chicla-kit/test/release-check.test.mjs` (13), red first (module missing). Two of my own assertions were wrong at first (a regex that forbade `tag --list`, then `--commit`); fixed in the test, not in the code. The page `packages/chicla/README.md` names `release` (the test of C31.1 requires every command of `--help`).
+- Mutants: `K-REL-01` to `15`, each run alone (`--only`, `--timeout 60`): 15 RED; `01` SURVIVED first («published» and «cannot tell» both fail), so the check got a `published` field (true, false, null) that the test reads; then RED.
+- D168: five calls made on delegation (package, local tag only, CI rule, E404, all checks run); Rodrigo said «ok» after the delivery reply: all five CONFIRMED (recorded in the ROADMAP and the status file in the same round).
+- Rotation with `chicla archive`: «Previous» 333, «Done» 329, rolling 336.
+- First whole run after `bump-round` (2029 tests, 3 fail, 787 s): three guards of the docs: `K-REL-` was not in `docs/README.md` nor in the list of prefixes of `test/mutants-kit-figures.test.mjs`, and the kit README did not document `chicla release`. Fixed (a usage line and a row in the kit README, the prefix in the two places); the full documentation of the command stays C32.4's.
+- Whole `npm test` after that fix and after `bump-round`: 2029 tests, 2027 pass, 0 fail, 2 skipped, 764 s (Node 22, Linux, 1 core), read from the run's own summary. `check-build`: passed.
+- NOT run: the whole mutant list; `npm run smoke`; the CI; Node 18 and 20; macOS and Windows; `chicla release check` against the real repository, GitHub or npm (the first real run is Rodrigo's); G-C11 (his).
 
 ## Round 338 — C31.2: the NEXT line of `chicla recovery` says `chicla make-delivery`; the pin moves; rule 4 (v0.0.342)
 
