@@ -38,7 +38,8 @@ const line = (t, start) => t.split('\n').find((l) => l.startsWith(start));
 const done = (dir) => rmSync(dir, { recursive: true, force: true });
 const lines = (arch, title) => { const s = arch.split(`\n## ${title}\n`)[1]; return s.split('\n## ')[0].split('\n').filter((l) => l.startsWith('- ')).map((l) => l.slice(2)); };
 const PTR_CV = (names) => `; older rounds archived (nothing deleted): ${names.map((n) => `\`docs/archive/status/${n}\``).join(', ')}`;
-const PTR_OD = (names) => `(earlier rounds: archived verbatim, nothing deleted: ${names.map((n) => `\`docs/archive/status/${n}\``).join(', ')})`;
+// C30.6 (D-P, D162): the «Open decisions» pointer is ONE glob, whatever the number of archives; the names are not listed (the argument is kept so the calls read as before)
+const PTR_OD = () => '(earlier rounds: archived verbatim, nothing deleted: `docs/archive/status/status-archive-rolling-*.md`)';
 
 test('--rolling keeps the newest 3 clauses of each paragraph, archives the older ones verbatim, and archive + live rebuild the original', () => {
   const dir = project(status()); const before = stat(dir);
@@ -133,5 +134,23 @@ test('the real status file keeps both paragraphs short, and instruction 6 names 
   const docs = readdirSync(join(ROOT, 'docs/archive/status'));
   const arch = docs.filter((f) => /^status-archive-rolling-.*\.md$/.test(f));
   assert.ok(arch.length >= 1);
-  for (const f of arch) assert.ok(s.includes(`docs/archive/status/${f}`), `${f} is not named, with its folder, in the status file`);
+  // C30.6 (D-P): the status file holds ONE pointer, the glob; every archive must be one the glob matches (a name outside the pattern would be unreachable from it)
+  assert.ok(s.includes('`docs/archive/status/status-archive-rolling-*.md`'), 'the glob pointer is missing from the status file');
+  for (const f of arch) assert.match(f, /^status-archive-rolling-\d+-\d+\.md$/, `${f} is not an archive name the glob pointer leads to`);
+});
+
+test('C30.6: an «Open decisions» pointer that lists every archive (the old form) becomes the one glob pointer; the size stays the same after more batches, and nothing else in the line changes', () => {
+  const old = '(earlier rounds: archived verbatim, nothing deleted: `docs/archive/status/status-archive-rolling-1-2.md`, `docs/archive/status/status-archive-rolling-3-4.md`)';
+  const dir = project(status(CV, OD + ' ' + old));
+  const r = run(dir, '--rolling');
+  assert.equal(r.status, 0, r.stderr);
+  const live = stat(dir), od = line(live, '**Open decisions:**');
+  assert.equal(od, OD_HEAD + OD_ENTRIES.slice(0, 3).join(' ') + ' ' + PTR_OD());
+  assert.ok(!od.includes('rolling-1-2') && !od.includes('rolling-3-4'));
+  const again = run(dir, '--rolling', '--keep-clauses', '2');
+  assert.equal(again.status, 0, again.stderr);
+  const od2 = line(stat(dir), '**Open decisions:**');
+  assert.equal(od2, OD_HEAD + OD_ENTRIES.slice(0, 2).join(' ') + ' ' + PTR_OD());
+  assert.equal(od2.split('earlier rounds: archived').length, 2);
+  done(dir);
 });

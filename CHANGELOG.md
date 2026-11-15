@@ -1,7 +1,17 @@
-<!-- CHANGELOG_FINGERPRINT: seq=338 file=CHICLA_PROJECT_STATUS-338.md app_sha256_12=065d37032ef1 changelog_sha256_12=d24e0fa44717 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=339 file=CHICLA_PROJECT_STATUS-339.md app_sha256_12=065d37032ef1 changelog_sha256_12=c9aeac7db86f (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`
+
+## Round 334 — C30.6: one glob pointer to the rolling archives in «Open decisions» (v0.0.338)
+
+- Task (Rodrigo: «ok»; none of his decisions open = the task under «Next up»): C30.6, D-P, D162. One source line in `packages/chicla-kit/src/archive-changelog.mjs` and the tests.
+- Change: `chicla archive --rolling` leaves ONE pointer in «Open decisions», `(earlier rounds: archived verbatim, nothing deleted: `docs/archive/status/status-archive-rolling-*.md`)`, however many archives there are; an old pointer that lists every file is replaced by it (the files stay, nothing is deleted). Run on this project's status file (keep 2): «Open decisions» no longer lists 56 files, 54267 → 50757 bytes, the clause of round 331 moved to `status-archive-rolling-331-331.md`. «Current version» keeps its own pointer (D-P names only «Open decisions»).
+- Tests: `test/archive-rolling.test.mjs`: the three tests that read the pointer expect the glob (red first), and one new test (the old list form is replaced, and the line is the same after a second batch): 3 red before the line. Mutant `K-ARC-52` (the list form back) RED.
+- Rotation with `chicla archive`: «Previous» 328, «Done» 324, rolling 331.
+- First whole run after `bump-round` (2003 tests, 1 fail, 704 s): `test/archive-rolling.test.mjs` «the real status file keeps both paragraphs short» still required every rolling archive to be named in the status file; it now requires the glob pointer and that each archive name fits the glob. Fixed.
+- Whole `npm test` after that fix and after `bump-round`: 2003 tests, 2001 pass, 0 fail, 2 skipped, 709 s (Node 22, Linux, 1 core), read from the run's own summary. `check-build`: passed.
+- NOT run: the kit mutants outside `K-ARC-52`; `npm run smoke` (no script changed); nothing on GitHub or npm; macOS and Windows runs; Node 18 and 20. The pointer of «Current version» was not changed.
 
 ## Round 333 — C30.5: `chicla git-plan` prints the git commands of a delivery (v0.0.337)
 

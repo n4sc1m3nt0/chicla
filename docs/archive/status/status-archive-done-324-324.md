@@ -1,0 +1,6 @@
+# Status file archive — «Done» lines of the Snapshot, rounds 324-324
+
+Moved out of `CHICLA_PROJECT_STATUS-338.md` verbatim by `chicla archive --snapshot`. Nothing was edited or deleted.
+Find a line with `grep -n "round 12" docs/archive/status/status-archive-done-*.md`.
+
+- Done: round 324 (2026-11-08; Rodrigo pasted `gh pr list/checks/diff`, `git ls-remote`, then `git pull` and `gh pr list --state all`). Docs and `ci.yml`, `test/dependabot-merged-docs.test.mjs` first (5, red). Rodrigo merged #3 (upload-artifact 7.0.2), #2 (checkout 7.0.1) and #1 (setup-node 7.1.0) after 14 green jobs each and the commit of each equal to its tag; main's CI after them green (run `42512206190`); `main` 306881e to 37ce250, only `ci.yml`. `ci.yml` of the tree = his main (v7.0.1 x5, v7.1.0 x5, v7.0.2 x1); the 8 test files that read it, 79 tests, green with the bumps. CORRECTION of round 323: a merge does NOT make `check-manifest` fail (it compares the list of files; crc and size are written by `--write` and `make-delivery-zip`), fixed in AUDIT-11 §7 and §8. Claude merged nothing. The round archived «Previous» 318, «Done» 314 and rolling 321. NOT seen: the pull-request pages and merge commits on GitHub, the `headSha` of the main run, the release notes of the actions beyond AUDIT-11 §7.

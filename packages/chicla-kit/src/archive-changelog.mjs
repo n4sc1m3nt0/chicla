@@ -165,7 +165,7 @@ if (args.includes("--rolling")) {
   if (odPlan) {
     const p = odPlan;
     if (p.head + [...p.mv.length ? [...p.kept, ...p.mv] : p.kept, ...(p.ptr ? [p.ptr] : [])].join(" ") !== p.l) fail("internal check failed («Open decisions» kept + moved != original); nothing was changed.");
-    const ptr = p.ptr ? `${p.ptr.slice(0, -1)}, ${item(aName)})` : `${OD_PTR}${item(aName)})`;
+    const ptr = `${OD_PTR}${item("status-archive-rolling-*.md")})`; // C30.6 (D-P): ONE pointer to the glob, however many archives there are; an old pointer that lists them all is replaced by it (the files stay)
     replacements.push({ from: p.from, to: p.to, str: p.head + [...p.kept, ptr].join(" ") });
   }
   let live = text;

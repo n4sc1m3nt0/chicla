@@ -309,4 +309,5 @@ export default [
   x("K-GPL-10", CLI, "if (command === \"git-plan\" && opts.prev === undefined) return fail(", "if (false) return fail(", GPT, "git-plan with no --against is not a usage error"),
   x("K-GPL-12", GP, "\"FILES.manifest\"])].sort();", "])].sort();", GPT, "FILES.manifest is not added when the manifest does not list itself (it never does)"),
   x("K-GPL-11", CLI, "command === \"git-plan\" ? mod.renderGitPlan(r) :", "", GPT, "the output of git-plan is rendered by the wrong renderer"),
+  x("K-ARC-52", AC, "const ptr = `${OD_PTR}${item(\"status-archive-rolling-*.md\")})`;", "const ptr = p.ptr ? `${p.ptr.slice(0, -1)}, ${item(aName)})` : `${OD_PTR}${item(aName)})`;", ["test/archive-rolling.test.mjs"], "the «Open decisions» pointer lists every archive again instead of the one glob (C30.6)"),
 ];
