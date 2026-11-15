@@ -15,6 +15,7 @@ const GH = ["packages/chicla-kit/test/git-hygiene.test.mjs"]; // C27.2: the git 
 const GP = "packages/chicla-kit/src/git-plan.mjs", GPT = ["packages/chicla-kit/test/git-plan.test.mjs"]; // C30.5: chicla git-plan
 const DC = "packages/chicla-kit/src/doctor.mjs", DCT = ["packages/chicla-kit/test/doctor.test.mjs"]; // C30.4: chicla doctor
 const RL = "packages/chicla-kit/src/release.mjs", RLT = ["packages/chicla-kit/test/release-check.test.mjs"]; // C32.1: chicla release check
+const RPT = ["packages/chicla-kit/test/release-prepare.test.mjs"]; // C32.2: chicla release prepare
 const CI = "packages/chicla-kit/src/ci-report.mjs", CIT = ["packages/chicla-kit/test/ci-report.test.mjs"]; // C27.3: chicla ci-report
 const F = "packages/chicla-kit/src/integrity.mjs";
 const LF = ["packages/chicla-kit/test/core-integrity.test.mjs"];                 // the LF rule, the regex, the callers of round 243
@@ -325,6 +326,25 @@ export default [
   x("K-REL-11", RL, "!NAME.test(pkg.name) ||", "", RLT, "a name with a scope or a space reaches the commands"),
   x("K-REL-12", RL, "try { r = run(cmd, args, { cwd: root }); } catch { r = null; }", "r = run(cmd, args, { cwd: root });", RLT, "a run function that throws makes the core throw"),
   x("K-REL-13", RL, "run(cmd, args, { cwd: root })", "run(cmd, args, {})", RLT, "git and gh run in the folder of the caller, not of the project"),
-  x("K-REL-14", CLI, "command === \"release\" ? mod.renderReleaseCheck(r) :", "", RLT, "the result of release check is rendered by the wrong renderer"),
-  x("K-REL-15", CLI, "opts.sub !== \"check\") return fail", "false) return fail", RLT, "`release publish` or any other word runs the check instead of a usage error"),
+  x("K-REL-14", CLI, "command === \"release\" ? (opts.sub === \"prepare\" ? mod.renderReleasePrepare(r) : mod.renderReleaseCheck(r)) :", "", RLT, "the result of release check is rendered by the wrong renderer"),
+  x("K-REL-15", CLI, "opts.sub !== \"check\" && opts.sub !== \"prepare\") return fail", "false) return fail", RLT, "`release publish` or any other word runs the check instead of a usage error"),
+  x("K-REL-16", RL, "view.headSha === res.commit && ", "", RPT, "a run of another commit is accepted"),
+  x("K-REL-17", RL, "view.conclusion === \"success\"", "true", RPT, "a failed or cancelled run is accepted"),
+  x("K-REL-18", RL, "view.status === \"completed\" && ", "", RPT, "a run that has not finished is accepted"),
+  x("K-REL-19", RL, "const RUNID = /^[1-9][0-9]{0,19}$/;", "const RUNID = /^.+$/;", RPT, "a run id with angle brackets or an option reaches gh"),
+  x("K-REL-20", RL, "if (existsSync(dir)) return stop(", "if (false) return stop(", RPT, "an existing folder is used and what is in it is mixed with the download"),
+  x("K-REL-21", RL, "names.length === 2 && ", "", RPT, "a folder with a third file (another tarball) passes the download check"),
+  x("K-REL-22", RL, "names[0] === file && names[1] === `${file}.sha256`", "true", RPT, "the tarball of another version passes as this one"),
+  x("K-REL-23", RL, "want !== null && got === want", "want !== null", RPT, "a tarball whose sha256 differs from the .sha256 file passes"),
+  x("K-REL-24", RL, "if (m && m[2] === file) want", "if (m) want", RPT, "a .sha256 file that names another tarball passes"),
+  x("K-REL-25", RL, "sm.status === 0, `the smoke", "true, `the smoke", RPT, "a failed tarball smoke is ignored"),
+  x("K-REL-26", RL, ")) return failed();\n  checks[0].detail", ")) { /* goes on */ }\n  checks[0].detail", RPT, "a run that is not of HEAD does not stop the download"),
+  x("K-REL-27", RL, "run(cmd, args, { cwd: root, timeout })", "run(cmd, args, { timeout })", RPT, "git, gh and node run in the folder of the caller, not of the project"),
+  x("K-REL-28", RL, "try { r = run(cmd, args, { cwd: root, timeout }); } catch { r = null; }", "r = run(cmd, args, { cwd: root, timeout });", RPT, "a run function that throws makes the core throw"),
+  x("K-REL-29", RL, "NAME.test(pkg.name) && VERSION.test(pkg.version)))", "VERSION.test(pkg.version)))", RPT, "a name with a scope reaches the commands"),
+  x("K-REL-30", RL, " && VERSION.test(pkg.version)))", "))", RPT, "a version that is an option (--registry=x) reaches the commands"),
+  x("K-REL-31", CLI, "!/^[1-9][0-9]{0,19}$/.test(opts.runId ?? \"\")", "false", RPT, "prepare without a valid --run is not a usage error"),
+  x("K-REL-32", CLI, "(opts.sub === \"prepare\" ? mod.renderReleasePrepare(r) : mod.renderReleaseCheck(r))", "mod.renderReleaseCheck(r)", RPT, "the result of release prepare is printed as a check"),
+  x("K-REL-33", CLI, "opts.relOut = resolve(cwd, v)", "opts.relOut = v", RPT, "a relative --out is read from the project root, not from the current folder"),
+  x("K-REL-34", CLI, "opts.sub === \"prepare\" ? mod.releasePrepare(", "false ? mod.releasePrepare(", RPT, "`release prepare` runs the check instead"),
 ];

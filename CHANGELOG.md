@@ -1,7 +1,19 @@
-<!-- CHANGELOG_FINGERPRINT: seq=344 file=CHICLA_PROJECT_STATUS-344.md app_sha256_12=065d37032ef1 changelog_sha256_12=3d952cb9f995 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=345 file=CHICLA_PROJECT_STATUS-345.md app_sha256_12=065d37032ef1 changelog_sha256_12=61b77dc8db65 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`
+
+## Round 340 — C32.2: `chicla release prepare` (v0.0.344)
+
+- Task (Rodrigo: «avança»; no decision open = the task under «Next up»): C32.2 of M32 (D167). Two source files: `packages/chicla-kit/src/release.mjs` (`releasePrepare`, `renderReleasePrepare`) and `cli.mjs` (`--run`, `--out`, the dispatch).
+- Change: `chicla release prepare --run <id> [--out <dir>] [--json] [--root <dir>]` takes the CI tarball of a run into a NEW folder (default `dist-<version>`), then five checks in order, stopping at the first failure: `run-is-head`, `download`, `sha256`, `tarball-smoke` (`node scripts/smoke-test-tarball.mjs --tarball <file> --json`), `notes` (written only when the four before passed). It publishes and tags nothing; `git`, `gh` and `node` run through the same replaceable `run` as C32.1 (`runTool` now takes a `timeout`; the smoke gets 600 s).
+- Tests: `packages/chicla-kit/test/release-prepare.test.mjs` (16), red first (15 failed, the module had no `releasePrepare`; the 16th, the usage errors, was already green because `prepare` was a usage error). Every test uses a fake: NO real `git`, `gh`, `npm` or smoke command ran for this round, and no real tarball was downloaded.
+- Mutants: `K-REL-16` to `34`, each run alone (`--only`, `--timeout 60`): 19 RED. The two entries of C32.1 whose anchors moved (`14`, `15`) were updated to the new lines.
+- D169: five calls made on delegation (digits-only run id, new folder, run of HEAD, the smoke as the install step, stop at the first failure), PROPOSED, waiting for Rodrigo.
+- Docs: usage line and a row in the kit README; the runbook text and the page of the npm package stay C32.4's.
+- Rotation with `chicla archive`: «Previous» 334, «Done» 330, rolling 337.
+- Whole `npm test` after `bump-round` (1 run, 2 cores): 2045 tests, 2043 pass, 0 fail, 2 skipped, 796 s. `check-build` passed (290 files).
+- NOT run: CI, `npm test` on Node 18 and 20, macOS, Windows, the whole `npm run mutants:kit`, `npm run smoke` (no script changed), and any real `gh run download`, `gh run view` or `smoke-test-tarball.mjs --tarball` on a real CI tarball: the first real `prepare` is Rodrigo's.
 
 ## Round 339 — C32.1: `chicla release check` (v0.0.343)
 
