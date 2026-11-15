@@ -1,7 +1,16 @@
-<!-- CHANGELOG_FINGERPRINT: seq=340 file=CHICLA_PROJECT_STATUS-340.md app_sha256_12=065d37032ef1 changelog_sha256_12=02bb1caec5f8 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=341 file=CHICLA_PROJECT_STATUS-341.md app_sha256_12=065d37032ef1 changelog_sha256_12=8811ce07061b (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`
+
+## Round 336 — D166 confirmed, D167 and M32: the release inside `chicla`, built before 0.4.0 (v0.0.340)
+
+- Task (Rodrigo asked whether the publication could be automated inside `chicla`; answer «ok, 1: construir primeiro»): docs only, no source, the pin does not move. Claude published nothing.
+- Recorded: D166 CONFIRMED (D-A, D-B, D-C) with one change of order; D167: **D-1** M32 is built first and 0.4.0 goes out with it; **D-2** `chicla release check` (reads only), `prepare` (the CI tarball into a new folder, sha256, installed alone, the smoke checks, notes with the CI's numbers) and `publish` (`git tag`, `gh release create`, `npm publish`: interactive terminal only, the version typed back, dry run unless confirmed); `git`, `gh` and `npm` go through one replaceable function so no test can publish. M32 has C32.1 to C32.4; C31.3 moves after C32.4.
+- Left OPEN, not recorded as done: **D-3**, the sentence «the AI never runs `chicla release publish`» in `CLAUDE.md` rule 4: it changes a rule, which `ok` never covers (CLAUDE.md, «How the owner answers»). `CLAUDE.md` was not touched.
+- Tests: `test/c32-docs.test.mjs` (3), red first (3 failing before the ROADMAP edit).
+- Whole `npm test` after `bump-round`: 2010 tests, 2008 pass, 0 fail, 2 skipped, 811 s (Node 22, Linux, 1 core), read from the run's own summary. `check-build`: passed. Rotation with `chicla archive`: «Previous» 330, «Done» 326, rolling 333.
+- NOT run: anything outside the docs tests; no release command exists yet.
 
 ## Round 335 — AUDIT-12: the audit after M30, before publishing the next `chicla` (v0.0.339)
 
