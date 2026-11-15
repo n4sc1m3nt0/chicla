@@ -1,7 +1,16 @@
-<!-- CHANGELOG_FINGERPRINT: seq=345 file=CHICLA_PROJECT_STATUS-345.md app_sha256_12=065d37032ef1 changelog_sha256_12=61b77dc8db65 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=346 file=CHICLA_PROJECT_STATUS-346.md app_sha256_12=065d37032ef1 changelog_sha256_12=916761cfd476 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`
+
+## Round 341 — docs only: CI logs of `16a27b9`, D169 confirmed, D170 and C32.5 (v0.0.345)
+
+- Task (Rodrigo: «ok avança» after reading the CI logs with Claude): record the answers; no code and no test changed.
+- CI (logs zip, 14 jobs read with `chicla ci-report`): every test job red with the same 22 tests (Windows 20); `tarball`, `bench` and `pack-chicla` showed no failure. One cause: `4 LOST file(s) vs FILES.manifest` (`docs/archive/status/status-archive-done-327-327.md`, `...-previous-331-331.md`, `...-rolling-334-334.md`, `test/readme-commands.test.mjs`): in the zips, not in git (inferred from the logs; Claude did not see the repository).
+- Recorded: D169 CONFIRMED («ok»); D170 (the guard as card C32.5; C32.3 after a green CI) CONFIRMED («ok avança»); C32.5 added to M32.
+- Rotation with `chicla archive`: «Previous» 335, «Done» 331, rolling 338. The first whole `npm test` was red (7 tests: 6 «Previous» blocks and 11 «Done» lines, the rotation was forgotten); fixed, then the whole run below.
+- Whole `npm test` after the fix and `bump-round`: 2045 tests, 2043 pass, 0 fail, 2 skipped, 806 s. `check-build` runs inside `make-delivery-zip`.
+- NOT run: CI, any real `git`, `gh` or `npm` command; the C32.5 guard is not built.
 
 ## Round 340 — C32.2: `chicla release prepare` (v0.0.344)
 
