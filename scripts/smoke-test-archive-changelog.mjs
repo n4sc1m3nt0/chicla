@@ -65,7 +65,7 @@ check(run("--keep", "3").status === 0 && readdirSync(join(T, "docs", "archive", 
   r = run("--rolling", "--keep-clauses", "2");
   const ra = join(T, "docs/archive/status/status-archive-rolling-6-7.md"), live2 = readFileSync(join(T, "CHICLA_PROJECT_STATUS-3.md"), "utf8");
   check(r.status === 0 && existsSync(ra) && readFileSync(ra, "utf8").includes("- round 7: c\n- round 6: d\n") && readFileSync(ra, "utf8").includes("- (round 7: c)\n- (round 6: d)\n"), "--rolling: docs/archive/status/status-archive-rolling-6-7.md holds clauses 7 and 6 and entries 7 and 6 verbatim");
-  check(live2 === mk([...cvc.slice(0, 2)], ode.slice(0, 2)).replace(").\n\n## Next up", "; older rounds archived (nothing deleted): `docs/archive/status/status-archive-rolling-6-7.md`).\n\n## Next up").replace(/\n$/, " (earlier rounds: archived verbatim, nothing deleted: `docs/archive/status/status-archive-rolling-6-7.md`)\n"), "the two paragraphs keep 9 and 8 plus one pointer each; the rest is as before");
+  check(live2 === mk([...cvc.slice(0, 2)], ode.slice(0, 2)).replace(").\n\n## Next up", "; older rounds archived (nothing deleted): `docs/archive/status/status-archive-rolling-6-7.md`).\n\n## Next up").replace(/\n$/, " (earlier rounds: archived verbatim, nothing deleted: `docs/archive/status/status-archive-rolling-*.md`)\n"), "the two paragraphs keep 9 and 8 plus one pointer each; the rest is as before");
 }
 // 5. C19.1: an unknown argument is an error and changes nothing; --help prints the usage
 {

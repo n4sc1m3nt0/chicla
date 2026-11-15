@@ -1,7 +1,17 @@
-<!-- CHANGELOG_FINGERPRINT: seq=346 file=CHICLA_PROJECT_STATUS-346.md app_sha256_12=065d37032ef1 changelog_sha256_12=916761cfd476 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=347 file=CHICLA_PROJECT_STATUS-347.md app_sha256_12=065d37032ef1 changelog_sha256_12=a7ad82c0e974 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`
+
+## Round 342 — the archive smoke fixed, CI logs of `257af74` (v0.0.346)
+
+- Task (Rodrigo sent the CI logs): the 6 `test` jobs (Ubuntu, macOS) had 0 failing tests out of 2045 and one red step, `npm run smoke`: `scripts/smoke-test-archive-changelog.mjs`, check «the two paragraphs keep 9 and 8 plus one pointer each». The README problem of round 340 is gone.
+- Cause: the smoke expected the old pointer `...rolling-6-7.md` in «Open decisions»; since C30.6 (D-P) the code writes ONE pointer to the glob `rolling-*.md` (code and `test/archive-rolling.test.mjs` agree). The smoke was red already in the round 339 zip: `npm run smoke` had not been run since then.
+- Change: one line in the smoke (the expected pointer). No source file changed.
+- Run: `npm run smoke` all green (6 smokes); whole `npm test` after `bump-round`: 2045 tests, 2043 pass, 0 fail, 2 skipped, 787 s. `check-build` runs inside `make-delivery-zip`.
+- Mistake caught and undone: while reproducing, I ran `archive-changelog.mjs` twice without a copy (it takes the folder of the script as the root, not the current folder) and changed the working tree; both times I restored it from the round 341 zip and compared, byte for byte.
+- Rotation with `chicla archive`: «Previous» 336, «Done» 332, rolling 339.
+- NOT run: CI, any real `git`, `gh` or `npm publish`; Node 18, 20 and macOS locally.
 
 ## Round 341 — docs only: CI logs of `16a27b9`, D169 confirmed, D170 and C32.5 (v0.0.345)
 
