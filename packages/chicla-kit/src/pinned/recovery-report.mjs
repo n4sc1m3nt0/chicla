@@ -250,7 +250,7 @@ async function recover(o, put) {
 
   writeFileSync(join(out, "RECOVERY_DIFF.md"), lines.join("\n") + "\n");
   put("out", `\n✓ full report: ${join(out, "RECOVERY_DIFF.md")}\n✓ recovered project root (work here): ${root}`);
-  put("out", `\nNEXT: read the note above, finish only what was left half-done, then\n  cd "${root}" && node scripts/make-delivery-zip.mjs <out.zip> --against <last delivery zip>\n(item 17: DELIVER first; do not start new tasks in this session.)`);
+  put("out", `\nNEXT: read the note above, finish only what was left half-done, then\n  cd "${root}" && chicla make-delivery <out.zip> --against <last delivery zip>\n(item 17: DELIVER first; do not start new tasks in this session.)`);
   return { ok: true, code: null, out, root, report: join(out, "RECOVERY_DIFF.md"), note: marker.note ?? null, afterRound: marker.afterRound ?? null, against, changedInTransit: changedInTransit.map((k) => nowT.names[k] ?? mNames[k]), modified, added, removed, held: heldBack.map((h) => ({ path: h.path, kind: h.kind })), problems, collisions: collisions.length, guards };
 }
 

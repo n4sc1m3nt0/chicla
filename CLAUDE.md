@@ -4,7 +4,7 @@ status-prefix: CHICLA
 
 ## Emergency and recovery (override everything below)
 - **`/dump`** (also "dump", "emergência", "emergencia"): exactly three steps and nothing else. (1) `node scripts/emergency-dump.mjs "one-line note: what is in progress and what is missing"`; (2) `present_files` the printed path; (3) one sentence: "Dump created: <n>. Send it to the next session with «recovery mode»." No guards, no manifest, no docs, no explanation. **`/dump project`** (also "dump project", "dump projeto"): the same three steps with `--project-only` (C6.2): (1) `node scripts/emergency-dump.mjs --project-only "one-line note"`; (2) `present_files` the printed path; (3) one sentence: "Dump created (project only): <n>. Send it to the next session with «recovery mode»." It takes only the project root, so scratch files beside it are NOT in it. If it refuses (exit 1: no project root found), say that in one sentence and offer a plain `/dump`; do not run it unasked.
-- **Toolchain pin** (C9.4): `toolchain-digest: 15e4ef5d0602588869be2993db0559e01260dfbbbfa44ca01777b2a26faa5229` is the digest of the 5 files a dump carries in `RECOVER/`; `bump-round` writes it, `--verify` checks it, and the start line of item 17 refuses a dump whose `RECOVER/` differs (`EHASH_TOOLCHAIN`, `--trust-toolchain` only if Rodrigo says so).
+- **Toolchain pin** (C9.4): `toolchain-digest: 375b6901b72d03b6d95736314a847702302a42cb714289498d139fc32bf1bf14` is the digest of the 5 files a dump carries in `RECOVER/`; `bump-round` writes it, `--verify` checks it, and the start line of item 17 refuses a dump whose `RECOVER/` differs (`EHASH_TOOLCHAIN`, `--trust-toolchain` only if Rodrigo says so).
 - **Recovery mode** (a zip with `RECOVERY_MARKER.json`, or "recovery mode"): follow item 17 of the status file instructions. Priority is to DELIVER, not to start a new task.
 
 ## Start of every session
@@ -19,7 +19,7 @@ The full text is in the status file, **items 8 to 15** (status number, app versi
 1. **Zero dependencies** (D3). Node 18+, ESM (`.mjs`), types by JSDoc.
 2. A zip is hostile input: never extract outside the destination, never trust names, sizes or counts from the archive. Return errors, never throw through the CLI.
 3. Whatever Chicla writes must be accepted by `unzip -t` and Python's `zipfile` (independent readers).
-4. Distribution is GitHub first and also npm from 0.1 (D41). Only Rodrigo publishes (login and 2FA): the AI never runs `npm publish`, and nothing is published before the licence (G-C2) is decided.
+4. Distribution is GitHub first and also npm from 0.1 (D41). Only Rodrigo publishes (login and 2FA): the AI never runs `npm publish` or `chicla release publish` (D167 D-3, Rodrigo, 2026-11-15: «sim»), and nothing is published before the licence (G-C2) is decided.
 5. Licence is Apache-2.0 (D46, Rodrigo, 2026-10-11): `LICENSE` in the root and `"license": "Apache-2.0"` in every `package.json`. Add no copyright line or NOTICE with a holder's name until Rodrigo gives it.
 6. User-facing messages are English only, plain strings (D18, replaces D8). Tests assert error `code`s, never message text.
 

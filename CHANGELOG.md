@@ -1,7 +1,26 @@
-<!-- CHANGELOG_FINGERPRINT: seq=341 file=CHICLA_PROJECT_STATUS-341.md app_sha256_12=065d37032ef1 changelog_sha256_12=8811ce07061b (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=343 file=CHICLA_PROJECT_STATUS-343.md app_sha256_12=065d37032ef1 changelog_sha256_12=8335623e236e (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`
+
+## Round 338 — C31.2: the NEXT line of `chicla recovery` says `chicla make-delivery`; the pin moves; rule 4 (v0.0.342)
+
+- Task (Rodrigo: «sim. ok»: «sim» = D-3 of D167, a rule, answered apart; «ok» = the task under «Next up»): C31.2, AUDIT-12 F-1. One source line in the PINNED `packages/chicla-kit/src/pinned/recovery-report.mjs` and the tests.
+- Change: the NEXT line of `chicla recovery` (and of the copy a dump carries in `RECOVER/`) said `node scripts/make-delivery-zip.mjs <out.zip> --against <last delivery zip>`; it says `chicla make-delivery <out.zip> --against <last delivery zip>`. The pin moved with `bump-round`: `toolchain-digest` `15e4ef5d0602` → `375b6901b72d` (`CLAUDE.md` line 7). **G-C11 is open again and is Rodrigo's** (repeat `/dump` and «recovery mode» in a clean session); Claude did not do it and does not mark it.
+- Rule (D167 D-3, Rodrigo «sim»): product rule 4 of `CLAUDE.md` now says the AI never runs `npm publish` or `chicla release publish`. D167 row: D-3 CONFIRMED.
+- Tests: `packages/chicla-kit/test/no-scripts-in-pinned.test.mjs` (3): the guard of `no-scripts-in-messages` skips `pinned/`; this one reads it, and the NEXT line is asserted. 2 of 3 red before the line (the first of mine failed for a wrong floor, 5 pinned `.mjs` when the folder holds 4: `zipkit.mjs` joins it only in the built package; fixed). Mutant `K-REC-51` (the old text back) RED.
+- Rotation with `chicla archive`: «Previous» 332, «Done» 328, rolling 335.
+- First whole run after `bump-round` (2016 tests, 1 fail, 834 s): `test/c32-docs.test.mjs` still asserted D-3 OPEN; it now asserts D-3 CONFIRMED and the sentence in `CLAUDE.md`. Fixed.
+- Whole `npm test` after that fix and after `bump-round`: 2016 tests, 2014 pass, 0 fail, 2 skipped, 748 s (Node 22, Linux, 1 core), read from the run's own summary. `check-build`: passed.
+- NOT run: the recovery rehearsal (G-C11, his); the kit mutants outside `K-REC-51`; `npm run smoke`; the CI; Node 18 and 20; macOS and Windows.
+
+## Round 337 — C31.1: `chicla archive` in the three READMEs, and a test that the README names every command (v0.0.341)
+
+- Task (Rodrigo: «ok» = the task under «Next up»; the one decision of his still open, D-3 of D167, is a rule and `ok` does not cover it): C31.1, AUDIT-12 F-2. Docs and a test: no source, the pin does not move.
+- Change: a usage line for `chicla archive` in the root `README.md` and in `packages/chicla-kit/README.md`, a row in the table of the kit README (the default `--keep` is 10: my first draft said 12, caught against the source before the run), and `archive` in the sentence of `packages/chicla/README.md`, the page npm shows.
+- Tests: `test/readme-commands.test.mjs` (3): the commands are parsed from `chicla --help`, every one must be named in `packages/chicla/README.md`, and `archive` must be in the other two; 2 of 3 red before the docs.
+- Whole `npm test` after `bump-round`: 2013 tests, 2011 pass, 0 fail, 2 skipped, 819 s (Node 22, Linux, 1 core), read from the run's own summary. `check-build`: passed. Rotation with `chicla archive`: «Previous» 331, «Done» 327, rolling 334.
+- NOT run: anything outside the docs tests; no source changed. D-3 of D167 is still open: `CLAUDE.md` was not touched.
 
 ## Round 336 — D166 confirmed, D167 and M32: the release inside `chicla`, built before 0.4.0 (v0.0.340)
 

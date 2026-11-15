@@ -310,4 +310,5 @@ export default [
   x("K-GPL-12", GP, "\"FILES.manifest\"])].sort();", "])].sort();", GPT, "FILES.manifest is not added when the manifest does not list itself (it never does)"),
   x("K-GPL-11", CLI, "command === \"git-plan\" ? mod.renderGitPlan(r) :", "", GPT, "the output of git-plan is rendered by the wrong renderer"),
   x("K-ARC-52", AC, "const ptr = `${OD_PTR}${item(\"status-archive-rolling-*.md\")})`;", "const ptr = p.ptr ? `${p.ptr.slice(0, -1)}, ${item(aName)})` : `${OD_PTR}${item(aName)})`;", ["test/archive-rolling.test.mjs"], "the «Open decisions» pointer lists every archive again instead of the one glob (C30.6)"),
+  x("K-REC-51", R, "cd \"${root}\" && chicla make-delivery <out.zip>", "cd \"${root}\" && node scripts/make-delivery-zip.mjs <out.zip>", ["packages/chicla-kit/test/no-scripts-in-pinned.test.mjs"], "the NEXT line of the recovery tells the user of the package to run a script that is not there (C31.2)"),
 ];
