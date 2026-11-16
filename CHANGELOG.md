@@ -1,7 +1,16 @@
-<!-- CHANGELOG_FINGERPRINT: seq=351 file=CHICLA_PROJECT_STATUS-351.md app_sha256_12=065d37032ef1 changelog_sha256_12=0f8f666cb892 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=352 file=CHICLA_PROJECT_STATUS-352.md app_sha256_12=065d37032ef1 changelog_sha256_12=43c1f8df92b1 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-322-333.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-334-334.md`
+
+## Round 347 — C31.3: `chicla` 0.4.0 and its runbook (v0.0.351)
+
+- Task (Rodrigo: «ajuda a fazer a release»): C31.3, the open card after M32. Source: none; `packages/chicla/package.json` (version) and docs.
+- Change: `packages/chicla/package.json` 0.3.0 → 0.4.0; `docs/release.md` «Releasing chicla 0.4.0» under the `chicla release` section: what is new since 0.3.0 (`archive`, `doctor`, `git-plan`, `release`, the pin `15e4ef5d0602` → `375b6901b72d`), 36 files (32 before), the five steps with the differences; G-C19 opened in ROADMAP and the status file (Rodrigo's); G-C11 stays open and his.
+- Local rebuild (`build-chicla`, `pack-release`, Linux, nothing published): 36 files, 166265 bytes, sha256 `939079907bbe…e708`; it is not the CI tarball.
+- Tests: `test/release-040-docs.test.mjs` (5), red first; `chicla-single-package`, `retire-packages` and `release-030-docs` (4 red after the bump) now say 0.4.0.
+- Rotations: `archive-changelog --status`, `--snapshot`, `--rolling` (keep 4, 9, 2).
+- NOT run: `git`, `gh` or `npm` against anything real (no `release check`, `prepare` or `publish`; Rodrigo's); CI; Node 18 and 20; macOS and Windows.
 
 ## Round 346 — C32.4: the runbook and the READMEs for `chicla release` (v0.0.350)
 

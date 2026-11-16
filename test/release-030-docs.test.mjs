@@ -11,8 +11,8 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const read = (f) => readFileSync(join(root, f), 'utf8');
 const section = () => { const s = read('docs/release.md'); const i = s.indexOf('## Releasing chicla 0.3.0'); return { s, i, sec: i < 0 ? '' : s.slice(i, s.indexOf('\n## ', i + 5)) }; };
 
-test('packages/chicla is 0.3.0: 0.2.1 is on npm, npm cannot publish it twice, and three commands are new (D-310c)', () => {
-  assert.equal(JSON.parse(read('packages/chicla/package.json')).version, '0.3.0');
+test('packages/chicla is 0.4.0 since round 347 (C31.3, D166 D-B); it was 0.3.0, published in round 323', () => {
+  assert.equal(JSON.parse(read('packages/chicla/package.json')).version, '0.4.0');
 });
 
 test('docs/release.md: «Releasing chicla 0.3.0» sits above the 0.2.1 runbook, says why, and keeps the rule that only Rodrigo publishes', () => {
