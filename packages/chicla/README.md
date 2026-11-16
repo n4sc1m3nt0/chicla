@@ -10,7 +10,7 @@ npx chicla init             # CLAUDE.md, AGENTS.md, the status file, CHANGELOG.m
 npx chicla bump-round --verify
 ```
 
-**The `chicla` command** is the workflow: `init`, `update`, `check-manifest`, `bump-round`, `make-delivery`, `verify-delivery`, `dump`, `recovery`, `rename-status`, `doctor`, `git-plan`, `archive`, `ci-report` and `release` (`release check`: reads only, says whether the package may go out).
+**The `chicla` command** is the workflow: `init`, `update`, `check-manifest`, `bump-round`, `make-delivery`, `verify-delivery`, `dump`, `recovery`, `rename-status`, `doctor`, `git-plan`, `archive`, `ci-report` and `release` (`release check`: reads only, says whether the package may go out; `release prepare --run <id>`: the CI tarball of that run into a new folder, checked; `release publish --from <folder>`: tag, GitHub release and `npm publish`, a dry run unless `--confirm`, for the person who publishes).
 Every option and exit code is described in `chicla --help` and in the project's documentation.
 
 **Name the project.** The status file is `<NAME>_PROJECT_STATUS-N.md`: `npx chicla init --name ACME` chooses the name (otherwise the folder's, in capitals), and `npx chicla rename-status NEWNAME` changes it later. A project with no name set is called `CHICLA` and keeps working.

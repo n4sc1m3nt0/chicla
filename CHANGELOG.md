@@ -1,7 +1,14 @@
-<!-- CHANGELOG_FINGERPRINT: seq=350 file=CHICLA_PROJECT_STATUS-350.md app_sha256_12=065d37032ef1 changelog_sha256_12=07920350e820 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=351 file=CHICLA_PROJECT_STATUS-351.md app_sha256_12=065d37032ef1 changelog_sha256_12=0f8f666cb892 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-322-333.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-334-334.md`
+
+## Round 346 — C32.4: the runbook and the READMEs for `chicla release` (v0.0.350)
+
+- Task (Rodrigo: «ok», D173 CONFIRMED; Claude continued with C32.4): the last card of M32 (D167). Docs only; no source file changed.
+- Change: `docs/release.md` opens with «Releasing with `chicla release`»: check, prepare, look (dry run), publish (in a terminal, by hand, never through `tee`), after, and the manual finish if `publish` stops; the three commands in `README.md`, `packages/chicla-kit/README.md` and `packages/chicla/README.md` (the page npm shows). The help already named them.
+- Tests: `test/release-commands-docs.test.mjs` (3): 2 red first (the help test was already green); names and flags only.
+- Run: `npm run smoke`: all green. The whole `npm test`: 2078 tests, 2076 pass, 0 fail, 2 skipped (844 s). Not run: the three commands against anything real (Rodrigo's).
 
 ## Round 345 — C32.3: `chicla release publish` (v0.0.349)
 
