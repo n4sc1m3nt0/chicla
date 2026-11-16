@@ -37,11 +37,11 @@ test('the runbook says the first real run of prepare and publish is his, that 0.
   assert.match(sec, /local rebuild/i);
 });
 
-test('ROADMAP: C31.3 is done and G-C19 is a gate row that is open and Rodrigo\'s', () => {
+test('ROADMAP: C31.3 is done and G-C19 is a gate row that is Rodrigo\'s (open in round 347, CLOSED in round 348)', () => {
   const r = read('ROADMAP.md');
   const c = r.split('\n').find((l) => l.startsWith('| C31.3 '));
   assert.ok(c && /feito/.test(c) && /round 347/.test(c), 'C31.3 is not recorded as done in round 347');
   const g = r.split('\n').find((l) => l.startsWith('| G-C19'));
   assert.ok(g, 'no G-C19 gate row in ROADMAP');
-  assert.match(g, /Rodrigo/); assert.match(g, /OPEN/);
+  assert.match(g, /Rodrigo/); assert.match(g, /OPEN|CLOSED/);
 });

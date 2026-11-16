@@ -1,7 +1,15 @@
-<!-- CHANGELOG_FINGERPRINT: seq=352 file=CHICLA_PROJECT_STATUS-352.md app_sha256_12=065d37032ef1 changelog_sha256_12=43c1f8df92b1 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=353 file=CHICLA_PROJECT_STATUS-353.md app_sha256_12=065d37032ef1 changelog_sha256_12=781680166bde (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-322-333.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-334-334.md`
+
+## Round 348 — docs: `chicla` 0.4.0 published by Rodrigo; G-C19 and G-C11 closed (v0.0.352)
+
+- Task (Rodrigo: «fecha ambas as gates e faz a ronda de docs»): record the publication of 0.4.0 and close the two gates on his word. Docs only; no source file changed.
+- Change: «Published: chicla 0.4.0» in `docs/release.md` (his pasted output; what went differently: `ECOMMAND_UNKNOWN` for the global 0.3.0, the example run id, `--no-install` taking the global `chicla`, a `<name>` in a command); the `chicla release` section and the 0.4.0 runbook say how to run it before installation and `npx --yes chicla@<version>`; README says 0.4.0 is published; G-C19 and G-C11 CLOSED in the ROADMAP and the status file.
+- Seen, not fixed: the `dump` prints a line written for the agent («NOW: present_files…»); a suggestion in «Open decisions», no card.
+- Tests: `test/published-chicla-040-docs.test.mjs` (7), all red first.
+- NOT run: `git`, `gh` or `npm` against anything real; the `--confirm` output and the GitHub page were not seen; CI; Node 18 and 20; macOS and Windows.
 
 ## Round 347 — C31.3: `chicla` 0.4.0 and its runbook (v0.0.351)
 
