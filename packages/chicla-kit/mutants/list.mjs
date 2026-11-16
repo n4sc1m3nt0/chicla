@@ -33,6 +33,7 @@ const AC = "packages/chicla-kit/src/archive-changelog.mjs", AO = ["test/archive-
 const CM = "packages/chicla-kit/src/check-manifest.mjs";
 const CMT = ["test/manifest.test.mjs", "test/collisions-nfc.test.mjs", "test/secret-allow.test.mjs", "test/policy-file.test.mjs", "test/check-manifest-one-read.test.mjs", "test/secret-names.test.mjs", "packages/chicla-kit/test/core-check-manifest.test.mjs", "packages/chicla-kit/test/cli-check-manifest.test.mjs"];
 const CMG = ["packages/chicla-kit/test/core-check-manifest-gaps.test.mjs"];
+const NIG = ["packages/chicla-kit/test/manifest-not-in-git.test.mjs"]; // C32.5
 const CMV = ["test/manifest-v2.test.mjs", "test/policy.test.mjs", "packages/chicla-kit/test/robustness-r233.test.mjs", "packages/chicla-kit/test/core-integrity.test.mjs", "packages/chicla-kit/test/name-rules-differential.test.mjs", ...CMT];
 const x = (id, file, find, replace, tests, why, survives) => ({ id, file, find, replace, tests, why, ...(survives ? { survives } : {}) });
 
@@ -262,6 +263,13 @@ export default [
   x("K-CMN-32", CM, "complete: used === groups.length }", "complete: true }", GH, "a cut command says it is complete: the next `check-manifest` is not announced"),
   x("K-CMN-33", CM, "if (!top.some((t) => d.startsWith(`${t}/`))) top.push(d);", "top.push(d);", GH, "a folder and its sub-folders are all named: the same files twice in the command"),
   x("K-CMN-34", CM, "if (n < 2) continue;", "if (n < 1) continue;", GH, "a glob is made for one file: the line is longer and less clear than the name"),
+  x("K-CMN-35", CM, "\"--others\", \"--exclude-standard\"", "\"--others\"", NIG, "a file the .gitignore ignores is announced with a `git add` line that git would refuse"),
+  x("K-CMN-36", CM, "u.files.filter((f) => f !== \"FILES.manifest\" && inManifest(f))", "u.files.filter((f) => f !== \"FILES.manifest\")", NIG, "every untracked file is announced, also the ones outside the manifest"),
+  x("K-CMN-37", CM, "let command = \"git add --\", used = 0;", "let command = \"git add\", used = 0;", NIG, "the `git add` line loses its `--` and a name that starts with a dash is read as an option"),
+  x("K-CMN-38", CM, "result.notInGitComplete = used === result.notInGit.length;", "result.notInGitComplete = true;", NIG, "a cut `git add` line says it is complete"),
+  x("K-CMN-39", CM, "say(\"out\", `\\n! ${result.notInGit.length}", "say(\"err\", `\\n! ${result.notInGit.length}", NIG, "the note goes to stderr, where a script that reads stdout does not see it"),
+  x("K-CMN-41", CM, "if (used && command.length + part.length > CMD_MAX) break;", "", NIG, "the `git add` line is never cut: hundreds of files are one line of hundreds of kilobytes"),
+  x("K-CMN-40", CM, "const part = ` ${shq(f)}`;", "const part = ` ${f}`;", NIG, "a name with a space or an apostrophe breaks the `git add` line"),
   // C27.3 (round 307, D154): `chicla ci-report` (K-CIR-01 to 05).
   x("K-CIR-01", CI, "failed: failing.length > 0 || (fail ?? 0) > 0 || errLine !== null", "failed: failing.length > 0", CIT, "a job with only an ##[error] line (a step died) or a `# fail` count is read as green"),
   x("K-CIR-02", CI, "else fail = add(fail, v); return; }", "else fail = v; return; }", CIT, "the counts of the suites of one job are not added (Windows runs two): the last suite wins"),

@@ -39,6 +39,14 @@ function gitTracked(root, bin) {
   return { state: "ok", files: r.stdout.toString("utf8").split("\0").filter(Boolean) };
 }
 
+// C32.5 (D170): the files git does NOT know and does not ignore (`ls-files --others --exclude-standard`), read the same way. A failure is a skipped note, never a failure of the check.
+function gitUntracked(root, bin) {
+  const env = { ...process.env }; for (const k of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"]) delete env[k];
+  const r = spawnSync(bin, ["-c", "core.quotepath=off", "ls-files", "-z", "--others", "--exclude-standard"], { cwd: root, env, encoding: "buffer", maxBuffer: 256 * 1024 * 1024, timeout: 30000 });
+  if (r.error || r.status !== 0) return { state: "unavailable" };
+  return { state: "ok", files: r.stdout.toString("utf8").split("\0").filter(Boolean) };
+}
+
 // C29.1 (AUDIT-11 F-1): the files git tracks outside the manifest, GROUPED, and one ready `git rm` line. A FOLDER is named when every tracked file under it that exists is outside the manifest
 // (the top-most such folder); a GLOB `dir/prefix*ext` when two or more of the rest share the directory, the text before the first digit and the extension AND no other tracked file that exists
 // matches it (git's `*` also crosses `/`, so the test is made with `.*`); every other file is named. The command stops tracking (`--cached`: the files stay on disk) and is cut at about CMD_MAX
@@ -90,7 +98,7 @@ export function checkManifest({ root, write = false, git = "git" } = {}) {
   const MANIFEST = join(ROOT, "FILES.manifest");
   const messages = [];
   const say = (stream, text) => messages.push({ stream, text });
-  const result = { ok: true, code: null, mode: write ? "write" : "check", root: ROOT, messages, git: { state: "none" }, trackedOutside: [], trackedGroups: [], trackedCommand: null, trackedCommandComplete: true };
+  const result = { ok: true, code: null, mode: write ? "write" : "check", root: ROOT, messages, git: { state: "none" }, trackedOutside: [], trackedGroups: [], trackedCommand: null, trackedCommandComplete: true, notInGit: [], notInGitCommand: null, notInGitComplete: true };
   const stop = (code, text) => { say("err", text); result.ok = false; result.code = code; return result; };
 
   // A root that is missing or is not a folder is a clean error, not an ENOENT from the walk (and `--write` must not create anything there).
@@ -225,6 +233,19 @@ export function checkManifest({ root, write = false, git = "git" } = {}) {
         const list = few ? t : grp.groups.slice(0, 15).map((x) => `${x.files} × ${x.path}${x.kind === "folder" ? "/" : ""}`);
         const more = !few && grp.groups.length > 15 ? `\n  … and ${grp.groups.length - 15} more group(s)` : "";
         return stop("EMANIFEST_TRACKED", `\n✗ EMANIFEST_TRACKED: ${t.length} file(s) tracked by git are not in FILES.manifest${few ? "" : `, in ${grp.groups.length} group(s)`}:\n  ${list.join("\n  ")}${more}\n  To stop tracking them (they stay on disk), run:\n    ${grp.command}${grp.complete ? "" : "\n  (that line covers the first groups only: run the check again for the rest)"}\n  A stale copy of something that moved (an old status file, an archive now under docs/archive/)? Delete it instead: the same line without --cached. Build output committed by mistake? Name the folder in .gitignore. A real source file? regenerate with chicla check-manifest --write.`);
+      }
+      // C32.5 (D170): the counterpart. A file the manifest LISTS and git does not know (never `git add`ed: round 340, three archive files and a test that every zip carried and the CI checkout lacked) is a NOTE with ONE
+      // ready `git add` line, never a failure: before a commit every new file is untracked. A file that is only modified is `git status`'s (and `release check`'s tree-clean).
+      const u = gitUntracked(ROOT, git);
+      if (u.state === "ok") {
+        result.notInGit = u.files.filter((f) => f !== "FILES.manifest" && inManifest(f)).sort();
+        if (result.notInGit.length) {
+          let command = "git add --", used = 0;
+          for (const f of result.notInGit) { const part = ` ${shq(f)}`; if (used && command.length + part.length > CMD_MAX) break; command += part; used++; }
+          result.notInGitCommand = command; result.notInGitComplete = used === result.notInGit.length;
+          const named = result.notInGit.slice(0, 15).join("\n  "), more = result.notInGit.length > 15 ? `\n  … and ${result.notInGit.length - 15} more` : "";
+          say("out", `\n! ${result.notInGit.length} file(s) listed in FILES.manifest are not in git yet (new, or never added):\n  ${named}${more}\n  To add them, run:\n    ${command}${result.notInGitComplete ? "" : "\n  (that line covers the first files only: run the check again for the rest)"}\n  (Before a commit this is expected for every new file; after one it means a file was never added.)`);
+        }
       }
     }
   }

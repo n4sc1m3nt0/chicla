@@ -1,7 +1,17 @@
-<!-- CHANGELOG_FINGERPRINT: seq=348 file=CHICLA_PROJECT_STATUS-348.md app_sha256_12=065d37032ef1 changelog_sha256_12=05a211d908e2 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=349 file=CHICLA_PROJECT_STATUS-349.md app_sha256_12=065d37032ef1 changelog_sha256_12=1be8f9232072 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
-Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-322-333.md`
+Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-322-333.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-334-334.md`
+
+## Round 344 — C32.5: the manifest files that git does not know (v0.0.348)
+
+- Task (Rodrigo: «ok», C32.5 first): C32.5 of M32 (D170). One source file: `packages/chicla-kit/src/check-manifest.mjs`.
+- Change: in check mode, with a `.git` and a git that answers, `checkManifest` also runs `git ls-files -z --others --exclude-standard` and reports `notInGit`, `notInGitCommand` (ONE `git add -- …` line, cut at about 3000 characters) and `notInGitComplete`, and prints one note before the final ✓ line. A NOTE, never a failure; a file that is only modified is left to `git status` and `release check`. D172.
+- Tests: `packages/chicla-kit/test/manifest-not-in-git.test.mjs` (10), red first (10 of 10 failed); each uses a real temporary git repository, never the project's. `K-CMN-35` to `41`, each run alone: 7 RED (the first whole `npm test` had 1 red test: my loop repeated the anchor of `K-CMN-30`; rephrased, and `41` covers my line).
+- Docs: a sentence in the row of `chicla check-manifest` in the kit README; D172 and C32.5 done in the ROADMAP.
+- Rotation with `chicla archive`: «Previous» 338, «Done» 334, rolling 341, CHANGELOG round 334 (the plain archive, not needed: 11 headings, the limit is 21).
+- Whole `npm test` after the fix: see the reply (the number is not written here, to keep this entry true).
+- NOT run: CI of this round, any real `git` on the project, `gh` or `npm publish`; Node 18, 20 and macOS locally; the whole `npm run mutants:kit`.
 
 ## Round 343 — D171: `npm run smoke` in every closing kit (v0.0.347)
 
@@ -92,14 +102,4 @@ Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rou
 - Tests: `test/audit12-docs.test.mjs` (4). Honest: written in the same step as the docs, NOT seen red first.
 - Whole `npm test` after `bump-round`: 2007 tests, 2005 pass, 0 fail, 2 skipped, 766 s (Node 22, Linux, 1 core), read from the run's own summary. `check-build`: passed. Rotation with `chicla archive`: «Previous» 329, «Done» 325, rolling 332.
 - NOT run: the CI on GitHub; Node 18 and 20 (Node 22 only here); macOS and Windows; a real logs zip; any publish.
-
-## Round 334 — C30.6: one glob pointer to the rolling archives in «Open decisions» (v0.0.338)
-
-- Task (Rodrigo: «ok»; none of his decisions open = the task under «Next up»): C30.6, D-P, D162. One source line in `packages/chicla-kit/src/archive-changelog.mjs` and the tests.
-- Change: `chicla archive --rolling` leaves ONE pointer in «Open decisions», `(earlier rounds: archived verbatim, nothing deleted: `docs/archive/status/status-archive-rolling-*.md`)`, however many archives there are; an old pointer that lists every file is replaced by it (the files stay, nothing is deleted). Run on this project's status file (keep 2): «Open decisions» no longer lists 56 files, 54267 → 50757 bytes, the clause of round 331 moved to `status-archive-rolling-331-331.md`. «Current version» keeps its own pointer (D-P names only «Open decisions»).
-- Tests: `test/archive-rolling.test.mjs`: the three tests that read the pointer expect the glob (red first), and one new test (the old list form is replaced, and the line is the same after a second batch): 3 red before the line. Mutant `K-ARC-52` (the list form back) RED.
-- Rotation with `chicla archive`: «Previous» 328, «Done» 324, rolling 331.
-- First whole run after `bump-round` (2003 tests, 1 fail, 704 s): `test/archive-rolling.test.mjs` «the real status file keeps both paragraphs short» still required every rolling archive to be named in the status file; it now requires the glob pointer and that each archive name fits the glob. Fixed.
-- Whole `npm test` after that fix and after `bump-round`: 2003 tests, 2001 pass, 0 fail, 2 skipped, 709 s (Node 22, Linux, 1 core), read from the run's own summary. `check-build`: passed.
-- NOT run: the kit mutants outside `K-ARC-52`; `npm run smoke` (no script changed); nothing on GitHub or npm; macOS and Windows runs; Node 18 and 20. The pointer of «Current version» was not changed.
 
