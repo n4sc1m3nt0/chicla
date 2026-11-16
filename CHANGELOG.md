@@ -1,7 +1,18 @@
-<!-- CHANGELOG_FINGERPRINT: seq=349 file=CHICLA_PROJECT_STATUS-349.md app_sha256_12=065d37032ef1 changelog_sha256_12=1be8f9232072 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
+<!-- CHANGELOG_FINGERPRINT: seq=350 file=CHICLA_PROJECT_STATUS-350.md app_sha256_12=065d37032ef1 changelog_sha256_12=07920350e820 (bump-round.mjs: app hash unchanged, changelog hash recomputed) -->
 # Changelog
 
 Archived rounds (nothing deleted): `docs/archive/changelog/CHANGELOG-archive-rounds-0-219.md`. References to older rounds elsewhere in the docs ("see CHANGELOG.md's Round N") live there now (moved from the root to `docs/archive/changelog/` in round 305)., `docs/archive/changelog/CHANGELOG-archive-rounds-220-230.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-231-241.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-242-253.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-254-263.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-264-275.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-276-286.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-287-297.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-298-309.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-310-321.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-322-333.md`, `docs/archive/changelog/CHANGELOG-archive-rounds-334-334.md`
+
+## Round 345 — C32.3: `chicla release publish` (v0.0.349)
+
+- Task (Rodrigo: «sim às três», D172 CONFIRMED; Claude continued with C32.3 as announced): C32.3 of M32 (D167). Two source files: `packages/chicla-kit/src/release.mjs` (`releasePublish`, `renderReleasePublish`, `runTool` takes `interactive`) and `cli.mjs` (`--from`, `--confirm`, the question, the terminal).
+- Change: `chicla release publish --from <folder> [--confirm] [--json] [--root <dir>]`. Without `--confirm` a dry run: `files`, `sha256`, `release-check`, `notes-commit` and the plan, nothing that writes. With `--confirm`: a terminal on stdin and stdout, the version typed back exactly (both before any call), then `npm whoami`, `git tag -a`, `git push origin <tag>`, `gh release create`, `npm publish <absolute tarball> --access public` (interactive: npm asks for the two-factor code), `npm view`; it stops at the first failure and says which steps are `done`. D173.
+- Tests: `packages/chicla-kit/test/release-publish.test.mjs` (20), red first (18 of 19 failed before the code; the usage-errors test was already green because `publish` was a usage error; the 20th, `runTool`, came after). A fake `run` and a fake terminal: NO real `git`, `gh`, `npm` or `chicla release publish` ran, nothing was tagged, released or published (rule 4 of `CLAUDE.md`).
+- Mutants: `K-REL-35` to `55`, each run alone (`--only`, `--timeout 60`); the anchors of `K-REL-14`, `15`, `32` moved with the new subcommand and were updated.
+- Docs: usage line and a row in the kit README; the runbook and the npm page are C32.4's.
+- Rotation with `chicla archive`: «Previous» 339, «Done» 335, rolling 342 (nothing deleted).
+- Run: `npm run smoke` all green; whole `npm test` after `bump-round`: 2075 tests, 2073 pass, 0 fail, 2 skipped, 820 s. `check-build` runs inside `make-delivery-zip`.
+- NOT run: CI of this round, any real `git`, `gh`, `npm publish` or `chicla release publish`; Node 18, 20 and macOS locally; the whole `npm run mutants:kit`.
 
 ## Round 344 — C32.5: the manifest files that git does not know (v0.0.348)
 

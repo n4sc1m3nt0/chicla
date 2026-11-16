@@ -1,7 +1,7 @@
 {
  "format": "chicla-baseline-v1",
- "created": "2026-11-16T00:11:15.774Z",
- "seal": "315c900fe4d8a4e33717b9dc1ea11f40ecfd079ebbc6b1a96a26bc44e7dc3525",
+ "created": "2026-11-16T08:50:29.216Z",
+ "seal": "a16c9b748337af4219b641277bbe3cf6bcecebec716039f0864239a2c381a10a",
  "files": [
   {
    "path": ".gitattributes",
@@ -25,13 +25,13 @@
   },
   {
    "path": "CHANGELOG.md",
-   "size": 17381,
-   "sha256": "616cfe83fc21d0088a01af095262a41ab5e6432dad4c2b1e4b6e777605833844"
+   "size": 19379,
+   "sha256": "db918cf838dd7defc10fe773c717d90ba675423fd45c9007514ffef9ea0409c5"
   },
   {
-   "path": "CHICLA_PROJECT_STATUS-349.md",
-   "size": 52738,
-   "sha256": "c8ff50d4d0ee2ae467b9aa2dcbac5e09e7203f6dec02b6804699a388d5216562"
+   "path": "CHICLA_PROJECT_STATUS-350.md",
+   "size": 53077,
+   "sha256": "dc4488ca2d516c076cb979cba569e7fb01ac33aecc40707c9a742b41daae4afc"
   },
   {
    "path": "CLAUDE.md",
@@ -45,8 +45,8 @@
   },
   {
    "path": "FILES.manifest",
-   "size": 36198,
-   "sha256": "afffcf05576e148adc0e364330fc7a969b0b9cf8cba8776f90a3c672cda4d733"
+   "size": 36462,
+   "sha256": "d1b36277a757c3e78f9a17cc5dec4a9e60ebd9145f395e50a0d582ca3ed4273f"
   },
   {
    "path": "LICENSE",
@@ -60,8 +60,8 @@
   },
   {
    "path": "ROADMAP.md",
-   "size": 246296,
-   "sha256": "3a9625b21e57f4143474278039149e6eb2b4e7db56f7ad10c0434cefcc51eb6c"
+   "size": 248118,
+   "sha256": "1b4109baca272fc48d413fe9c4d5f04d6acf382ce0107b310492d78fa0c39e88"
   },
   {
    "path": "SECURITY.md",
@@ -604,6 +604,11 @@
    "sha256": "3102976710f6e3ecf58da7b0706f36a49092686be432365a84c9f018df4d4026"
   },
   {
+   "path": "docs/archive/status/status-archive-done-335-335.md",
+   "size": 701,
+   "sha256": "02e9968c9ff003b202550b821954f973aa28f73da1fe99ea719085cd64525b57"
+  },
+  {
    "path": "docs/archive/status/status-archive-previous-123-233.md",
    "size": 35356,
    "sha256": "6e1546bd6a4840c343aa4b7398845f32b8a6121511e4bdc41b9e313be2e79ed1"
@@ -1084,6 +1089,11 @@
    "sha256": "3104ff7992f5328815b5028e4fb22a001bc2a3581d1e4db119ee56ea3ee168a0"
   },
   {
+   "path": "docs/archive/status/status-archive-previous-339-339.md",
+   "size": 840,
+   "sha256": "74bd90c7aa0722b5335eabdf580d9a2bc7c20933a1a1136a4ea4bb96a38c39ab"
+  },
+  {
    "path": "docs/archive/status/status-archive-rolling-135-246.md",
    "size": 21508,
    "sha256": "5e2e6d0ebf5f86cac92cc361727478e6d28aca0be4cd73df88c0b90901f447a5"
@@ -1464,6 +1474,11 @@
    "sha256": "a4c153e0e59a6fb1afb4515845b5990e7dc8e8258a8b229cc3b5b2d3271152fb"
   },
   {
+   "path": "docs/archive/status/status-archive-rolling-342-342.md",
+   "size": 843,
+   "sha256": "aec8f2735a389448bb129c2d6f69ce12b93f8b714e919913a2cb9856259689e5"
+  },
+  {
    "path": "docs/audits/AUDIT-1.md",
    "size": 7439,
    "sha256": "61aed62fa91672220322c67633d7a01226395949c900aacf596afec4a02e7b64"
@@ -1581,7 +1596,7 @@
   {
    "path": "package.json",
    "size": 804,
-   "sha256": "7b69738fa0e9e10a887ef3f68e1be9c038f5e8641c18f6c668e10a9fbd28fc02"
+   "sha256": "4956ff3910075ef3eb07e13fc73a77ed0caa9c6fa21e922211bd6c3ee334e185"
   },
   {
    "path": "packages/chicla-kit/LICENSE",
@@ -1590,13 +1605,13 @@
   },
   {
    "path": "packages/chicla-kit/README.md",
-   "size": 12531,
-   "sha256": "caa5dedc3148344316a743b37bfb02da55b4ae0e887a36b61efeef6d1cd3ac25"
+   "size": 13268,
+   "sha256": "416814a1d724d91afd42d9bc633ab4529f097ed428098cca0374169489ee9c40"
   },
   {
    "path": "packages/chicla-kit/mutants/list.mjs",
-   "size": 58833,
-   "sha256": "1e9c75539b95a2daa28a7ff38a8e22a6b36b14a2f3fb16d12ff1d2d95b8abe5d"
+   "size": 62136,
+   "sha256": "e730c16c138388fbaf653e03419c0f8de96741aaa922a646877c45c735922753"
   },
   {
    "path": "packages/chicla-kit/package.json",
@@ -1635,8 +1650,8 @@
   },
   {
    "path": "packages/chicla-kit/src/cli.mjs",
-   "size": 23778,
-   "sha256": "03f3f7f173a1726188cc376c6bb40369acc63f8b197bb40549a1fb704ec2c155"
+   "size": 25974,
+   "sha256": "add4377dd730d38d8646d784b46c51563a4d5b25b082232ce8c7ab94324865f9"
   },
   {
    "path": "packages/chicla-kit/src/doctor.mjs",
@@ -1695,8 +1710,8 @@
   },
   {
    "path": "packages/chicla-kit/src/release.mjs",
-   "size": 14496,
-   "sha256": "a10465df77b9cfb2b54b60f9be437d9e3162385cc94e80ccc076be4c431d28e8"
+   "size": 23243,
+   "sha256": "1047cc4d0b247cfd7352fdb0147d68f3339e020856c51cdf3a79e3526a6f79cc"
   },
   {
    "path": "packages/chicla-kit/src/rename-status.mjs",
@@ -1992,6 +2007,11 @@
    "path": "packages/chicla-kit/test/release-prepare.test.mjs",
    "size": 17260,
    "sha256": "fec5cc2444ee2ea2f51570fb0cd599913c7a2d76e756a8698108d93b7077d53e"
+  },
+  {
+   "path": "packages/chicla-kit/test/release-publish.test.mjs",
+   "size": 21253,
+   "sha256": "864549a79d4b3e8874de88a5386c1b9566cb1d810b52ddd998c538ad01642317"
   },
   {
    "path": "packages/chicla-kit/test/rename-status.test.mjs",
@@ -3126,7 +3146,7 @@
   {
    "path": "version.mjs",
    "size": 531,
-   "sha256": "032fc516425608805474363da6953c74dca2e39c7a656728e27b5ecafb8987ef"
+   "sha256": "2743c9d282d28e162fb0dbdec00590b75fd414547b3c8f64a7778e27706db22d"
   }
  ]
 }

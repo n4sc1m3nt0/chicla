@@ -16,6 +16,7 @@ const GP = "packages/chicla-kit/src/git-plan.mjs", GPT = ["packages/chicla-kit/t
 const DC = "packages/chicla-kit/src/doctor.mjs", DCT = ["packages/chicla-kit/test/doctor.test.mjs"]; // C30.4: chicla doctor
 const RL = "packages/chicla-kit/src/release.mjs", RLT = ["packages/chicla-kit/test/release-check.test.mjs"]; // C32.1: chicla release check
 const RPT = ["packages/chicla-kit/test/release-prepare.test.mjs"]; // C32.2: chicla release prepare
+const RBT = ["packages/chicla-kit/test/release-publish.test.mjs"]; // C32.3: chicla release publish
 const CI = "packages/chicla-kit/src/ci-report.mjs", CIT = ["packages/chicla-kit/test/ci-report.test.mjs"]; // C27.3: chicla ci-report
 const F = "packages/chicla-kit/src/integrity.mjs";
 const LF = ["packages/chicla-kit/test/core-integrity.test.mjs"];                 // the LF rule, the regex, the callers of round 243
@@ -334,8 +335,8 @@ export default [
   x("K-REL-11", RL, "!NAME.test(pkg.name) ||", "", RLT, "a name with a scope or a space reaches the commands"),
   x("K-REL-12", RL, "try { r = run(cmd, args, { cwd: root }); } catch { r = null; }", "r = run(cmd, args, { cwd: root });", RLT, "a run function that throws makes the core throw"),
   x("K-REL-13", RL, "run(cmd, args, { cwd: root })", "run(cmd, args, {})", RLT, "git and gh run in the folder of the caller, not of the project"),
-  x("K-REL-14", CLI, "command === \"release\" ? (opts.sub === \"prepare\" ? mod.renderReleasePrepare(r) : mod.renderReleaseCheck(r)) :", "", RLT, "the result of release check is rendered by the wrong renderer"),
-  x("K-REL-15", CLI, "opts.sub !== \"check\" && opts.sub !== \"prepare\") return fail", "false) return fail", RLT, "`release publish` or any other word runs the check instead of a usage error"),
+  x("K-REL-14", CLI, "command === \"release\" ? (opts.sub === \"prepare\" ? mod.renderReleasePrepare(r) : opts.sub === \"publish\" ? mod.renderReleasePublish(r) : mod.renderReleaseCheck(r)) :", "", RLT, "the result of release check is rendered by the wrong renderer"),
+  x("K-REL-15", CLI, "opts.sub !== \"check\" && opts.sub !== \"prepare\" && opts.sub !== \"publish\") return fail", "false) return fail", RLT, "any other word after `release` runs the check instead of a usage error"),
   x("K-REL-16", RL, "view.headSha === res.commit && ", "", RPT, "a run of another commit is accepted"),
   x("K-REL-17", RL, "view.conclusion === \"success\"", "true", RPT, "a failed or cancelled run is accepted"),
   x("K-REL-18", RL, "view.status === \"completed\" && ", "", RPT, "a run that has not finished is accepted"),
@@ -352,7 +353,28 @@ export default [
   x("K-REL-29", RL, "NAME.test(pkg.name) && VERSION.test(pkg.version)))", "VERSION.test(pkg.version)))", RPT, "a name with a scope reaches the commands"),
   x("K-REL-30", RL, " && VERSION.test(pkg.version)))", "))", RPT, "a version that is an option (--registry=x) reaches the commands"),
   x("K-REL-31", CLI, "!/^[1-9][0-9]{0,19}$/.test(opts.runId ?? \"\")", "false", RPT, "prepare without a valid --run is not a usage error"),
-  x("K-REL-32", CLI, "(opts.sub === \"prepare\" ? mod.renderReleasePrepare(r) : mod.renderReleaseCheck(r))", "mod.renderReleaseCheck(r)", RPT, "the result of release prepare is printed as a check"),
+  x("K-REL-32", CLI, "(opts.sub === \"prepare\" ? mod.renderReleasePrepare(r) : opts.sub === \"publish\" ? mod.renderReleasePublish(r) : mod.renderReleaseCheck(r))", "mod.renderReleaseCheck(r)", RPT, "the result of release prepare is printed as a check"),
   x("K-REL-33", CLI, "opts.relOut = resolve(cwd, v)", "opts.relOut = v", RPT, "a relative --out is read from the project root, not from the current folder"),
   x("K-REL-34", CLI, "opts.sub === \"prepare\" ? mod.releasePrepare(", "false ? mod.releasePrepare(", RPT, "`release prepare` runs the check instead"),
+  x("K-REL-54", RL, "VERSION.test(pkg.version) && NAME.test(pkg.name)", "VERSION.test(pkg.version)", RBT, "a scoped or odd package name reaches git, gh and npm in the publish"),
+  x("K-REL-55", RL, "typeof pkg?.version === \"string\" && VERSION.test(pkg.version) && ", "typeof pkg?.version === \"string\" && ", RBT, "a version that is an option (--registry=x) reaches git, gh and npm in the publish"),
+  x("K-REL-35", RL, "if (live && isTTY !== true) return stop(", "if (false) return stop(", RBT, "--confirm without an interactive terminal publishes"),
+  x("K-REL-36", RL, "if (live && typed !== version) return stop(", "if (false) return stop(", RBT, "the version is not asked back: anything publishes"),
+  x("K-REL-37", RL, "names.length !== 3 || ", "", RBT, "a fourth file in the prepared folder passes"),
+  x("K-REL-38", RL, "sm[1].toLowerCase() === digest", "true", RBT, "a tarball that is not the one in the .sha256 file is published"),
+  x("K-REL-39", RL, "sm[2] === file && ", "", RBT, "a .sha256 file that names another tarball passes"),
+  x("K-REL-40", RL, "rc.ok === true", "true", RBT, "a failed release check (published version, dirty tree, tag, red CI) does not stop the publish"),
+  x("K-REL-41", RL, "res.commit !== null && notes.includes(", "true || notes.includes(", RBT, "a folder prepared from another commit is published"),
+  x("K-REL-42", RL, "who.status === 0 && who.stdout.trim() !== \"\"", "true", RBT, "a missing npm login is found only after the tag and the release exist"),
+  x("K-REL-43", RL, "if (!live) return { ...res, ok: true, checks };", "", RBT, "a dry run tags, releases and publishes"),
+  x("K-REL-44", RL, "id === \"npm-publish\" ? { interactive: true, timeout: 600_000 } : {}", "{}", RBT, "npm publish cannot ask for the two-factor code (EOTP)"),
+  x("K-REL-45", RL, "if (id === \"npm-publish\") res.published = true;", "", RBT, "a publish that worked is reported as not published"),
+  x("K-REL-46", RL, "res.done.push(id);", "", RBT, "the steps already done are not reported when a later one fails"),
+  x("K-REL-47", RL, "view.stdout.trim() === version", "true", RBT, "a registry that does not say the version is reported as success"),
+  x("K-REL-48", RL, "const tgz = join(dir, file)", "const tgz = join(\"dist\", file)", RBT, "npm gets a relative path that it reads as a GitHub shorthand"),
+  x("K-REL-49", CLI, "if (opts.confirm && !tty) r =", "if (opts.confirm && false) r =", RBT, "no terminal: the reads run and the question is asked anyway"),
+  x("K-REL-50", CLI, "if (opts.confirm && r.ok) {", "if (opts.confirm) {", RBT, "the question is asked even when the dry run failed"),
+  x("K-REL-51", CLI, "isTTY: true, typed });", "isTTY: true, typed: r.version });", RBT, "the typed answer is ignored: anything publishes"),
+  x("K-REL-52", CLI, "opts.relFrom = resolve(cwd, v)", "opts.relFrom = v", RBT, "a relative --from is read from the project root, not from the current folder"),
+  x("K-REL-53", CLI, "if (!json) stdout.write(mod.renderReleasePublish(r).out);", "", RBT, "the plan is not shown before the question"),
 ];

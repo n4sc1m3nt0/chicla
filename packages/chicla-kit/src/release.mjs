@@ -15,8 +15,8 @@ const RUNID = /^[1-9][0-9]{0,19}$/;
 const NAME = /^[a-z0-9][a-z0-9._-]*$/, VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$/, SHA = /^[0-9a-f]{40}$/;
 
 /** The real `run`: never throws (a missing tool is status null with the reason in stderr). */
-export function runTool(cmd, args, { cwd, timeout } = {}) {
-  const r = spawnSync(cmd, args, { cwd, encoding: "utf8", timeout: timeout ?? 60_000, maxBuffer: 16 * 1024 * 1024 });
+export function runTool(cmd, args, { cwd, timeout, interactive } = {}) { // `interactive` (C32.3): the child owns the terminal (npm asks for the two-factor code itself; a pipe stops it with EOTP)
+  const r = spawnSync(cmd, args, { cwd, encoding: "utf8", timeout: timeout ?? 60_000, maxBuffer: 16 * 1024 * 1024, stdio: interactive === true ? "inherit" : undefined });
   return { status: r.status, stdout: r.stdout ?? "", stderr: r.stderr ?? (r.error ? String(r.error.code ?? r.error.message) : "") };
 }
 
@@ -148,4 +148,88 @@ export function renderReleasePrepare(r) {
   const lines = r.checks.map((c) => `  ${c.ok ? "✓" : "✗"} ${c.id}: ${c.detail}\n`).join("");
   if (!r.ok) return { out: lines, err: `✗ ${r.code}: ${r.checks.find((c) => !c.ok)?.id} failed, the later checks did not run (${r.name} ${r.version}, run ${r.run})\n` };
   return { out: `✓ release prepare: ${r.checks.length} checks, none failed (${r.name} ${r.version}, run ${r.run})\n${lines}  folder: ${r.out}\n  ${r.file}: ${r.bytes} bytes, sha256 ${r.sha256}\n`, err: "" };
+}
+
+// C32.3 (D167, D173) — `chicla release publish --from <folder> [--confirm]`: the IRREVERSIBLE step. Only Rodrigo runs it (D167 D-3, rule 4 of CLAUDE.md): the tests use a fake `run` and a fake terminal.
+// `from` is the folder `release prepare` left: exactly `<name>-<version>.tgz`, its `.sha256` and `notes-<name>-<version>.md`. Without `confirm` it is a DRY RUN: four checks and the plan, no command that writes.
+//   files, sha256   the folder is what prepare leaves, and the tarball is the one in the `.sha256` file;
+//   release-check   `releaseCheck` passes (the version is not on npm, the tree is clean, the tag is absent, the CI of HEAD is green);
+//   notes-commit    the notes name HEAD (the folder was prepared from THIS commit).
+// With `confirm: true` it first needs `isTTY === true` (ERELEASE_NOTTY) and `typed` equal to the version (ERELEASE_NOCONFIRM), both before ANY call, then the four checks, then, stopping at the first failure:
+//   npm-whoami (so a missing login stops BEFORE anything irreversible), git-tag, git-push, gh-release, npm-publish (interactive: npm asks for the two-factor code), npm-view (the registry says the version).
+// `done` lists the write steps that succeeded; `published` is true once `npm publish` exited 0. The tarball is given to npm as an ABSOLUTE path (`dist/x.tgz` is read as a GitHub shorthand).
+// Result: { ok, code?, message?, dryRun, root, name, version, tag, commit, from, file, plan, done, published, checks }. Codes: ENOROOT, ERELEASE_NOPACKAGE, ERELEASE_NOTTY, ERELEASE_NOCONFIRM, ERELEASE_FROM, ERELEASE_FAILED. Never throws.
+/** @param {{ root?: string, run?: typeof runTool, from?: string, confirm?: boolean, isTTY?: boolean, typed?: string }} o */
+export function releasePublish({ root = ".", run = runTool, from, confirm = false, isTTY, typed } = {}) {
+  const live = confirm === true;
+  const res = { ok: false, root, name: null, version: null, tag: null, commit: null, from: null, file: null, dryRun: !live, plan: [], done: [], published: false };
+  const stop = (code, message) => ({ ...res, code, message });
+  let isDir = false; try { isDir = statSync(root).isDirectory(); } catch { /* missing */ }
+  if (!isDir) return stop("ENOROOT", "the project folder does not exist or is not a folder");
+  let pkg; try { pkg = JSON.parse(readFileSync(join(root, "packages", "chicla", "package.json"), "utf8")); } catch { pkg = null; }
+  if (!(typeof pkg?.name === "string" && typeof pkg?.version === "string" && VERSION.test(pkg.version) && NAME.test(pkg.name))) return stop("ERELEASE_NOPACKAGE", "packages/chicla/package.json is missing, or its name or version is not plain");
+  const { name, version } = pkg, file = `${name}-${version}.tgz`, notesName = `notes-${name}-${version}.md`, tag = `${name}-v${version}`;
+  res.name = name; res.version = version; res.tag = tag;
+  if (live && isTTY !== true) return stop("ERELEASE_NOTTY", "--confirm needs an interactive terminal (stdin and stdout): run it yourself in a terminal; the AI never runs it");
+  if (live && typed !== version) return stop("ERELEASE_NOCONFIRM", `the version was not typed back: type ${version} exactly to publish it`);
+  let names = null; try { if (typeof from === "string" && from !== "" && statSync(resolve(root, from)).isDirectory()) names = readdirSync(resolve(root, from)).sort(); } catch { /* not a folder */ }
+  const expect = [file, `${file}.sha256`, notesName].sort();
+  if (names === null || names.length !== 3 || names.some((n, i) => n !== expect[i])) return stop("ERELEASE_FROM", `--from must be the folder that \`release prepare\` left: exactly ${file}, ${file}.sha256 and ${notesName}`);
+  const dir = resolve(root, from); res.from = dir; res.file = file;
+
+  const call = (cmd, args, extra = {}) => {
+    let r; try { r = run(cmd, args, { cwd: root, ...extra }); } catch { r = null; }
+    return { status: typeof r?.status === "number" ? r.status : null, stdout: typeof r?.stdout === "string" ? r.stdout : "", stderr: typeof r?.stderr === "string" ? r.stderr : "" };
+  };
+  const checks = [];
+  const step = (id, ok, detail) => { checks.push({ id, ok, level: ok ? "pass" : "fail", detail }); return ok; };
+  const failed = () => ({ ...res, code: "ERELEASE_FAILED", checks });
+
+  step("files", true, `${file}, ${file}.sha256 and ${notesName} are in the folder`);
+  let bytes = null, sumLine = ""; try { bytes = readFileSync(join(dir, file)); sumLine = readFileSync(join(dir, `${file}.sha256`), "utf8"); } catch { /* unreadable */ }
+  const sm = /^([0-9a-fA-F]{64}) [ *](\S+)\n?$/.exec(sumLine), digest = bytes === null ? null : createHash("sha256").update(bytes).digest("hex");
+  if (!step("sha256", sm !== null && sm[2] === file && sm[1].toLowerCase() === digest, `the sha256 of ${file} is not the one in ${file}.sha256 (or that file does not name it)`)) return failed();
+  checks[1].detail = `sha256 ${digest} matches ${file}.sha256`;
+
+  const rc = releaseCheck({ root, run }); res.commit = rc.commit ?? null;
+  const bad = (rc.checks ?? []).filter((c) => !c.ok).map((c) => c.id);
+  if (!step("release-check", rc.ok === true, `release check failed: ${bad.join(", ") || rc.code}`)) return failed();
+  checks[2].detail = "npm-version-free, tree-clean, tag-absent and ci-green pass";
+  let notes = ""; try { notes = readFileSync(join(dir, notesName), "utf8"); } catch { /* unreadable */ }
+  if (!step("notes-commit", res.commit !== null && notes.includes(`\`${res.commit}\``), `the notes do not name HEAD ${(res.commit ?? "").slice(0, 12)}: this folder was prepared from another commit`)) return failed();
+  checks[3].detail = `the notes name HEAD ${res.commit.slice(0, 12)}`;
+
+  const tgz = join(dir, file), shaFile = join(dir, `${file}.sha256`), title = `${name} ${version}`;
+  const writes = [
+    ["git-tag", "git", ["tag", "-a", tag, "-m", title, res.commit], `the tag ${tag} could not be made`],
+    ["git-push", "git", ["push", "origin", tag], `the tag ${tag} exists here only: push it with git push origin ${tag}`],
+    ["gh-release", "gh", ["release", "create", tag, tgz, shaFile, "--title", title, "--notes-file", join(dir, notesName)], `the tag is pushed, the GitHub release is not: make it by hand`],
+    ["npm-publish", "npm", ["publish", tgz, "--access", "public"], `the tag and the release exist and nothing is on npm: run npm publish ${tgz} --access public in a terminal`],
+  ];
+  const show = (cmd, args) => [cmd, ...args.map((a) => (a.includes(" ") ? `"${a}"` : a))].join(" ");
+  res.plan = writes.map(([, cmd, args]) => show(cmd, args));
+  if (!live) return { ...res, ok: true, checks };
+
+  const who = call("npm", ["whoami"]);
+  if (!step("npm-whoami", who.status === 0 && who.stdout.trim() !== "", "npm is not logged in (npm whoami failed): run npm login; nothing was written")) return failed();
+  checks[4].detail = `npm is logged in as ${who.stdout.trim()}`;
+  for (const [id, cmd, args, hint] of writes) {
+    const r = call(cmd, args, id === "npm-publish" ? { interactive: true, timeout: 600_000 } : {});
+    if (!step(id, r.status === 0, `${cmd} exited ${r.status ?? "none"}: ${hint}`)) return failed();
+    checks.at(-1).detail = show(cmd, args); res.done.push(id);
+    if (id === "npm-publish") res.published = true;
+  }
+  const view = call("npm", ["view", name, "version"]);
+  if (!step("npm-view", view.status === 0 && view.stdout.trim() === version, `npm publish exited 0 but npm view ${name} version says «${view.stdout.trim()}»: the registry may lag, ask again in a minute`)) return failed();
+  checks.at(-1).detail = `npm view ${name} version says ${version}`;
+  return { ...res, ok: true, checks };
+}
+
+/** @returns {{ out: string, err: string }} one line per check; a dry run lists the plan; a failure prints the write steps that are done */
+export function renderReleasePublish(r) {
+  if (!r.checks) return { out: "", err: `✗ ${r.code}: ${r.message}\n` };
+  const lines = r.checks.map((c) => `  ${c.ok ? "✓" : "✗"} ${c.id}: ${c.detail}\n`).join("");
+  if (!r.ok) return { out: lines, err: `✗ ${r.code}: ${r.checks.find((c) => !c.ok)?.id} failed; ${r.done.length ? `done: ${r.done.join(", ")}` : "nothing was written"} (${r.name} ${r.version})\n` };
+  if (r.dryRun) return { out: `✓ release publish (dry run): ${r.checks.length} checks passed for ${r.name} ${r.version}; nothing was run that writes\n${lines}  Plan, run only with --confirm, in a terminal, with the version typed back:\n${r.plan.map((l) => `    ${l}\n`).join("")}`, err: "" };
+  return { out: `✓ release publish: ${r.name} ${r.version} is on npm (${r.checks.length} steps)\n${lines}`, err: "" };
 }
